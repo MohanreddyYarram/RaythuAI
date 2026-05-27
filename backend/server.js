@@ -1,3 +1,4 @@
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 //Main Entry point for backend
 
 //Import express (the framework that handles request)
@@ -17,6 +18,11 @@ app.use(express.json())
 
 // Enable cors so frontend can connect
 app.use(cors())
+
+//Import Routes
+const farmersRoute = require('./routes/farmers')
+
+app.use('/farmers',farmersRoute)
 
 // First Route
 app.get('/',(req,res)=>{
