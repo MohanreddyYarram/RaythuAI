@@ -5,7 +5,7 @@ const express = require('express')
 const router = express.Router()
 const jwt = require('jsonwebtoken')
 const axios = require('axios')
-const supabase = require('@supabase/supabase-js')
+const supabase = require('../services/supabase')
 
 //Store OTP temporarily in memeory
 //const otpStore = {}
