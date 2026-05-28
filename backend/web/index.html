@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rytu — Smart Farming App</title>
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Telugu&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+ 
+<div class="app-title-area">
+  <h1>Rytu<span>AI</span></h1>
+  <p>Smart Farming — Andhra Pradesh | రైతు AI అప్లికేషన్</p>
+</div>
+
+ <!-- LOGIN SCREEN -->
+<div id="login-screen" style="
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #0d3d1e, #1a6e35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 32px;
+">
+  <!-- Logo -->
+  <div style="text-align:center; margin-bottom:40px;">
+    <div style="font-size:56px;">🌶️</div>
+    <div style="font-family:'Nunito',sans-serif; font-size:32px; font-weight:900; color:white; margin-top:8px;">
+      Rytu<span style="color:#f5a623;">AI</span>
+    </div>
+    <div style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:6px; font-family:'Tiro Telugu',serif;">
+      రైతు AI అప్లికేషన్
+    </div>
+  </div>
+ 
+  <!-- Phone Input -->
+  <div id="step-phone" style="width:100%; max-width:320px;">
+    <div style="font-size:13px; color:rgba(255,255,255,0.8); margin-bottom:10px; font-family:'Nunito',sans-serif; font-weight:700;">
+      📱 Enter Your Mobile Number
+    </div>
+    <input 
+      type="tel" 
+      id="login-phone" 
+      placeholder="10-digit mobile number"
+      maxlength="10"
+      style="
+        width:100%;
+        padding:16px;
+        border-radius:14px;
+        border:none;
+        font-size:18px;
+        font-family:'Nunito',sans-serif;
+        font-weight:700;
+        letter-spacing:2px;
+        outline:none;
+        text-align:center;
+        background:rgba(255,255,255,0.95);
+        color:#1a2e1e;
+        margin-bottom:12px;
+      "
+    />
+    <button onclick="sendOTP()" id="send-otp-btn" style="
+      width:100%;
+      padding:16px;
+      background:#f5a623;
+      color:#3d2000;
+      border:none;
+      border-radius:14px;
+      font-size:15px;
+      font-weight:800;
+      font-family:'Nunito',sans-serif;
+      cursor:pointer;
+    ">
+      📨 Send OTP
+    </button>
+  </div>
+ 
+  <!-- OTP Input (hidden initially) -->
+  <div id="step-otp" style="width:100%; max-width:320px; display:none;">
+    <div style="font-size:13px; color:rgba(255,255,255,0.8); margin-bottom:6px; font-family:'Nunito',sans-serif; font-weight:700;">
+      🔐 Enter OTP sent to your phone
+    </div>
+    <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-bottom:10px; font-family:'Nunito',sans-serif;" id="otp-sent-to">
+    </div>
+    <input 
+      type="tel" 
+      id="login-otp" 
+      placeholder="6-digit OTP"
+      maxlength="6"
+      style="
+        width:100%;
+        padding:16px;
+        border-radius:14px;
+        border:none;
+        font-size:24px;
+        font-family:'Nunito',sans-serif;
+        font-weight:900;
+        letter-spacing:8px;
+        outline:none;
+        text-align:center;
+        background:rgba(255,255,255,0.95);
+        color:#1a2e1e;
+        margin-bottom:12px;
+      "
+    />
+    <button onclick="verifyOTP()" style="
+      width:100%;
+      padding:16px;
+      background:#f5a623;
+      color:#3d2000;
+      border:none;
+      border-radius:14px;
+      font-size:15px;
+      font-weight:800;
+      font-family:'Nunito',sans-serif;
+      cursor:pointer;
+      margin-bottom:10px;
+    ">
+      ✅ Verify & Login
+    </button>
+    <button onclick="backToPhone()" style="
+      width:100%;
+      padding:12px;
+      background:transparent;
+      color:rgba(255,255,255,0.6);
+      border:1px solid rgba(255,255,255,0.2);
+      border-radius:14px;
+      font-size:13px;
+      font-weight:700;
+      font-family:'Nunito',sans-serif;
+      cursor:pointer;
+    ">
+      ← Change Number
+    </button>
+  </div>
+ 
+  <!-- Loading -->
+  <div id="login-loading" style="display:none; text-align:center; color:white; font-family:'Nunito',sans-serif;">
+    <div style="font-size:32px; margin-bottom:12px;">⏳</div>
+    <div style="font-size:14px; font-weight:700;" id="loading-text">Sending OTP...</div>
+  </div>
+ 
+  <!-- Error Message -->
+  <div id="login-error" style="
+    display:none;
+    margin-top:14px;
+    background:rgba(220,50,50,0.2);
+    border:1px solid rgba(220,50,50,0.4);
+    border-radius:10px;
+    padding:12px 16px;
+    font-size:12px;
+    color:#ffb3b3;
+    font-family:'Nunito',sans-serif;
+    text-align:center;
+    width:100%;
+    max-width:320px;
+  " id="error-msg">
+  </div>
+</div>
+ 
+<div class="phone-wrapper">
+ 
+  <!-- SIDEBAR (desktop) -->
+  <div class="desktop-sidebar">
+    <div style="font-size:11px;font-weight:800;color:var(--muted);padding:0 16px 8px;text-transform:uppercase;letter-spacing:1px;">Navigation</div>
+    <div class="sidebar-item active" onclick="switchScreen('home')"><span class="s-icon">🏠</span> Home</div>
+    <div class="sidebar-item" onclick="switchScreen('detect')"><span class="s-icon">🔬</span> Detect Disease</div>
+    <div class="sidebar-item" onclick="switchScreen('shop')"><span class="s-icon">🏪</span> Rytu Shop</div>
+    <div class="sidebar-item" onclick="switchScreen('roadmap')"><span class="s-icon">🗓️</span> Crop Roadmap</div>
+    <div class="sidebar-item" onclick="switchScreen('tracker')"><span class="s-icon">📋</span> My Tracker</div>
+    <div style="margin-top:20px;padding:14px 16px;background:var(--green-light);border-radius:var(--radius);border:1.5px solid var(--border);">
+      <div style="font-size:11px;font-weight:800;color:var(--green);">🌶️ Chilli Season</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;">Kharif 2025</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px;">Guntur District</div>
+    </div>
+  </div>
+ 
+  <!-- PHONE -->
+  <div class="phone-frame">
+    <div class="phone-notch"></div>
+ 
+    <!-- HOME SCREEN -->
+    <div class="screen active" id="screen-home">
+      <div class="app-header">
+        <div class="header-row">
+          <div>
+            <div class="app-logo">Rytu<span>AI</span></div>
+            <div class="header-subtitle">నమస్కారం, రమేష్ గారు 🙏</div>
+          </div>
+          <div class="avatar">👨‍🌾</div>
+        </div>
+        <div class="weather-strip">
+          <div style="font-size:28px;">⛅</div>
+          <div>
+            <div class="temp">32°C</div>
+            <div class="desc">Partly Cloudy — Guntur</div>
+            <div class="location">High humidity — watch for fungal diseases</div>
+          </div>
+        </div>
+      </div>
+ 
+      <div class="lang-toggle">
+        <button class="lang-btn active">EN</button>
+        <button class="lang-btn">తె</button>
+      </div>
+ 
+      <div class="section-title">⚡ Quick Actions</div>
+      <div class="quick-actions">
+        <div class="quick-card primary" onclick="switchScreen('detect')">
+          <div class="qc-icon">🔬</div>
+          <div class="qc-title">Detect Disease</div>
+          <div class="qc-desc">Upload crop photos now</div>
+        </div>
+        <div class="quick-card" onclick="switchScreen('shop')">
+          <div class="qc-icon">🏪</div>
+          <div class="qc-title">Rytu Shop</div>
+          <div class="qc-desc">Order pesticides</div>
+        </div>
+        <div class="quick-card" onclick="switchScreen('roadmap')">
+          <div class="qc-icon">🗓️</div>
+          <div class="qc-title">Crop Roadmap</div>
+          <div class="qc-desc">Season schedule</div>
+        </div>
+        <div class="quick-card" onclick="switchScreen('tracker')">
+          <div class="qc-icon">📋</div>
+          <div class="qc-title">My Tracker</div>
+          <div class="qc-desc">Log farm work</div>
+        </div>
+      </div>
+ 
+      <div class="section-title">⚠️ Alert</div>
+      <div class="alert-banner">
+        <div style="font-size:24px;">🐛</div>
+        <div>
+          <div class="alert-text">Thrips Alert in Your Area</div>
+          <div class="alert-sub">3 farmers near you reported thrips. Check your crop today.</div>
+        </div>
+      </div>
+ 
+      <div class="section-title">🌶️ My Crop Status</div>
+      <div class="crop-status">
+        <div class="crop-status-row">
+          <div class="crop-name">Guntur Chilli</div>
+          <div class="crop-stage">Flowering Stage</div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Sowed: June 12 · 2.5 acres</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-label">Season Progress — 45% complete</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:45%"></div></div>
+        </div>
+      </div>
+    </div>
+ 
+    <!-- DETECT SCREEN -->
+    <div class="screen" id="screen-detect">
+      <div class="detect-hero">
+        <h2>🔬 Detect Crop Disease</h2>
+        <p>పంట జబ్బులు గుర్తించండి — Upload 3-4 photos for best results</p>
+      </div>
+ 
+      <div class="tip-box" style="margin:14px 16px 0;">
+        <strong>📸 Photo Tips for Best Accuracy:</strong>
+        Take close-ups from different angles. Include healthy + affected leaves. Good lighting helps AI detect better.
+      </div>
+ 
+      <div class="section-title">📷 Upload Images (min. 1)</div>
+      <div class="upload-grid" id="upload-grid">
+      <div class="upload-slot" id="slot-0" onclick="triggerUpload(0)">
+      <div class="slot-icon">📷</div>
+      <div class="slot-label">Photo 1 — Leaf</div>
+  </div>
+  <div class="upload-slot" id="slot-1" onclick="triggerUpload(1)">
+    <div class="slot-icon">📷</div>
+    <div class="slot-label">Photo 2 — Stem</div>
+  </div>
+  <div class="upload-slot" id="slot-2" onclick="triggerUpload(2)">
+    <div class="slot-icon">📷</div>
+    <div class="slot-label">Photo 3 — Plant</div>
+  </div>
+  <div class="upload-slot" id="slot-3" onclick="triggerUpload(3)">
+    <div class="slot-icon">➕</div>
+    <div class="slot-label">Photo 4 — Extra</div>
+  </div>
+</div>
+ 
+<!-- Hidden file inputs -->
+<input type="file" id="file-0" accept="image/*"
+  style="display:none" onchange="handleUpload(0, this)">
+<input type="file" id="file-1" accept="image/*"
+  style="display:none" onchange="handleUpload(1, this)">
+<input type="file" id="file-2" accept="image/*"
+  style="display:none" onchange="handleUpload(2, this)">
+<input type="file" id="file-3" accept="image/*"
+  style="display:none" onchange="handleUpload(3, this)">
+ 
+<div id="upload-count-msg" style="text-align:center;
+  font-size:12px;color:var(--muted);font-weight:700;padding:6px 16px 0;">
+  0 photos uploaded
+</div>
+ 
+      <div class="info-card" style="margin-top:8px;">
+        <h4>🌶️ Crop Details</h4>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <div style="flex:1;background:var(--green-light);border-radius:8px;padding:8px;text-align:center;">
+            <div style="font-size:11px;font-weight:800;">Chilli</div>
+            <div style="font-size:10px;color:var(--muted);">Crop</div>
+          </div>
+          <div style="flex:1;background:var(--green-light);border-radius:8px;padding:8px;text-align:center;">
+            <div style="font-size:11px;font-weight:800;">Flowering</div>
+            <div style="font-size:10px;color:var(--muted);">Stage</div>
+          </div>
+          <div style="flex:1;background:var(--green-light);border-radius:8px;padding:8px;text-align:center;">
+            <div style="font-size:11px;font-weight:800;">Guntur</div>
+            <div style="font-size:10px;color:var(--muted);">District</div>
+          </div>
+        </div>
+      </div>
+ 
+      <button class="analyze-btn" id="analyze-btn" 
+       onclick="analyzeImages()" 
+       style="opacity:0.4;cursor:not-allowed;">
+ 
+    </div>
+ 
+    <!-- RESULT SCREEN -->
+     <!-- RESULT SCREEN -->
+<div class="screen" id="screen-result">
+ 
+  <!-- LOADING STATE -->
+  <div id="result-loading" style="display:none;
+    flex-direction:column;align-items:center;
+    justify-content:center;padding:60px 20px;gap:16px;">
+    <div style="width:64px;height:64px;
+      border:5px solid var(--green-light);
+      border-top-color:var(--green);
+      border-radius:50%;
+      animation:spin 1s linear infinite;">
+    </div>
+    <div style="font-size:15px;font-weight:800;
+      color:var(--green);">
+      Analyzing your photos...
+    </div>
+    <div style="font-size:12px;color:var(--muted);
+      text-align:center;">
+      AI is examining your chilli crop images
+    </div>
+  </div>
+ 
+  <!-- ERROR STATE -->
+  <div id="result-error" style="display:none;
+    padding:30px 20px;text-align:center;">
+    <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
+    <div style="font-size:15px;font-weight:800;
+      color:var(--red);">Analysis Failed</div>
+    <div id="error-msg" style="font-size:12px;
+      color:var(--muted);margin-top:6px;"></div>
+    <button onclick="switchScreen('detect')"
+      style="margin-top:20px;background:var(--green);
+      color:white;border:none;border-radius:12px;
+      padding:12px 24px;font-size:13px;font-weight:800;
+      cursor:pointer;font-family:'Nunito',sans-serif;">
+      ← Try Again
+    </button>
+  </div>
+ 
+  <!-- ACTUAL RESULT -->
+  <div id="result-content" style="display:none;">
+    <div id="result-header-div" class="result-header">
+      <div style="font-size:36px;margin-bottom:8px;"
+        id="r-emoji">🦠</div>
+      <div class="disease-name" id="r-disease">—</div>
+      <div style="font-size:12px;font-family:'Tiro Telugu';
+        margin-top:4px;opacity:0.9;" id="r-telugu">—</div>
+      <div class="confidence-badge" id="r-confidence">
+        Analysing...
+      </div>
+    </div>
+ 
+    <div class="severity-row">
+      <div class="severity-chip high" id="r-sev">
+        🔴 Severity<br>
+        <span id="r-sev-val">—</span>
+      </div>
+      <div class="severity-chip medium" id="r-spread">
+        ⚡ Spread<br>
+        <span id="r-spread-val">—</span>
+      </div>
+      <div class="severity-chip low" id="r-treat">
+        🕐 Treat<br>
+        <span id="r-treat-val">—</span>
+      </div>
+    </div>
+ 
+    <div class="info-card" style="margin-top:12px;">
+      <h4>What Is This?</h4>
+      <p id="r-what">—</p>
+    </div>
+ 
+    <div class="info-card">
+      <h4>Symptoms Found</h4>
+      <p id="r-symptoms">—</p>
+    </div>
+ 
+    <div class="section-title">💊 Recommended Pesticides</div>
+    <div class="pesticide-list" id="r-pesticides"></div>
+ 
+    <div class="info-card" style="margin-bottom:0;">
+      <h4>Prevention Tips</h4>
+      <p id="r-prevention">—</p>
+    </div>
+ 
+    <button class="order-btn"
+      onclick="switchScreen('shop')"
+      style="margin-top:12px;">
+      🛒 Order from Rytu Shop
+    </button>
+ 
+    <button onclick="switchScreen('detect')"
+      style="margin:8px 16px 16px;
+      background:transparent;color:var(--green);
+      border:1.5px solid var(--green);
+      border-radius:var(--radius);padding:12px;
+      font-size:13px;font-weight:800;
+      width:calc(100% - 32px);cursor:pointer;
+      font-family:'Nunito',sans-serif;">
+      🔄 Scan Again
+    </button>
+  </div>
+ 
+</div>
+ 
+           
+        
+ 
+    <!-- SHOP SCREEN -->
+    <div class="screen" id="screen-shop">
+      <div class="shop-hero">
+        <h2>🏪 Rytu Shop</h2>
+        <p>మీ తోటకు అవసరమైనవి — Direct prices, no middlemen</p>
+        <div style="display:flex;gap:10px;margin-top:10px;">
+          <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:8px 12px;font-size:10px;font-weight:700;">📍 Nearest store: 2.3 km</div>
+          <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:8px 12px;font-size:10px;font-weight:700;">🚚 Delivery: 4 hrs</div>
+        </div>
+      </div>
+ 
+      <div class="search-bar">🔍 &nbsp;Search pesticides, fertilizers...</div>
+ 
+      <div class="category-scroll">
+        <div class="cat-chip active">All</div>
+        <div class="cat-chip">Insecticides</div>
+        <div class="cat-chip">Fungicides</div>
+        <div class="cat-chip">Fertilizers</div>
+        <div class="cat-chip">Seeds</div>
+        <div class="cat-chip">Equipment</div>
+      </div>
+ 
+      <div class="section-title">🎯 Recommended for Your Crop</div>
+      <div class="product-grid">
+        <div class="product-card">
+          <div class="p-icon">🧴</div>
+          <div class="p-name">Spinosad 45% SC</div>
+          <div class="p-brand">Coragen · 100ml</div>
+          <div class="p-price-row">
+            <div class="p-price">₹320</div>
+            <div class="p-mrp">₹420</div>
+          </div>
+          <div class="p-badge">24% CHEAPER</div>
+          <button class="add-btn">+ Add to Cart</button>
+        </div>
+        <div class="product-card">
+          <div class="p-icon">🧪</div>
+          <div class="p-name">Imidacloprid 17.8</div>
+          <div class="p-brand">Confidor · 250ml</div>
+          <div class="p-price-row">
+            <div class="p-price">₹185</div>
+            <div class="p-mrp">₹240</div>
+          </div>
+          <div class="p-badge">23% CHEAPER</div>
+          <button class="add-btn">+ Add to Cart</button>
+        </div>
+        <div class="product-card">
+          <div class="p-icon">🌿</div>
+          <div class="p-name">Neem Oil 10000PPM</div>
+          <div class="p-brand">Organic · 500ml</div>
+          <div class="p-price-row">
+            <div class="p-price">₹95</div>
+            <div class="p-mrp">₹130</div>
+          </div>
+          <div class="p-badge">27% CHEAPER</div>
+          <button class="add-btn">+ Add to Cart</button>
+        </div>
+        <div class="product-card">
+          <div class="p-icon">🪣</div>
+          <div class="p-name">NPK 19:19:19</div>
+          <div class="p-brand">Iffco · 1 kg</div>
+          <div class="p-price-row">
+            <div class="p-price">₹220</div>
+            <div class="p-mrp">₹290</div>
+          </div>
+          <div class="p-badge">24% CHEAPER</div>
+          <button class="add-btn">+ Add to Cart</button>
+        </div>
+      </div>
+ 
+      <div style="margin:14px 16px 0;background:var(--green-light);border-radius:var(--radius);padding:14px;border:1.5px solid var(--border);">
+        <div style="font-size:13px;font-weight:800;color:var(--green);">📍 Nearest Rytu Franchise Store</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Rytu AgriCenter — Narasaraopet Road, Guntur</div>
+        <div style="font-size:11px;font-weight:700;color:var(--green);margin-top:6px;">2.3 km away · Open 7AM–8PM · ☎️ 98765 43210</div>
+      </div>
+    </div>
+ 
+    <!-- ROADMAP SCREEN -->
+    <div class="screen" id="screen-roadmap">
+      <div class="roadmap-hero">
+        <h2>🗓️ Chilli Crop Roadmap</h2>
+        <p>సీజన్ పూర్తి గైడ్ — Kharif 2025 · Guntur District</p>
+      </div>
+ 
+      <div class="season-selector">
+        <button class="season-btn active">Kharif 2025</button>
+        <button class="season-btn">Rabi 2025</button>
+        <button class="season-btn">Summer 2026</button>
+      </div>
+ 
+      <div class="section-title">📅 Season Timeline</div>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="tl-dot done">✅</div>
+          <div class="tl-content">
+            <div class="tl-title">Land Preparation</div>
+            <div class="tl-date">May 20 – June 5</div>
+            <div class="tl-desc">Deep ploughing, apply FYM @ 10 tons/acre. Soil test for pH.</div>
+            <span class="tl-status done">Completed</span>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-dot done">✅</div>
+          <div class="tl-content">
+            <div class="tl-title">Nursery & Sowing</div>
+            <div class="tl-date">June 10 – June 15</div>
+            <div class="tl-desc">Use LCA 334 or G4 variety. Treat seeds with Trichoderma before sowing.</div>
+            <span class="tl-status done">Completed</span>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-dot active">🌱</div>
+          <div class="tl-content active">
+            <div class="tl-title">Flowering & Pest Watch ← You Are Here</div>
+            <div class="tl-date">August 10 – September 10</div>
+            <div class="tl-desc">Apply DAP 50kg/acre. Watch for Thrips, Mites & Whitefly. Spray at 7-day intervals.</div>
+            <span class="tl-status ongoing">In Progress</span>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-dot" style="font-size:16px;">🌶️</div>
+          <div class="tl-content">
+            <div class="tl-title">Fruit Development</div>
+            <div class="tl-date">September 10 – October 20</div>
+            <div class="tl-desc">Micro-nutrient spray (Boron + Zinc). Continue disease monitoring. Reduce irrigation.</div>
+            <span class="tl-status upcoming">Upcoming</span>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-dot" style="font-size:16px;">🏆</div>
+          <div class="tl-content">
+            <div class="tl-title">Harvest</div>
+            <div class="tl-date">November 1 – November 30</div>
+            <div class="tl-desc">Expected yield: 25–30 quintals/acre. Harvest when 60% fruits turn red.</div>
+            <span class="tl-status upcoming">Upcoming</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- TRACKER SCREEN -->
+    <div class="screen" id="screen-tracker">
+      <div class="tracker-hero">
+        <h2>📋 My Farm Tracker</h2>
+        <p>మీ పని రికార్డ్ — Track every activity on your farm</p>
+      </div>
+ 
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="s-val">24</div>
+          <div class="s-label">Days Active</div>
+        </div>
+        <div class="stat-card">
+          <div class="s-val">12</div>
+          <div class="s-label">Tasks Done</div>
+        </div>
+        <div class="stat-card">
+          <div class="s-val">₹4.2k</div>
+          <div class="s-label">Spent so far</div>
+        </div>
+      </div>
+ 
+      <div class="section-title">📝 Recent Activity Log</div>
+      <div class="log-list">
+        <div class="log-item">
+          <div class="log-icon-wrap" style="background:#fff3e0;">💧</div>
+          <div class="log-info">
+            <div class="log-title">Irrigation Done</div>
+            <div class="log-date">Today, 6:30 AM</div>
+            <div class="log-note">Drip irrigation — 2.5 acres. Duration: 3 hours.</div>
+          </div>
+        </div>
+        <div class="log-item">
+          <div class="log-icon-wrap" style="background:#ffebee;">🧴</div>
+          <div class="log-info">
+            <div class="log-title">Pesticide Sprayed</div>
+            <div class="log-date">Yesterday, 7:00 AM</div>
+            <div class="log-note">Spinosad 45% SC — 1 litre in 200L water. Full field covered.</div>
+          </div>
+        </div>
+        <div class="log-item">
+          <div class="log-icon-wrap" style="background:var(--green-light);">🌱</div>
+          <div class="log-info">
+            <div class="log-title">Fertilizer Applied</div>
+            <div class="log-date">Aug 18</div>
+            <div class="log-note">DAP 50 kg/acre applied. Followed roadmap recommendation.</div>
+          </div>
+        </div>
+        <div class="log-item">
+          <div class="log-icon-wrap" style="background:#f3e8ff;">🔬</div>
+          <div class="log-info">
+            <div class="log-title">Disease Scan Completed</div>
+            <div class="log-date">Aug 20</div>
+            <div class="log-note">AI detected Thrips. Ordered treatment from Rytu Shop.</div>
+          </div>
+        </div>
+      </div>
+ 
+      <button class="add-log-btn">
+        ➕ Add New Activity Log
+      </button>
+ 
+      <div style="margin:14px 16px 0;background:var(--green-light);border-radius:var(--radius);padding:14px;border:1.5px solid var(--border);">
+        <div style="font-size:12px;font-weight:800;color:var(--green);">📊 Season Summary (so far)</div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;">
+          <div><span style="font-weight:700;">Irrigations:</span> 8 times</div>
+          <div><span style="font-weight:700;">Sprays:</span> 3 times</div>
+          <div><span style="font-weight:700;">Scans:</span> 2 times</div>
+        </div>
+      </div>
+    </div>
+ 
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav">
+      <div class="nav-item active" id="nav-home" onclick="switchScreen('home')">
+        <div class="nav-icon">🏠</div>
+        <span>Home</span>
+      </div>
+      <div class="nav-item" id="nav-detect" onclick="switchScreen('detect')">
+        <div class="nav-icon">🔬</div>
+        <span>Detect</span>
+      </div>
+      <div class="nav-item" id="nav-shop" onclick="switchScreen('shop')" style="position:relative;">
+        <div class="nav-icon">🏪</div>
+        <span>Shop</span>
+        <div class="badge">3</div>
+      </div>
+      <div class="nav-item" id="nav-roadmap" onclick="switchScreen('roadmap')">
+        <div class="nav-icon">🗓️</div>
+        <span>Roadmap</span>
+      </div>
+      <div class="nav-item" id="nav-tracker" onclick="switchScreen('tracker')">
+        <div class="nav-icon">📋</div>
+        <span>Tracker</span>
+      </div>
+    </div>
+  </div>
+ 
+</div>
+<script src="app.js"></script>
+</body>
+</html>
+ 
+        
+ 

@@ -26,7 +26,7 @@ app.use(cors({
 }))
 
 
-app.use(express.static(path.join(__dirname,'../web')))
+app.use(express.static(path.join(__dirname,'web')))
 
 //Import Routes for farmers
 const farmersRoute = require('./routes/farmers')
@@ -43,7 +43,7 @@ app.use('/detect',detectionRoute)
 
 // Home Route
 app.get('/',(req,res)=>{
-    res.sendFile(path.join(__dirname,'../web','index.html'))
+    res.sendFile(path.join(__dirname,'web','index.html'))
 })
 
 // Start the server on port 3000
