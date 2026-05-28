@@ -13,6 +13,154 @@
   <h1>Rytu<span>AI</span></h1>
   <p>Smart Farming — Andhra Pradesh | రైతు AI అప్లికేషన్</p>
 </div>
+
+ <!-- LOGIN SCREEN -->
+<div id="login-screen" style="
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #0d3d1e, #1a6e35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 32px;
+">
+  <!-- Logo -->
+  <div style="text-align:center; margin-bottom:40px;">
+    <div style="font-size:56px;">🌶️</div>
+    <div style="font-family:'Nunito',sans-serif; font-size:32px; font-weight:900; color:white; margin-top:8px;">
+      Rytu<span style="color:#f5a623;">AI</span>
+    </div>
+    <div style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:6px; font-family:'Tiro Telugu',serif;">
+      రైతు AI అప్లికేషన్
+    </div>
+  </div>
+ 
+  <!-- Phone Input -->
+  <div id="step-phone" style="width:100%; max-width:320px;">
+    <div style="font-size:13px; color:rgba(255,255,255,0.8); margin-bottom:10px; font-family:'Nunito',sans-serif; font-weight:700;">
+      📱 Enter Your Mobile Number
+    </div>
+    <input 
+      type="tel" 
+      id="login-phone" 
+      placeholder="10-digit mobile number"
+      maxlength="10"
+      style="
+        width:100%;
+        padding:16px;
+        border-radius:14px;
+        border:none;
+        font-size:18px;
+        font-family:'Nunito',sans-serif;
+        font-weight:700;
+        letter-spacing:2px;
+        outline:none;
+        text-align:center;
+        background:rgba(255,255,255,0.95);
+        color:#1a2e1e;
+        margin-bottom:12px;
+      "
+    />
+    <button onclick="sendOTP()" id="send-otp-btn" style="
+      width:100%;
+      padding:16px;
+      background:#f5a623;
+      color:#3d2000;
+      border:none;
+      border-radius:14px;
+      font-size:15px;
+      font-weight:800;
+      font-family:'Nunito',sans-serif;
+      cursor:pointer;
+    ">
+      📨 Send OTP
+    </button>
+  </div>
+ 
+  <!-- OTP Input (hidden initially) -->
+  <div id="step-otp" style="width:100%; max-width:320px; display:none;">
+    <div style="font-size:13px; color:rgba(255,255,255,0.8); margin-bottom:6px; font-family:'Nunito',sans-serif; font-weight:700;">
+      🔐 Enter OTP sent to your phone
+    </div>
+    <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-bottom:10px; font-family:'Nunito',sans-serif;" id="otp-sent-to">
+    </div>
+    <input 
+      type="tel" 
+      id="login-otp" 
+      placeholder="6-digit OTP"
+      maxlength="6"
+      style="
+        width:100%;
+        padding:16px;
+        border-radius:14px;
+        border:none;
+        font-size:24px;
+        font-family:'Nunito',sans-serif;
+        font-weight:900;
+        letter-spacing:8px;
+        outline:none;
+        text-align:center;
+        background:rgba(255,255,255,0.95);
+        color:#1a2e1e;
+        margin-bottom:12px;
+      "
+    />
+    <button onclick="verifyOTP()" style="
+      width:100%;
+      padding:16px;
+      background:#f5a623;
+      color:#3d2000;
+      border:none;
+      border-radius:14px;
+      font-size:15px;
+      font-weight:800;
+      font-family:'Nunito',sans-serif;
+      cursor:pointer;
+      margin-bottom:10px;
+    ">
+      ✅ Verify & Login
+    </button>
+    <button onclick="backToPhone()" style="
+      width:100%;
+      padding:12px;
+      background:transparent;
+      color:rgba(255,255,255,0.6);
+      border:1px solid rgba(255,255,255,0.2);
+      border-radius:14px;
+      font-size:13px;
+      font-weight:700;
+      font-family:'Nunito',sans-serif;
+      cursor:pointer;
+    ">
+      ← Change Number
+    </button>
+  </div>
+ 
+  <!-- Loading -->
+  <div id="login-loading" style="display:none; text-align:center; color:white; font-family:'Nunito',sans-serif;">
+    <div style="font-size:32px; margin-bottom:12px;">⏳</div>
+    <div style="font-size:14px; font-weight:700;" id="loading-text">Sending OTP...</div>
+  </div>
+ 
+  <!-- Error Message -->
+  <div id="login-error" style="
+    display:none;
+    margin-top:14px;
+    background:rgba(220,50,50,0.2);
+    border:1px solid rgba(220,50,50,0.4);
+    border-radius:10px;
+    padding:12px 16px;
+    font-size:12px;
+    color:#ffb3b3;
+    font-family:'Nunito',sans-serif;
+    text-align:center;
+    width:100%;
+    max-width:320px;
+  " id="error-msg">
+  </div>
+</div>
  
 <div class="phone-wrapper">
  
@@ -119,28 +267,40 @@
         Take close-ups from different angles. Include healthy + affected leaves. Good lighting helps AI detect better.
       </div>
  
-      <div class="section-title">📷 Upload Images (min. 3)</div>
-      <div class="upload-grid">
-        <div class="upload-slot filled" onclick="showResult()">
-          <div class="filled-img">🍃</div>
-          <div class="slot-label">Photo 1 — Leaf</div>
-          <div class="check">✓</div>
-        </div>
-        <div class="upload-slot filled" onclick="showResult()">
-          <div class="filled-img">🌿</div>
-          <div class="slot-label">Photo 2 — Stem</div>
-          <div class="check">✓</div>
-        </div>
-        <div class="upload-slot filled" onclick="showResult()">
-          <div class="filled-img">🍂</div>
-          <div class="slot-label">Photo 3 — Whole Plant</div>
-          <div class="check">✓</div>
-        </div>
-        <div class="upload-slot" onclick="switchScreen('result')">
-          <div class="slot-icon">➕</div>
-          <div class="slot-label">Add Photo 4</div>
-        </div>
-      </div>
+      <div class="section-title">📷 Upload Images (min. 1)</div>
+      <div class="upload-grid" id="upload-grid">
+      <div class="upload-slot" id="slot-0" onclick="triggerUpload(0)">
+      <div class="slot-icon">📷</div>
+      <div class="slot-label">Photo 1 — Leaf</div>
+  </div>
+  <div class="upload-slot" id="slot-1" onclick="triggerUpload(1)">
+    <div class="slot-icon">📷</div>
+    <div class="slot-label">Photo 2 — Stem</div>
+  </div>
+  <div class="upload-slot" id="slot-2" onclick="triggerUpload(2)">
+    <div class="slot-icon">📷</div>
+    <div class="slot-label">Photo 3 — Plant</div>
+  </div>
+  <div class="upload-slot" id="slot-3" onclick="triggerUpload(3)">
+    <div class="slot-icon">➕</div>
+    <div class="slot-label">Photo 4 — Extra</div>
+  </div>
+</div>
+ 
+<!-- Hidden file inputs -->
+<input type="file" id="file-0" accept="image/*"
+  style="display:none" onchange="handleUpload(0, this)">
+<input type="file" id="file-1" accept="image/*"
+  style="display:none" onchange="handleUpload(1, this)">
+<input type="file" id="file-2" accept="image/*"
+  style="display:none" onchange="handleUpload(2, this)">
+<input type="file" id="file-3" accept="image/*"
+  style="display:none" onchange="handleUpload(3, this)">
+ 
+<div id="upload-count-msg" style="text-align:center;
+  font-size:12px;color:var(--muted);font-weight:700;padding:6px 16px 0;">
+  0 photos uploaded
+</div>
  
       <div class="info-card" style="margin-top:8px;">
         <h4>🌶️ Crop Details</h4>
@@ -160,80 +320,121 @@
         </div>
       </div>
  
-      <button class="analyze-btn" onclick="switchScreen('result')">
-        🤖 Analyze with AI &nbsp;·&nbsp; విశ్లేషించు
-      </button>
+      <button class="analyze-btn" id="analyze-btn" 
+       onclick="analyzeImages()" 
+       style="opacity:0.4;cursor:not-allowed;">
+ 
     </div>
  
     <!-- RESULT SCREEN -->
-    <div class="screen" id="screen-result">
-      <div class="result-header">
-        <div style="font-size:36px;margin-bottom:8px;">🦠</div>
-        <div class="disease-name">Chilli Thrips Detected</div>
-        <div style="font-size:12px;font-family:'Tiro Telugu';margin-top:4px;opacity:0.9;">మిరప థ్రిప్స్ గుర్తించబడింది</div>
-        <div class="confidence-badge">95.3% Confidence · 3 images analysed</div>
-      </div>
+     <!-- RESULT SCREEN -->
+<div class="screen" id="screen-result">
  
-      <div class="severity-row">
-        <div class="severity-chip high">🔴 Severity<br>High</div>
-        <div class="severity-chip medium">⚡ Spread<br>Active</div>
-        <div class="severity-chip low">🕐 Treat<br>Within 48h</div>
-      </div>
- 
-      <div class="info-card" style="margin-top:12px;">
-        <h4>What Is This?</h4>
-        <p>Scirtothrips dorsalis (Chilli Thrips) — a tiny insect pest that feeds on tender leaves and flower buds. Causes leaf curl, silvering, and flower drop. Can reduce yield by 30–50% if untreated.</p>
-      </div>
- 
-      <div class="info-card">
-        <h4>Symptoms Found in Your Photos</h4>
-        <p>✅ Upward leaf curling &nbsp;&nbsp; ✅ Silver streaks on leaves<br>✅ Flower bud shedding &nbsp;&nbsp; ⚠️ Early stage fruit damage</p>
-      </div>
- 
-      <div class="section-title">💊 Recommended Pesticides</div>
-      <div class="pesticide-list">
-        <div class="pest-item" onclick="switchScreen('shop')">
-          <div class="pest-icon">🧴</div>
-          <div class="pest-info">
-            <div class="pest-name">Spinosad 45% SC</div>
-            <div class="pest-brand">Coragen · Rytu Shop</div>
-          </div>
-          <div class="pest-price">
-            <div class="price">₹320</div>
-            <div class="mrp">₹420</div>
-            <div class="discount">24% OFF</div>
-          </div>
-        </div>
-        <div class="pest-item" onclick="switchScreen('shop')">
-          <div class="pest-icon">🧪</div>
-          <div class="pest-info">
-            <div class="pest-name">Imidacloprid 17.8 SL</div>
-            <div class="pest-brand">Confidor · Rytu Shop</div>
-          </div>
-          <div class="pest-price">
-            <div class="price">₹185</div>
-            <div class="mrp">₹240</div>
-            <div class="discount">23% OFF</div>
-          </div>
-        </div>
-        <div class="pest-item" onclick="switchScreen('shop')">
-          <div class="pest-icon">🌿</div>
-          <div class="pest-info">
-            <div class="pest-name">Neem Oil 10000 PPM</div>
-            <div class="pest-brand">Organic · Rytu Shop</div>
-          </div>
-          <div class="pest-price">
-            <div class="price">₹95</div>
-            <div class="mrp">₹130</div>
-            <div class="discount">27% OFF</div>
-          </div>
-        </div>
-      </div>
- 
-      <button class="order-btn" onclick="switchScreen('shop')">
-        🛒 Order from Rytu Shop — Fast Delivery
-      </button>
+  <!-- LOADING STATE -->
+  <div id="result-loading" style="display:none;
+    flex-direction:column;align-items:center;
+    justify-content:center;padding:60px 20px;gap:16px;">
+    <div style="width:64px;height:64px;
+      border:5px solid var(--green-light);
+      border-top-color:var(--green);
+      border-radius:50%;
+      animation:spin 1s linear infinite;">
     </div>
+    <div style="font-size:15px;font-weight:800;
+      color:var(--green);">
+      Analyzing your photos...
+    </div>
+    <div style="font-size:12px;color:var(--muted);
+      text-align:center;">
+      AI is examining your chilli crop images
+    </div>
+  </div>
+ 
+  <!-- ERROR STATE -->
+  <div id="result-error" style="display:none;
+    padding:30px 20px;text-align:center;">
+    <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
+    <div style="font-size:15px;font-weight:800;
+      color:var(--red);">Analysis Failed</div>
+    <div id="error-msg" style="font-size:12px;
+      color:var(--muted);margin-top:6px;"></div>
+    <button onclick="switchScreen('detect')"
+      style="margin-top:20px;background:var(--green);
+      color:white;border:none;border-radius:12px;
+      padding:12px 24px;font-size:13px;font-weight:800;
+      cursor:pointer;font-family:'Nunito',sans-serif;">
+      ← Try Again
+    </button>
+  </div>
+ 
+  <!-- ACTUAL RESULT -->
+  <div id="result-content" style="display:none;">
+    <div id="result-header-div" class="result-header">
+      <div style="font-size:36px;margin-bottom:8px;"
+        id="r-emoji">🦠</div>
+      <div class="disease-name" id="r-disease">—</div>
+      <div style="font-size:12px;font-family:'Tiro Telugu';
+        margin-top:4px;opacity:0.9;" id="r-telugu">—</div>
+      <div class="confidence-badge" id="r-confidence">
+        Analysing...
+      </div>
+    </div>
+ 
+    <div class="severity-row">
+      <div class="severity-chip high" id="r-sev">
+        🔴 Severity<br>
+        <span id="r-sev-val">—</span>
+      </div>
+      <div class="severity-chip medium" id="r-spread">
+        ⚡ Spread<br>
+        <span id="r-spread-val">—</span>
+      </div>
+      <div class="severity-chip low" id="r-treat">
+        🕐 Treat<br>
+        <span id="r-treat-val">—</span>
+      </div>
+    </div>
+ 
+    <div class="info-card" style="margin-top:12px;">
+      <h4>What Is This?</h4>
+      <p id="r-what">—</p>
+    </div>
+ 
+    <div class="info-card">
+      <h4>Symptoms Found</h4>
+      <p id="r-symptoms">—</p>
+    </div>
+ 
+    <div class="section-title">💊 Recommended Pesticides</div>
+    <div class="pesticide-list" id="r-pesticides"></div>
+ 
+    <div class="info-card" style="margin-bottom:0;">
+      <h4>Prevention Tips</h4>
+      <p id="r-prevention">—</p>
+    </div>
+ 
+    <button class="order-btn"
+      onclick="switchScreen('shop')"
+      style="margin-top:12px;">
+      🛒 Order from Rytu Shop
+    </button>
+ 
+    <button onclick="switchScreen('detect')"
+      style="margin:8px 16px 16px;
+      background:transparent;color:var(--green);
+      border:1.5px solid var(--green);
+      border-radius:var(--radius);padding:12px;
+      font-size:13px;font-weight:800;
+      width:calc(100% - 32px);cursor:pointer;
+      font-family:'Nunito',sans-serif;">
+      🔄 Scan Again
+    </button>
+  </div>
+ 
+</div>
+ 
+           
+        
  
     <!-- SHOP SCREEN -->
     <div class="screen" id="screen-shop">
