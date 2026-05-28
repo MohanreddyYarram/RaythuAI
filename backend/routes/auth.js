@@ -34,7 +34,7 @@ router.post('/send-otp',async(req,res)=>{
             expiry: new Date(Date.now()+5*60*1000).toISOString()
         }])
         if(otpSaveError){
-            console.log('Error saving OTP: ',saveError.message)
+            console.log('Error saving OTP: ',otpSaveError.message)
         }
     console.log(`OTP for ${phone} : ${otp}`)
     try{
