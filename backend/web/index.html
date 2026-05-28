@@ -191,7 +191,8 @@
             <div class="app-logo">Rytu<span>AI</span></div>
             <div class="header-subtitle">నమస్కారం, రమేష్ గారు 🙏</div>
           </div>
-          <div class="avatar">👨‍🌾</div>
+          <div class="avatar" onclick ="logout()"
+          style="cursor: pointer;" title="Logout">👨‍🌾</div>
         </div>
         <div class="weather-strip">
           <div style="font-size:28px;">⛅</div>
@@ -329,7 +330,20 @@
     <!-- RESULT SCREEN -->
      <!-- RESULT SCREEN -->
 <div class="screen" id="screen-result">
+    <div style="padding:12px 16px;">
+  <button onclick="goBack()" style="
+    background:transparent;
+    border:none;
+    font-size:14px;
+    font-weight:700;
+    color:var(--green);
+    cursor:pointer;
+    font-family:'Nunito',sans-serif;">
+    ← Back
+  </button>
+</div>
  
+
   <!-- LOADING STATE -->
   <div id="result-loading" style="display:none;
     flex-direction:column;align-items:center;
@@ -438,6 +452,19 @@
  
     <!-- SHOP SCREEN -->
     <div class="screen" id="screen-shop">
+      <div style="padding:12px 16px;">
+  <button onclick="goBack()" style="
+    background:transparent;
+    border:none;
+    font-size:14px;
+    font-weight:700;
+    color:var(--green);
+    cursor:pointer;
+    font-family:'Nunito',sans-serif;">
+    ← Back
+  </button>
+</div>
+ 
       <div class="shop-hero">
         <h2>🏪 Rytu Shop</h2>
         <p>మీ తోటకు అవసరమైనవి — Direct prices, no middlemen</p>
@@ -515,6 +542,19 @@
  
     <!-- ROADMAP SCREEN -->
     <div class="screen" id="screen-roadmap">
+      <div style="padding:12px 16px;">
+  <button onclick="goBack()" style="
+    background:transparent;
+    border:none;
+    font-size:14px;
+    font-weight:700;
+    color:var(--green);
+    cursor:pointer;
+    font-family:'Nunito',sans-serif;">
+    ← Back
+  </button>
+</div>
+ 
       <div class="roadmap-hero">
         <h2>🗓️ Chilli Crop Roadmap</h2>
         <p>సీజన్ పూర్తి గైడ్ — Kharif 2025 · Guntur District</p>
@@ -577,6 +617,19 @@
     </div>
     <!-- TRACKER SCREEN -->
     <div class="screen" id="screen-tracker">
+      <div style="padding:12px 16px;">
+  <button onclick="goBack()" style="
+    background:transparent;
+    border:none;
+    font-size:14px;
+    font-weight:700;
+    color:var(--green);
+    cursor:pointer;
+    font-family:'Nunito',sans-serif;">
+    ← Back
+  </button>
+</div>
+ 
       <div class="tracker-hero">
         <h2>📋 My Farm Tracker</h2>
         <p>మీ పని రికార్డ్ — Track every activity on your farm</p>
