@@ -45,7 +45,7 @@ const detectLimiter = rateLimit({
 //Rate limiting for auth route
 const authLimiter = rateLimit({
     windowMs: 60 * 60 *1000,
-    max : 5,
+    max : 25,
     message:{
         message:' Too many otp requests,please try after 1 hour.'
     }
