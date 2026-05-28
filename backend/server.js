@@ -16,6 +16,7 @@ require('dotenv').config()
 
 //Creates express app
 const app = express()
+app.set('trust proxy',1)
 
 //Tells express to accept JSON data in request
 app.use(express.json())
