@@ -8,7 +8,7 @@ const axios = require('axios')
 const supabase = require('@supabase/supabase-js')
 
 //Store OTP temporarily in memeory
-const otpStore = {}
+//const otpStore = {}
 
 // POST/auth/send-otp
 // Farmer enters phone number receive otp
@@ -26,10 +26,16 @@ router.post('/send-otp',async(req,res)=>{
     const otp = Math.floor(100000+Math.random()*900000).toString()
 
         //Save OTP with phone number and expires in 5 minutes
-    otpStore[phone] = {
-            otp :otp,
-            expiry: Date.now()+5*60*1000
-    }
+    await supabase
+        .from('otp_store')
+        .upsert([{
+            phone:phone,
+            otp:otp,
+            expiry: new Date(Date.now()+5*60*1000).toISOString()
+        }])
+        if(saveError){
+            console.log('Error saving OTP: ',saveError.message)
+        }
     console.log(`OTP for ${phone} : ${otp}`)
     try{
         //Send OTP via Fast2SMS
@@ -56,8 +62,8 @@ router.post('/send-otp',async(req,res)=>{
         console.log("Error sending OTP:",err.message)
         res.status(200).json({
             message:'OTP Sent Sucessfully',
-            phone:phone,
-            dev_otp :otp
+            phone:phone
+    
         })
     }
 })
@@ -72,30 +78,37 @@ router.post('/verify-otp',async(req,res)=>{
                 message:'Phone and otp are required'
             })
         }
-         const stored =otpStore[phone]
-         
-        if(!stored){
+          // Get OTP from Supabase database
+            const { data: stored, error: fetchError } = await supabase
+             .from('otp_store')
+             .select('*')
+             .eq('phone', phone)
+             .single()
+ 
+       if (!stored || fetchError) {
+          return res.status(400).json({
+              message: 'OTP not found. Please request a new one'
+           })
+    }
+ 
+           // Check if OTP expired
+        if (new Date() > new Date(stored.expiry)) {
+          await supabase.from('otp_store').delete().eq('phone', phone)
+         return res.status(400).json({
+            message: 'OTP has expired. Please request a new one'
+        })
+    }
+ 
+            // Check if OTP matches
+           if (stored.otp !== otp) {
             return res.status(400).json({
-                message:"OTP not found.Please request a new one"
-            })
-        }
-        //Check if otp expires
-        if(Date.now()>stored.expiry){
-            delete otpStore[phone]
-            return res.status(400).json({
-                message:"OTP has expired . Please request new one"
-            })
-        }
-
-        //Check if otp matches
-        if(stored.opt !== otp){
-            return res.status(400).json({
-                message:'Invalid OTP. please try again'
-            })
-        }
-
-        //OTP correct delete it 
-        delete otpStore[phone]
+             message: 'Invalid OTP. Please try again'
+               })
+    }
+ 
+          // Delete OTP after successful verify
+        await supabase.from('otp_store').delete().eq('phone', phone)
+ 
 
         //Check if farmer exists in database
 
