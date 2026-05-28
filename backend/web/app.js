@@ -79,10 +79,16 @@ async function verifyOTP() {
         }
       }
       document.getElementById('login-screen').style.display = 'none'
-    } else {
+      } else if(data.isNewFarmer){
+      //New Farmer Registration
+      showRegistration()
+
+     } else  {
       document.getElementById('step-otp').style.display = 'block'
       showError(data.message || 'Invalid OTP')
+     
     }
+     
   } catch (err) {
     hideLoading()
     document.getElementById('step-otp').style.display = 'block'
@@ -98,9 +104,10 @@ function backToPhone() {
  
 // Check if already logged in
 window.onload = function() {
-  //const token = localStorage.getItem('rytuai_token')
-  //if (token) {
+  const token = localStorage.getItem('rytuai_token')
+  if (token) {
   document.getElementById('login-screen').style.display = 'none'
+  }
   
 }
  
@@ -310,6 +317,70 @@ function renderResult(r) {
           </div>
         </div>`
     })
+  }
+}
+ 
+// Farmer Registration
+function showRegistration() {
+  document.getElementById('step-otp').style.display = 'none'
+  document.getElementById('step-register').style.display = 'block'
+}
+ 
+async function registerFarmer() {
+  const name = document.getElementById('reg-name').value.trim()
+  const village = document.getElementById('reg-village').value.trim()
+  const district = document.getElementById('reg-district').value.trim()
+  const land_acres = document.getElementById('reg-acres').value
+  const crop_type = document.getElementById('reg-crop').value
+  const sowing_date = document.getElementById('reg-sowing').value
+ 
+  if (!name || !village || !district) {
+    showError('Please fill all required fields')
+    return
+  }
+ 
+  showLoading('Saving your profile...')
+ 
+  try {
+    const response = await fetch(`${API}/farmers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        phone: currentPhone,
+        village,
+        district,
+        land_acres: parseFloat(land_acres),
+        crop_type,
+        sowing_date
+      })
+    })
+ 
+    const data = await response.json()
+    hideLoading()
+ 
+    if (response.ok) {
+      // Save farmer details locally
+      localStorage.setItem('rytuai_farmer', JSON.stringify(data.farmer))
+ 
+      // Update home screen name
+      const nameEl = document.querySelector('.header-subtitle')
+      if (nameEl) {
+        nameEl.textContent = `నమస్కారం, ${data.farmer.name} గారు 🙏`
+      }
+ 
+      // Show home screen
+      document.getElementById('login-screen').style.display = 'none'
+ 
+    } else {
+      showError(data.message || 'Registration failed')
+      document.getElementById('step-register').style.display = 'block'
+    }
+ 
+  } catch (err) {
+    hideLoading()
+    document.getElementById('step-register').style.display = 'block'
+    showError('Cannot connect to server')
   }
 }
  

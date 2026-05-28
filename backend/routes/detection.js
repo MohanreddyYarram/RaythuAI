@@ -1,4 +1,5 @@
 
+const jwt = require('jsonwebtoken')
 const express = require('express')
 const router = express.Router()
 const multer = require('multer')
@@ -8,6 +9,21 @@ const upload = multer({ storage: multer.memoryStorage() })
  
 router.post('/', upload.array('photos', 4), async (req, res) => {
   console.log('=== DETECT ROUTE HIT ===')
+   //Check if the farmer is logged in
+   const authHeader = req.headers.authorization
+   if(!authHeader || !authHeader.startsWith('Bearer')){
+    return res.status(401).json({
+        message:'Please login to use disease detection'
+    })
+   }
+   const token = authHeader.split('')[1]
+   try{
+    jwt.verify(token,process.env.JWT_SECRET)
+   }catch(err){
+    return res.status(401).json({
+        message:'Session expired. Please login again'
+    })
+   }
   
   try {
     console.log('Files count:', req.files ? req.files.length : 0)

@@ -224,6 +224,9 @@ async function analyzeImages() {
     // Send to backend
     const response = await fetch(`${API}/detect`, {
       method: 'POST',
+      headers:{
+        'Authosization': `Bearer ${localStorage.getItem('rytuai_token')}`
+      },
       body: formData
     })
  

@@ -84,6 +84,19 @@ router.post('/',async(req,res)=>{
                 message : 'Please provide name ,phone, village and district'
             })
         }
+        //Validating phone  number
+        if(phone.length !==10 || isNaN(phone)){
+            return res.status(400).json({
+                message:'Please enter a valid 10-digit phone number'
+            })
+
+        }
+        //Validating name length
+        if(name.length<2 || name.length>100){
+            return res.status(400).json({
+                message:'Name must be in between 2 and 100 characters'
+            })
+        }
         // Checking farmer details with this phone number
         const {data:existing} = await supabase
             .from('farmers')

@@ -1,4 +1,4 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+
 const Anthropic = require('@anthropic-ai/sdk')
  
 //const Anthropic = require('@anthropic-ai/sdk')

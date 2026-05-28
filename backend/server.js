@@ -1,4 +1,7 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+
+//process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+const rateLimit = require('express-rate-limit')
+const helmet = require('helmet')
 //Main Entry point for backend
 
 //Import express (the framework that handles request)
@@ -24,6 +27,31 @@ app.use(cors({
     allowedHeaders:['Content-Type','Authorization']
 
 }))
+
+app.use(helmet({
+    contentSecurityPolicy:false
+}))
+
+//Detect limit for detect route
+const detectLimiter = rateLimit({
+    windowMs:15 * 60 *1000,
+    max : 10,
+    message:{
+        message:'Too many scan request. Please try after 15 minutes'
+    }
+})
+
+//Rate limiting for auth route
+const authLimiter = rateLimit({
+    windowMs: 60 * 60 *1000,
+    max : 5,
+    message:{
+        message:' Too many otp requests,please try after 1 hour.'
+    }
+})
+
+app.use('/detect',detectLimiter)
+app.use('/auth',authLimiter)
 
 
 app.use(express.static(path.join(__dirname,'web')))
