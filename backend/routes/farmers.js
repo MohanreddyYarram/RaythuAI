@@ -50,8 +50,8 @@ router.get('/:phone',async(req,res)=>{
          .eq('phone',phone)
          .single()
         if(error){
-            return res.status(400).json({
-                message:'Error fetching farmers',
+            return res.status(404).json({
+                message:'Farmer not found',
                 error : error.message
             })
         }
@@ -66,6 +66,65 @@ router.get('/:phone',async(req,res)=>{
             error:err.message
         })
 
+    }
+})
+
+//Post method to add new farmer
+
+router.post('/',async(req,res)=>{
+    try{
+
+        //Get farmer details
+        const {name,phone,village,district,land_acres,crop_type} = req.body
+
+        //Checking all the required fields are provided
+
+        if(!name || !phone || !village || !district ){
+            return res.status(400).json({
+                message : 'Please provide name ,phone, village and district'
+            })
+        }
+        // Checking farmer details with this phone number
+        const {data:existing} = await supabase
+            .from('farmers')
+            .select('*')
+            .eq('phone',phone)
+            .single()
+        if(existing){
+            return res.status(400).json({
+                message :'Farmer with this phone number already exists'
+            })
+        }
+
+        const{data,error}=await supabase
+            .from('farmers')
+            .insert([{
+                name,
+                phone,
+                village,
+                district,
+                land_acres,
+                crop_type
+            }])
+            .select()
+        if (error){
+            res.status(400).json({
+                message:'Error creating the farmer',
+                error:error.message
+            })
+        }
+        res.status(201).json({
+            message:'Farmer Created Sucessfully',
+            Farmer:data[0]
+
+        })
+
+
+    }catch(err){
+        res.status(500).json({
+            message:"Server Error",
+            error:err.message
+        })
     }
 })
 
