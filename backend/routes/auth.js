@@ -64,7 +64,7 @@ router.post('/send-otp',async(req,res)=>{
 
 //Farmer enters OTP
 
-router.post('/veify-otp',async(req,res)=>{
+router.post('/verify-otp',async(req,res)=>{
     try{
         const {phone,otp} = req.body
         if(!phone || !otp){
