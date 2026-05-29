@@ -331,6 +331,7 @@ function showRegistration() {
   document.getElementById('step-phone').style.display = 'none'
   document.getElementById('step-register').style.display = 'block'
   document.getElementById('login-loading').style.display ='none'
+  document.getElementById('login-screen').scrollTop = 0
 }
  
 async function registerFarmer() {
