@@ -34,7 +34,7 @@ router.post('/send-otp',async(req,res)=>{
     
 
         const{error:insertError} = await supabase
-            .from('opt_store')
+            .from('otp_store')
             .insert({
                 phone:phone,
                 otp:otp,
