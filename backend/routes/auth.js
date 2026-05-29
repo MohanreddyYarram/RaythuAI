@@ -14,7 +14,7 @@ const supabase = require('../services/supabase')
 // Farmer enters phone number receive otp
 router.post('/send-otp',async(req,res)=>{
     
-   try{     // Get phone number from request
+       // Get phone number from request
     const { phone } = req.body
 
     if(!phone){
@@ -78,14 +78,7 @@ router.post('/send-otp',async(req,res)=>{
             message:'OTP sent sucessfully',
             phone:phone
         })
-    }catch(err){
-        console.log("Error sending OTP:",err.message)
-        res.status(200).json({
-            message:'OTP Sent Sucessfully',
-            phone:phone
-    
-        })
-    }
+
 })
 
 //Farmer enters OTP
