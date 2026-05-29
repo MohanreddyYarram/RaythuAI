@@ -14,7 +14,7 @@ const supabase = require('../services/supabase')
 // Farmer enters phone number receive otp
 router.post('/send-otp',async(req,res)=>{
     
-        // Get phone number from request
+   try{     // Get phone number from request
     const { phone } = req.body
 
     if(!phone){
@@ -26,20 +26,39 @@ router.post('/send-otp',async(req,res)=>{
     const otp = Math.floor(100000+Math.random()*900000).toString()
 
         //Save OTP with phone number and expires in 5 minutes
-    const {error:otpSaveError} = await supabase
+    try{
+
+     await supabase
         .from('otp_store')
-        .upsert([{
-            phone:phone,
-            otp:otp,
-            expiry: new Date(Date.now()+5*60*1000).toISOString()
-        }])
-        if(otpSaveError){
-            console.log('Error saving OTP: ',otpSaveError.message)
+        .delete()
+        .eq('phone',phone)
+        await new PromiseRejectionEvent(r=> setTimeout(r,100))
+
+        const{error:insertError} = await supabase
+            .from('opt_store')
+            .insert({
+                phone:phone,
+                otp:otp,
+                expiry:new Date(
+                    Date.now() + 5*60*1000
+                ).toISOString()
+                
+            })
+        if(insertError){
+            console.log('OTP insert Error: ',insertError.message)
+
+        }else{
+            console.log(`OTP saved for ${phone} : ${otp}`)
         }
+    }catch(err){
+        console.log('OTP storage error: ',err.message)
+    }
     console.log(`OTP for ${phone} : ${otp}`)
+    // Send SMS
+    
     try{
         //Send OTP via Fast2SMS
-        const response = await axios({
+        await axios({
             method :'post',
             url:'https://www.fast2sms.com/dev/bulkV2',
             headers:{
@@ -48,12 +67,15 @@ router.post('/send-otp',async(req,res)=>{
             data:{
                 variables_values:otp,
                 route:'otp',
-                phone:phone
+                numbers:phone
             }
 
 
         })
-        console.log('Fast2SMS response: ',response)
+    }catch(smsErr){
+        console.log('SMS failed: ',smsErr.message)
+    }
+
         res.status(200).json({
             message:'OTP sent sucessfully',
             phone:phone
@@ -107,7 +129,10 @@ router.post('/verify-otp',async(req,res)=>{
     }
  
           // Delete OTP after successful verify
-        await supabase.from('otp_store').delete().eq('phone', phone)
+        await supabase
+         .from('otp_store')
+         .delete()
+         .eq('phone', phone)
  
 
         //Check if farmer exists in database

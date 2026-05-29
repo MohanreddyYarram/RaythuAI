@@ -402,5 +402,10 @@ function logout() {
 function goBack(){
   switchScreen('home')
 }
+
+function backToOTP(){
+  document.getElementById('step-register').style.display ='none'
+  document.getElementById('step-otp').style.display = 'block'
+}
  
  
