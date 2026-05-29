@@ -396,7 +396,8 @@ function logout() {
   localStorage.removeItem('rytuai_token')
   localStorage.removeItem('rytuai_phone')
   localStorage.removeItem('rytuai_farmer')
-  document.getElementById('login-screen').style.display = 'flex'
+  //document.getElementById('login-screen').style.display = 'flex'
+  location.reload()
 }
 
 function goBack(){
