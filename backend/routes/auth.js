@@ -13,8 +13,7 @@ const supabase = require('../services/supabase')
 // POST/auth/send-otp
 // Farmer enters phone number receive otp
 router.post('/send-otp',async(req,res)=>{
-    
-       // Get phone number from request
+ // Get phone number from request
     const { phone } = req.body
 
     if(!phone){
@@ -32,7 +31,7 @@ router.post('/send-otp',async(req,res)=>{
         .from('otp_store')
         .delete()
         .eq('phone',phone)
-        await new PromiseRejectionEvent(r=> setTimeout(r,100))
+    
 
         const{error:insertError} = await supabase
             .from('opt_store')
