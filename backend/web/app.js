@@ -447,19 +447,70 @@ function openEditProfile() {
       farmer.name || '—'
     document.getElementById('profile-phone').textContent =
       farmer.phone || '—'
+      //Fill Edit Fields
     document.getElementById('profile-village').textContent =
-      farmer.village || '—'
+      farmer.village || ''
     document.getElementById('profile-district').textContent =
-      farmer.district || '—'
+      farmer.district || ''
     document.getElementById('profile-acres').textContent =
-      farmer.land_acres ? `${farmer.land_acres} acres` : '—'
+      farmer.land_acres ? `${farmer.land_acres} acres` : ''
     document.getElementById('profile-crop').textContent =
-      farmer.crop_type || '—'
+      farmer.crop_type || ''
     document.getElementById('profile-sowing').textContent =
-      farmer.sowing_date || 'Not set'
+      farmer.sowing_date || ''
   }
  
   document.getElementById('profile-screen').style.display = 'block'
+}
+
+async function saveProfile(){
+  const farmerData = localStorage.getItem('rytuai_farmer')
+  if(!farmerData) return
+
+  const farmer = JSON.parse(farmerData)
+
+  const updatedFarmer = {
+    name:document.getElementById('edit-name').value.trim(),
+    village:document.getElementById('edit-village').value.trim(),
+    district:document.getElementById('edit-district').value.trim(),
+    land_acres:document.getElementById('edit-acres').value,
+    crop_type:document.getElementById('edit-crop').value,
+    sowing_date:document.getElementById('edit-swoing').value
+  }
+  if(!updatedFarmer.name || !updatedFarmer.village){
+    alert('Please fill name and village')
+    return
+  }
+  try{
+    const response = await fetch(`${API}/farmers/${farmer.phone}`,{
+      method:'PUT',
+      headers:{
+        'Content-Type' : 'application/json',
+        'Authorization':`Bearer ${localStorage.getItem('rytuai_token')}`
+      },
+      body:JSON.stringify(updatedFarmer)
+    })
+    const data = await response.json()
+
+    if (response.ok){
+      //Updating localStorage
+      const updated = {...farmer, ...updatedFarmer}
+      localStorage.setItem('rytuai_farmer', JSON.stringify(updated))
+
+      //Update Home Screen Name
+      const nameEl = document.querySelector('.header-subtitle')
+      if (nameEl){
+        nameEl.textContent =
+        `నమస్కారం, ${updatedFarmer.name} గారు 🙏`
+      }
+      alert('Profile updated successfully!')
+      closeProfile()
+    }else{
+      alert(data.message || 'Update failed')
+    }
+  }catch(err){
+    alert ('Cannot connect to server')
+  }
 }
  
 function closeProfile() {

@@ -141,4 +141,39 @@ router.post('/',async(req,res)=>{
     }
 })
 
+//PUT/Method
+router.put('/:phone',async(req,res)=>{
+    try{
+        const {phone} = req.params
+        const{
+            name,village,district,
+            land_acres,crop_type,sowing_date
+        } = req.body
+
+        const {data,error} = await supabase
+            .from('farmers')
+            .update({
+                name,village,district,
+                land_acres,crop_type,sowing_date
+            })
+            .eq('phone',phone)
+            .select()
+        if(error){
+            return res.status(400).json({
+                message:'Error updating farmer',
+                error:error.message
+            })
+        }
+        res.status(200).json({
+            message:'Profile updated successfully',
+            farmer:data[0]
+        })
+    }catch(err){
+        res.status(500).json({
+            message:'Server error',
+            error:err.message
+        })
+    }
+})
+
 module.exports = router
