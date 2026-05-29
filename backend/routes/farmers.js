@@ -143,12 +143,14 @@ router.post('/',async(req,res)=>{
 
 //PUT/Method
 router.put('/:phone',async(req,res)=>{
-    try{
-        const {phone} = req.params
+     const {phone} = req.params
         const{
             name,village,district,
             land_acres,crop_type,sowing_date
         } = req.body
+    try{
+        console.log('Updating farmer: ',phone,{name,village} )
+       
 
         const {data,error} = await supabase
             .from('farmers')
