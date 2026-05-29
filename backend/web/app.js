@@ -70,24 +70,29 @@ async function verifyOTP() {
     const data = await response.json()
     hideLoading()
     if (response.ok) {
-      localStorage.setItem('rytuai_token', data.token)
-      localStorage.setItem('rytuai_phone', currentPhone)
-      if (data.farmer) {
-        const nameEl = document.querySelector('.header-subtitle')
-        if (nameEl) {
-          nameEl.textContent = `నమస్కారం, ${data.farmer.name} గారు 🙏`
-        }
-      }
-      document.getElementById('login-screen').style.display = 'none'
-      } else if(data.isNewFarmer){
-      //New Farmer Registration
-      showRegistration()
-
-     } else  {
-      document.getElementById('step-otp').style.display = 'block'
-      showError(data.message || 'Invalid OTP')
-     
+  // Save token always
+  localStorage.setItem('rytuai_token', data.token)
+  localStorage.setItem('rytuai_phone', currentPhone)
+ 
+  if (data.farmer) {
+    // Existing farmer — update name and go home
+    localStorage.setItem('rytuai_farmer',
+      JSON.stringify(data.farmer))
+ 
+    const nameEl = document.querySelector('.header-subtitle')
+    if (nameEl) {
+      nameEl.textContent =
+        `నమస్కారం, ${data.farmer.name} గారు 🙏`
     }
+ 
+    document.getElementById('login-screen').style.display = 'none'
+    switchScreen('home')
+ 
+  } else {
+    // New farmer — show registration form
+    showRegistration()
+  }
+ }
      
   } catch (err) {
     hideLoading()
@@ -323,7 +328,9 @@ function renderResult(r) {
 // Farmer Registration
 function showRegistration() {
   document.getElementById('step-otp').style.display = 'none'
+  document.getElementById('step-phone').style.display = 'none'
   document.getElementById('step-register').style.display = 'block'
+  document.getElementById('login-loading').style.display ='none'
 }
  
 async function registerFarmer() {
