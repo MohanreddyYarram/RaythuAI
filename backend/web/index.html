@@ -137,6 +137,85 @@
       ← Change Number
     </button>
   </div>
+  <!-- REGISTRATION SCREEN -->
+<div id="step-register" style="
+  width:100%;
+  max-width:320px;
+  display:none;">
+ 
+  <div style="font-size:13px;
+    color:rgba(255,255,255,0.8);
+    margin-bottom:16px;
+    font-family:'Nunito',sans-serif;
+    font-weight:700;text-align:center;">
+    👨‍🌾 Complete Your Profile
+  </div>
+ 
+  <input type="text" id="reg-name"
+    placeholder="Full Name — మీ పేరు"
+    style="width:100%;padding:14px;
+    border-radius:12px;border:none;
+    font-size:14px;
+    font-family:'Nunito',sans-serif;
+    margin-bottom:10px;outline:none;">
+ 
+  <input type="text" id="reg-village"
+    placeholder="Village — మీ గ్రామం"
+    style="width:100%;padding:14px;
+    border-radius:12px;border:none;
+    font-size:14px;
+    font-family:'Nunito',sans-serif;
+    margin-bottom:10px;outline:none;">
+ 
+  <input type="text" id="reg-district"
+    placeholder="District — జిల్లా"
+    style="width:100%;padding:14px;
+    border-radius:12px;border:none;
+    font-size:14px;
+    font-family:'Nunito',sans-serif;
+    margin-bottom:10px;outline:none;">
+ 
+  <input type="number" id="reg-acres"
+    placeholder="Land in Acres — ఎకరాలు"
+    style="width:100%;padding:14px;
+    border-radius:12px;border:none;
+    font-size:14px;
+    font-family:'Nunito',sans-serif;
+    margin-bottom:10px;outline:none;">
+ 
+  <select id="reg-crop"
+    style="width:100%;padding:14px;
+    border-radius:12px;border:none;
+    font-size:14px;
+    font-family:'Nunito',sans-serif;
+    margin-bottom:10px;outline:none;
+    background:white;">
+    <option value="">Select Crop — పంట</option>
+    <option value="Chilli">🌶️ Chilli — మిరప</option>
+    <option value="Paddy">🌾 Paddy — వరి</option>
+    <option value="Cotton">🌿 Cotton — పత్తి</option>
+    <option value="Groundnut">🥜 Groundnut — వేరుశెనగ</option>
+    <option value="Maize">🌽 Maize — మొక్కజొన్న</option>
+  </select>
+ 
+  <input type="date" id="reg-sowing"
+    style="width:100%;padding:14px;
+    border-radius:12px;border:none;
+    font-size:14px;
+    font-family:'Nunito',sans-serif;
+    margin-bottom:16px;outline:none;">
+ 
+  <button onclick="registerFarmer()" style="
+    width:100%;padding:16px;
+    background:#f5a623;color:#3d2000;
+    border:none;border-radius:14px;
+    font-size:15px;font-weight:800;
+    font-family:'Nunito',sans-serif;
+    cursor:pointer;margin-bottom:10px;">
+    ✅ Save and Continue
+  </button>
+ 
+</div>
  
   <!-- Loading -->
   <div id="login-loading" style="display:none; text-align:center; color:white; font-family:'Nunito',sans-serif;">

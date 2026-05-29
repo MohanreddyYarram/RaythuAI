@@ -92,7 +92,7 @@ async function verifyOTP() {
     // New farmer — show registration form
     showRegistration()
   }
- }
+ }a
      
   } catch (err) {
     hideLoading()
