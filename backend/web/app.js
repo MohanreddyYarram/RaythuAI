@@ -373,6 +373,7 @@ async function registerFarmer() {
  
     if (response.ok) {
       // Save farmer details locally
+      document.getElementById('login-error').style.display = 'none'
       localStorage.setItem('rytuai_farmer', JSON.stringify(data.farmer))
  
       // Update home screen name
@@ -405,14 +406,86 @@ function logout() {
   //document.getElementById('login-screen').style.display = 'flex'
   location.reload()
 }
-
+//Back screen
 function goBack(){
   switchScreen('home')
 }
-
+//Back to otp screen from registration from
 function backToOTP(){
   document.getElementById('step-register').style.display ='none'
   document.getElementById('step-otp').style.display = 'block'
 }
+
+// ── PROFILE MENU ──
+function toggleProfileMenu() {
+  const menu = document.getElementById('profile-menu')
+  if (menu.style.display === 'none' || menu.style.display === '') {
+    const farmerData = localStorage.getItem('rytuai_farmer')
+    if (farmerData) {
+      const farmer = JSON.parse(farmerData)
+      document.getElementById('menu-farmer-name').textContent =
+        farmer.name || 'Farmer'
+      document.getElementById('menu-farmer-phone').textContent =
+        farmer.phone || ''
+      document.getElementById('menu-farmer-details').textContent =
+        `${farmer.crop_type || 'Crop'} · ${farmer.village || 'Village'}`
+    }
+    menu.style.display = 'block'
+  } else {
+    menu.style.display = 'none'
+  }
+}
+ 
+function openEditProfile() {
+  document.getElementById('profile-menu').style.display = 'none'
+  
+  // Load farmer data into profile screen
+  const farmerData = localStorage.getItem('rytuai_farmer')
+  if (farmerData) {
+    const farmer = JSON.parse(farmerData)
+    document.getElementById('profile-name').textContent =
+      farmer.name || '—'
+    document.getElementById('profile-phone').textContent =
+      farmer.phone || '—'
+    document.getElementById('profile-village').textContent =
+      farmer.village || '—'
+    document.getElementById('profile-district').textContent =
+      farmer.district || '—'
+    document.getElementById('profile-acres').textContent =
+      farmer.land_acres ? `${farmer.land_acres} acres` : '—'
+    document.getElementById('profile-crop').textContent =
+      farmer.crop_type || '—'
+    document.getElementById('profile-sowing').textContent =
+      farmer.sowing_date || 'Not set'
+  }
+ 
+  document.getElementById('profile-screen').style.display = 'block'
+}
+ 
+function closeProfile() {
+  document.getElementById('profile-screen').style.display = 'none'
+}
+ 
+function openSettings() {
+  document.getElementById('profile-menu').style.display = 'none'
+  alert('Settings coming soon!')
+}
+ 
+function openOrders() {
+  document.getElementById('profile-menu').style.display = 'none'
+  switchScreen('shop')
+}
+ 
+// Close menu when tapping outside
+window.addEventListener('click', function(e) {
+  const menu = document.getElementById('profile-menu')
+  if (menu && menu.style.display === 'block') {
+    if (e.target === menu) {
+      menu.style.display = 'none'
+    }
+  }
+})
+ 
+
  
  

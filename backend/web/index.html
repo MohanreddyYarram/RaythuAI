@@ -290,21 +290,201 @@
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:8px;">
-    <div class="avatar">👨‍🌾</div>
-   <button onclick="localStorage.clear();window.location.replace('/');"style="
-  background:rgba(255,255,255,0.15);
-  border:none;
-  border-radius:8px;
-  padding:6px 12px;
-  color:white;
-  font-size:11px;
-  font-weight:700;
-  cursor:pointer;
-  font-family:'Nunito',sans-serif;
-  position:relative;
-  z-index:999;">
-  🚪 Logout
-</button>
+    <div class="avatar" onclick="toggleProfileMenu()"
+    style="cursor: pointer;position: relative;z-index:999;">
+    👨‍🌾
+   </div>
+   <!-- PROFILE DROPDOWN MENU -->
+<div id="profile-menu" style="
+  display:none;
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.5);
+  z-index:9998;">
+ 
+  <div style="
+    position:absolute;
+    top:70px;right:16px;
+    background:white;
+    border-radius:16px;
+    padding:8px;
+    min-width:240px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+ 
+    <!-- Farmer Info -->
+    <div style="padding:12px 16px;
+      border-bottom:1px solid #f0f0f0;
+      margin-bottom:8px;">
+      <div id="menu-farmer-name" 
+        style="font-size:15px;font-weight:800;
+        color:#1a2e1e;">
+        Farmer Name
+      </div>
+      <div id="menu-farmer-phone" 
+        style="font-size:12px;color:#888;margin-top:2px;">
+        Phone
+      </div>
+      <div id="menu-farmer-details" 
+        style="font-size:11px;color:#4a7c5f;
+        margin-top:4px;font-weight:600;">
+        Crop · Village
+      </div>
+    </div>
+ 
+    <!-- Edit Profile -->
+    <div onclick="openEditProfile()" style="
+      display:flex;align-items:center;gap:12px;
+      padding:12px 16px;border-radius:10px;
+      cursor:pointer;font-size:14px;font-weight:700;
+      color:#1a2e1e;">
+      ✏️ Edit Profile
+    </div>
+ 
+    <!-- Settings -->
+    <div onclick="openSettings()" style="
+      display:flex;align-items:center;gap:12px;
+      padding:12px 16px;border-radius:10px;
+      cursor:pointer;font-size:14px;font-weight:700;
+      color:#1a2e1e;">
+      ⚙️ Settings
+    </div>
+ 
+    <!-- Orders -->
+    <div onclick="openOrders()" style="
+      display:flex;align-items:center;gap:12px;
+      padding:12px 16px;border-radius:10px;
+      cursor:pointer;font-size:14px;font-weight:700;
+      color:#1a2e1e;">
+      📦 My Orders
+    </div>
+ 
+    <div style="height:1px;background:#f0f0f0;
+      margin:8px 0;">
+    </div>
+ 
+    <!-- Logout -->
+    <div onclick="localStorage.clear();
+      window.location.replace('/');" style="
+      display:flex;align-items:center;gap:12px;
+      padding:12px 16px;border-radius:10px;
+      cursor:pointer;font-size:14px;font-weight:700;
+      color:#e74c3c;">
+      🚪 Logout
+    </div>
+ 
+  </div>
+</div>
+ 
+<!-- PROFILE / EDIT SCREEN -->
+<div id="profile-screen" style="
+  display:none;
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  background:white;
+  z-index:9997;
+  overflow-y:auto;">
+ 
+  <div style="background:linear-gradient(135deg,#1a4a2e,#2d7a4f);
+    padding:20px 16px 24px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button onclick="closeProfile()" style="
+        background:rgba(255,255,255,0.2);
+        border:none;border-radius:8px;
+        padding:8px 12px;color:white;
+        font-size:13px;cursor:pointer;">
+        ← Back
+      </button>
+      <div style="font-size:18px;font-weight:800;
+        color:white;">
+        My Profile
+      </div>
+    </div>
+  </div>
+ 
+  <div style="padding:20px 16px;">
+ 
+    <!-- Profile Info -->
+    <div style="background:#f8f8f8;border-radius:16px;
+      padding:20px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;
+        gap:16px;margin-bottom:16px;">
+        <div style="width:64px;height:64px;
+          background:#e8f0eb;border-radius:50%;
+          display:flex;align-items:center;
+          justify-content:center;font-size:32px;">
+          👨‍🌾
+        </div>
+        <div>
+          <div id="profile-name" style="font-size:18px;
+            font-weight:800;color:#1a2e1e;">—</div>
+          <div id="profile-phone" style="font-size:13px;
+            color:#888;margin-top:2px;">—</div>
+        </div>
+      </div>
+ 
+      <div style="display:grid;
+        grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="background:white;border-radius:12px;
+          padding:12px;">
+          <div style="font-size:10px;color:#888;
+            font-weight:700;text-transform:uppercase;
+            margin-bottom:4px;">Village</div>
+          <div id="profile-village" style="font-size:14px;
+            font-weight:700;color:#1a2e1e;">—</div>
+        </div>
+        <div style="background:white;border-radius:12px;
+          padding:12px;">
+          <div style="font-size:10px;color:#888;
+            font-weight:700;text-transform:uppercase;
+            margin-bottom:4px;">District</div>
+          <div id="profile-district" style="font-size:14px;
+            font-weight:700;color:#1a2e1e;">—</div>
+        </div>
+        <div style="background:white;border-radius:12px;
+          padding:12px;">
+          <div style="font-size:10px;color:#888;
+            font-weight:700;text-transform:uppercase;
+            margin-bottom:4px;">Land</div>
+          <div id="profile-acres" style="font-size:14px;
+            font-weight:700;color:#1a2e1e;">—</div>
+        </div>
+        <div style="background:white;border-radius:12px;
+          padding:12px;">
+          <div style="font-size:10px;color:#888;
+            font-weight:700;text-transform:uppercase;
+            margin-bottom:4px;">Crop</div>
+          <div id="profile-crop" style="font-size:14px;
+            font-weight:700;color:#1a2e1e;">—</div>
+        </div>
+      </div>
+    </div>
+ 
+    <!-- Sowing Date -->
+    <div style="background:#f8f8f8;border-radius:16px;
+      padding:16px;margin-bottom:16px;">
+      <div style="font-size:12px;color:#888;font-weight:700;
+        text-transform:uppercase;margin-bottom:8px;">
+        🌱 Sowing Date
+      </div>
+      <div id="profile-sowing" style="font-size:16px;
+        font-weight:700;color:#1a6e35;">—</div>
+    </div>
+ 
+    <!-- Logout -->
+    <button onclick="localStorage.clear();
+      window.location.replace('/');"
+      style="width:100%;padding:16px;
+      background:#e74c3c;color:white;
+      border:none;border-radius:14px;
+      font-size:15px;font-weight:800;
+      font-family:'Nunito',sans-serif;
+      cursor:pointer;">
+      🚪 Logout
+    </button>
+ 
+  </div>
+</div>
+ 
   </div>
 </div>
         <div class="weather-strip">
