@@ -438,6 +438,7 @@ function toggleProfileMenu() {
  
 function openEditProfile() {
   document.getElementById('profile-menu').style.display = 'none'
+  document.getElementById('profile-screen').style.display ='block'
   
   // Load farmer data into profile screen
   const farmerData = localStorage.getItem('rytuai_farmer')
