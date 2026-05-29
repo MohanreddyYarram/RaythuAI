@@ -155,11 +155,15 @@ router.put('/:phone',async(req,res)=>{
         const {data,error} = await supabase
             .from('farmers')
             .update({
-                name,village,district,
-                land_acres,crop_type,sowing_date
-            })
-            .eq('phone',phone)
-            .select()
+                name,
+                village,
+                district,
+                land_acres,
+                crop_type,
+                sowing_date: sowing_date || null
+    })
+    .eq('phone',phone)
+    .select()
         if(error){
             return res.status(400).json({
                 message:'Error updating farmer',
