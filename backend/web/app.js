@@ -1,5 +1,5 @@
 // -- Global State---
-const API = ""
+const API = ''
 const uploadedImages = { 0: null, 1: null, 2: null, 3: null }
 const labels = ['Leaf', 'Stem', 'Whole Plant', 'Extra']
 // ── LOGIN SYSTEM ──
@@ -352,7 +352,10 @@ async function registerFarmer() {
   try {
     const response = await fetch(`${API}/farmers`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization':`Bearer ${localStorage.getItem('rytuai_token')}`
+       },
       body: JSON.stringify({
         name,
         phone: currentPhone,
@@ -379,6 +382,7 @@ async function registerFarmer() {
  
       // Show home screen
       document.getElementById('login-screen').style.display = 'none'
+      switchScreen('home')
  
     } else {
       showError(data.message || 'Registration failed')
