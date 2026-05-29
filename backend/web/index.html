@@ -2,562 +2,776 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rytu — Smart Farming App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>RytuAI — Smart Farming App</title>
 <link href="https://fonts.googleapis.com/css2?family=Tiro+Telugu&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<style>
+/* ── RESET & BASE ── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Nunito',sans-serif;background:#f0ebe0;}
+
+/* ── APP SHELL ── */
+.app-shell{
+  display:flex;
+  height:100vh;
+  max-width:1200px;
+  margin:0 auto;
+}
+
+/* ── SIDEBAR (desktop only) ── */
+.sidebar{
+  width:260px;
+  background:#fff;
+  border-right:1.5px solid #e8e0d0;
+  display:flex;
+  flex-direction:column;
+  padding:24px 0;
+  flex-shrink:0;
+}
+.sidebar-logo{
+  padding:0 20px 24px;
+  border-bottom:1.5px solid #f0ebe0;
+  margin-bottom:16px;
+}
+.sidebar-logo h1{font-size:26px;font-weight:900;color:#1a2e1e;}
+.sidebar-logo h1 span{color:#f5a623;}
+.sidebar-logo p{font-size:11px;color:#888;margin-top:4px;}
+.sidebar-nav{flex:1;padding:0 12px;}
+.s-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;border-radius:12px;
+  cursor:pointer;font-size:14px;font-weight:700;
+  color:#555;margin-bottom:4px;
+  transition:all 0.15s;
+}
+.s-item:hover{background:#f5f0e8;color:#1a2e1e;}
+.s-item.active{background:#1a6e35;color:#fff;}
+.s-item .s-icon{font-size:18px;width:24px;text-align:center;}
+.sidebar-season{
+  margin:16px 12px 0;
+  background:#e8f0eb;border-radius:12px;
+  padding:14px;border:1.5px solid #c8ddc8;
+}
+.sidebar-season .ss-label{font-size:11px;font-weight:800;color:#1a6e35;}
+.sidebar-season .ss-val{font-size:10px;color:#666;margin-top:3px;}
+
+/* ── MAIN CONTENT ── */
+.main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  background:#fff;
+  position:relative;
+}
+
+/* ── SCREENS ── */
+.screen{
+  display:none;
+  flex-direction:column;
+  height:100%;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.screen.active{display:flex;}
+
+/* ── APP HEADER ── */
+.app-header{
+  background:linear-gradient(135deg,#1a4a2e 0%,#2d7a4f 100%);
+  padding:16px 16px 20px;
+  color:white;
+  flex-shrink:0;
+  position:relative;
+  overflow:hidden;
+}
+.app-header::before{
+  content:'';position:absolute;
+  top:-30px;right:-30px;
+  width:140px;height:140px;
+  background:rgba(255,255,255,0.07);
+  border-radius:50%;pointer-events:none;
+}
+.app-header::after{
+  content:'';position:absolute;
+  bottom:-40px;right:40px;
+  width:100px;height:100px;
+  background:rgba(255,255,255,0.05);
+  border-radius:50%;pointer-events:none;
+}
+.header-row{
+  display:flex;align-items:center;
+  justify-content:space-between;
+  position:relative;z-index:1;
+}
+.app-logo{font-size:20px;font-weight:900;}
+.app-logo span{color:#f5a623;}
+.header-subtitle{font-size:12px;opacity:0.8;margin-top:2px;}
+.avatar{
+  width:38px;height:38px;
+  background:rgba(255,255,255,0.2);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;cursor:pointer;
+  border:2px solid rgba(255,255,255,0.3);
+  position:relative;z-index:10;
+  flex-shrink:0;
+}
+
+/* ── WEATHER STRIP ── */
+.weather-strip{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,0.12);
+  border-radius:10px;padding:10px 12px;
+  margin-top:12px;position:relative;z-index:1;
+}
+.weather-strip .temp{font-size:20px;font-weight:900;}
+.weather-strip .desc{font-size:11px;opacity:0.85;margin-top:2px;}
+.weather-strip .location{font-size:10px;opacity:0.65;margin-top:1px;}
+
+/* ── SECTION TITLE ── */
+.section-title{
+  font-size:12px;font-weight:800;
+  color:#555;text-transform:uppercase;
+  letter-spacing:1px;
+  padding:16px 16px 8px;
+}
+
+/* ── QUICK ACTIONS ── */
+.quick-actions{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:10px;padding:0 16px;
+}
+.quick-card{
+  background:#f8f5f0;border-radius:14px;
+  padding:14px;cursor:pointer;
+  border:1.5px solid #e8e0d0;
+  transition:transform 0.15s;
+}
+.quick-card:active{transform:scale(0.97);}
+.quick-card.primary{background:#1a6e35;border-color:#1a6e35;color:white;}
+.qc-icon{font-size:24px;margin-bottom:6px;}
+.qc-title{font-size:13px;font-weight:800;}
+.qc-desc{font-size:10px;opacity:0.7;margin-top:2px;}
+
+/* ── ALERT BANNER ── */
+.alert-banner{
+  margin:0 16px;
+  background:#fff8e1;border:1.5px solid #ffd54f;
+  border-radius:12px;padding:12px 14px;
+  display:flex;align-items:flex-start;gap:10px;
+}
+.alert-text{font-size:13px;font-weight:800;color:#333;}
+.alert-sub{font-size:11px;color:#666;margin-top:3px;}
+
+/* ── CROP STATUS ── */
+.crop-status{
+  margin:0 16px 16px;
+  background:#f0f7f0;border-radius:12px;
+  padding:14px;border:1.5px solid #c8ddc8;
+}
+.crop-status-row{display:flex;justify-content:space-between;align-items:center;}
+.crop-name{font-size:14px;font-weight:800;color:#1a2e1e;}
+.crop-stage{font-size:11px;font-weight:700;color:#1a6e35;
+  background:#d4edda;padding:3px 8px;border-radius:20px;}
+.progress-bar-wrap{margin-top:10px;}
+.progress-label{font-size:10px;color:#666;margin-bottom:4px;}
+.progress-bar{background:#e0e0e0;border-radius:99px;height:6px;}
+.progress-fill{background:linear-gradient(90deg,#1a6e35,#4caf50);
+  height:100%;border-radius:99px;transition:width 0.5s;}
+
+/* ── DETECT SCREEN ── */
+.detect-hero{
+  background:linear-gradient(135deg,#1a4a2e,#2d7a4f);
+  padding:20px 16px;color:white;flex-shrink:0;
+}
+.detect-hero h2{font-size:18px;font-weight:900;}
+.detect-hero p{font-size:11px;opacity:0.8;margin-top:4px;}
+.tip-box{
+  background:#e8f5e9;border-left:4px solid #1a6e35;
+  border-radius:0 10px 10px 0;
+  padding:10px 12px;margin:12px 16px 0;
+  font-size:11px;color:#333;line-height:1.5;
+}
+.upload-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:10px;padding:0 16px;
+}
+.upload-slot{
+  aspect-ratio:1;background:#f8f5f0;
+  border:2px dashed #c8b89a;border-radius:14px;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  cursor:pointer;position:relative;overflow:hidden;
+  transition:border-color 0.2s;
+}
+.upload-slot:active{border-color:#1a6e35;}
+.upload-slot.filled{border-style:solid;border-color:#1a6e35;}
+.slot-icon{font-size:28px;margin-bottom:6px;}
+.slot-label{font-size:10px;font-weight:700;color:#888;}
+.check{
+  position:absolute;top:6px;right:6px;
+  background:#1a6e35;color:white;
+  border-radius:50%;width:20px;height:20px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;
+}
+.analyze-btn{
+  margin:14px 16px;width:calc(100% - 32px);
+  padding:16px;background:#1a6e35;color:white;
+  border:none;border-radius:14px;
+  font-size:15px;font-weight:800;
+  font-family:'Nunito',sans-serif;cursor:pointer;
+  transition:opacity 0.2s;
+}
+
+/* ── RESULT SCREEN ── */
+.result-header{
+  background:linear-gradient(135deg,#c0392b,#e74c3c);
+  padding:20px 16px;color:white;text-align:center;flex-shrink:0;
+}
+.result-header.healthy{background:linear-gradient(135deg,#1a6e35,#27ae60);}
+.disease-name{font-size:20px;font-weight:900;margin-bottom:4px;}
+.confidence-badge{
+  display:inline-block;
+  background:rgba(255,255,255,0.2);
+  border-radius:20px;padding:4px 12px;
+  font-size:11px;font-weight:700;margin-top:8px;
+}
+.severity-row{
+  display:flex;gap:8px;padding:12px 16px;flex-shrink:0;
+}
+.severity-chip{
+  flex:1;background:#f8f5f0;border-radius:10px;
+  padding:10px;text-align:center;
+  font-size:10px;font-weight:700;color:#555;
+  border:1.5px solid #e8e0d0;line-height:1.4;
+}
+.info-card{
+  margin:0 16px 12px;background:#f8f5f0;
+  border-radius:14px;padding:14px;
+  border:1.5px solid #e8e0d0;
+}
+.info-card h4{font-size:12px;font-weight:800;
+  color:#1a6e35;margin-bottom:6px;text-transform:uppercase;}
+.info-card p{font-size:13px;color:#444;line-height:1.6;}
+.pesticide-list{padding:0 16px;}
+.pest-item{
+  display:flex;align-items:center;gap:10px;
+  background:#f8f5f0;border-radius:12px;
+  padding:12px;margin-bottom:8px;
+  border:1.5px solid #e8e0d0;cursor:pointer;
+}
+.pest-icon{font-size:24px;flex-shrink:0;}
+.pest-info{flex:1;}
+.pest-name{font-size:13px;font-weight:800;color:#1a2e1e;}
+.pest-brand{font-size:11px;color:#888;margin-top:2px;}
+.pest-price{text-align:right;flex-shrink:0;}
+.price{font-size:15px;font-weight:900;color:#1a6e35;}
+.mrp{font-size:11px;color:#aaa;text-decoration:line-through;}
+.discount{font-size:10px;font-weight:800;color:#e74c3c;}
+.order-btn{
+  margin:12px 16px;width:calc(100% - 32px);
+  padding:16px;background:#f5a623;color:#3d2000;
+  border:none;border-radius:14px;
+  font-size:15px;font-weight:800;
+  font-family:'Nunito',sans-serif;cursor:pointer;
+}
+
+/* ── SHOP SCREEN ── */
+.shop-hero{
+  background:linear-gradient(135deg,#1a4a2e,#2d7a4f);
+  padding:20px 16px;color:white;flex-shrink:0;
+}
+.shop-hero h2{font-size:18px;font-weight:900;}
+.shop-hero p{font-size:11px;opacity:0.8;margin-top:4px;}
+.search-bar{
+  margin:12px 16px;background:#f8f5f0;
+  border-radius:12px;padding:12px 16px;
+  font-size:13px;color:#999;
+  border:1.5px solid #e8e0d0;cursor:pointer;
+}
+.category-scroll{
+  display:flex;gap:8px;padding:0 16px;
+  overflow-x:auto;scrollbar-width:none;
+}
+.category-scroll::-webkit-scrollbar{display:none;}
+.cat-chip{
+  flex-shrink:0;padding:6px 14px;
+  border-radius:20px;font-size:12px;font-weight:700;
+  background:#f8f5f0;border:1.5px solid #e8e0d0;
+  cursor:pointer;color:#555;
+}
+.cat-chip.active{background:#1a6e35;border-color:#1a6e35;color:white;}
+.product-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:10px;padding:0 16px;
+}
+.product-card{
+  background:#f8f5f0;border-radius:14px;
+  padding:12px;border:1.5px solid #e8e0d0;
+}
+.p-icon{font-size:28px;margin-bottom:6px;}
+.p-name{font-size:12px;font-weight:800;color:#1a2e1e;}
+.p-brand{font-size:10px;color:#888;margin-top:2px;}
+.p-price-row{display:flex;align-items:center;gap:6px;margin-top:6px;}
+.p-price{font-size:15px;font-weight:900;color:#1a6e35;}
+.p-mrp{font-size:11px;color:#aaa;text-decoration:line-through;}
+.p-badge{
+  font-size:9px;font-weight:800;color:#e74c3c;
+  background:#ffeaea;border-radius:4px;
+  padding:2px 6px;margin-top:4px;display:inline-block;
+}
+.add-btn{
+  width:100%;margin-top:8px;padding:8px;
+  background:#1a6e35;color:white;border:none;
+  border-radius:8px;font-size:11px;font-weight:800;
+  font-family:'Nunito',sans-serif;cursor:pointer;
+}
+
+/* ── ROADMAP SCREEN ── */
+.roadmap-hero,.tracker-hero{
+  background:linear-gradient(135deg,#1a4a2e,#2d7a4f);
+  padding:20px 16px;color:white;flex-shrink:0;
+}
+.roadmap-hero h2,.tracker-hero h2{font-size:18px;font-weight:900;}
+.roadmap-hero p,.tracker-hero p{font-size:11px;opacity:0.8;margin-top:4px;}
+.season-selector{
+  display:flex;gap:8px;padding:12px 16px;
+  overflow-x:auto;scrollbar-width:none;
+}
+.season-btn{
+  flex-shrink:0;padding:8px 16px;
+  border-radius:20px;font-size:12px;font-weight:700;
+  background:#f8f5f0;border:1.5px solid #e8e0d0;
+  cursor:pointer;color:#555;font-family:'Nunito',sans-serif;
+}
+.season-btn.active{background:#1a6e35;border-color:#1a6e35;color:white;}
+.timeline{padding:0 16px 16px;}
+.timeline-item{
+  display:flex;gap:12px;margin-bottom:16px;
+}
+.tl-dot{
+  width:32px;height:32px;border-radius:50%;
+  background:#e8e0d0;display:flex;align-items:center;
+  justify-content:center;font-size:14px;flex-shrink:0;
+  margin-top:2px;
+}
+.tl-dot.done{background:#1a6e35;}
+.tl-dot.active{background:#f5a623;}
+.tl-content{flex:1;}
+.tl-content.active{
+  background:#fff8e1;border-radius:12px;
+  padding:10px;border:1.5px solid #ffd54f;
+}
+.tl-title{font-size:13px;font-weight:800;color:#1a2e1e;}
+.tl-date{font-size:10px;color:#888;margin-top:2px;}
+.tl-desc{font-size:11px;color:#555;margin-top:4px;line-height:1.5;}
+.tl-status{
+  display:inline-block;margin-top:6px;
+  font-size:10px;font-weight:800;
+  padding:3px 8px;border-radius:20px;
+}
+.tl-status.done{background:#d4edda;color:#1a6e35;}
+.tl-status.ongoing{background:#fff3cd;color:#856404;}
+.tl-status.upcoming{background:#e8e0d0;color:#666;}
+
+/* ── TRACKER SCREEN ── */
+.stats-row{
+  display:flex;gap:10px;padding:12px 16px;
+}
+.stat-card{
+  flex:1;background:#f8f5f0;border-radius:12px;
+  padding:12px;text-align:center;border:1.5px solid #e8e0d0;
+}
+.s-val{font-size:18px;font-weight:900;color:#1a6e35;}
+.s-label{font-size:10px;color:#888;margin-top:2px;}
+.log-list{padding:0 16px;}
+.log-item{
+  display:flex;align-items:flex-start;gap:10px;
+  margin-bottom:10px;background:#f8f5f0;
+  border-radius:12px;padding:12px;
+  border:1.5px solid #e8e0d0;
+}
+.log-icon-wrap{
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+}
+.log-title{font-size:13px;font-weight:800;color:#1a2e1e;}
+.log-date{font-size:10px;color:#888;margin-top:2px;}
+.log-note{font-size:11px;color:#555;margin-top:4px;line-height:1.5;}
+.add-log-btn{
+  margin:12px 16px;width:calc(100% - 32px);
+  padding:14px;background:#f8f5f0;color:#1a6e35;
+  border:2px dashed #1a6e35;border-radius:14px;
+  font-size:14px;font-weight:800;
+  font-family:'Nunito',sans-serif;cursor:pointer;
+}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{
+  display:flex;
+  background:#fff;border-top:1.5px solid #e8e0d0;
+  flex-shrink:0;position:sticky;bottom:0;z-index:100;
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:10px 4px 8px;cursor:pointer;
+  font-size:10px;font-weight:700;color:#999;
+  transition:color 0.15s;position:relative;
+}
+.nav-item.active{color:#1a6e35;}
+.nav-icon{font-size:22px;margin-bottom:2px;}
+.badge{
+  position:absolute;top:6px;right:calc(50% - 18px);
+  background:#e74c3c;color:white;
+  border-radius:99px;font-size:9px;font-weight:800;
+  padding:1px 5px;min-width:16px;text-align:center;
+}
+
+/* ── LOADING / ERROR ── */
+#result-loading{
+  display:none;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:60px 20px;gap:16px;
+}
+.spinner{
+  width:56px;height:56px;
+  border:5px solid #e8e0d0;
+  border-top-color:#1a6e35;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+#result-error{display:none;padding:30px 20px;text-align:center;}
+#result-content{display:none;}
+
+/* ── BACK BUTTON ── */
+.back-btn{
+  background:transparent;border:none;
+  font-size:14px;font-weight:700;
+  color:#1a6e35;cursor:pointer;
+  font-family:'Nunito',sans-serif;
+  padding:12px 16px;display:block;
+  flex-shrink:0;
+}
+
+/* ── LOGIN SCREEN ── */
+#login-screen{
+  position:fixed;inset:0;
+  background:linear-gradient(135deg,#0d3d1e,#1a6e35);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  z-index:9999;padding:32px;
+  overflow-y:auto;
+}
+.login-logo{text-align:center;margin-bottom:40px;}
+.login-logo .chilli{font-size:56px;}
+.login-logo h1{font-size:32px;font-weight:900;color:white;margin-top:8px;}
+.login-logo h1 span{color:#f5a623;}
+.login-logo p{font-size:12px;color:rgba(255,255,255,0.6);
+  margin-top:6px;font-family:'Tiro Telugu',serif;}
+.login-box{width:100%;max-width:320px;}
+.login-label{font-size:13px;color:rgba(255,255,255,0.8);
+  margin-bottom:10px;font-weight:700;}
+.login-input{
+  width:100%;padding:16px;border-radius:14px;border:none;
+  font-size:18px;font-family:'Nunito',sans-serif;
+  font-weight:700;letter-spacing:2px;outline:none;
+  text-align:center;background:rgba(255,255,255,0.95);
+  color:#1a2e1e;margin-bottom:12px;
+}
+.login-btn{
+  width:100%;padding:16px;background:#f5a623;
+  color:#3d2000;border:none;border-radius:14px;
+  font-size:15px;font-weight:800;
+  font-family:'Nunito',sans-serif;cursor:pointer;
+}
+.login-btn-ghost{
+  width:100%;padding:12px;background:transparent;
+  color:rgba(255,255,255,0.6);
+  border:1px solid rgba(255,255,255,0.2);
+  border-radius:14px;font-size:13px;font-weight:700;
+  font-family:'Nunito',sans-serif;cursor:pointer;
+  margin-top:10px;
+}
+#login-loading{display:none;text-align:center;color:white;}
+#login-loading p{font-size:14px;font-weight:700;margin-top:12px;}
+.login-error{
+  display:none;margin-top:14px;
+  background:rgba(220,50,50,0.2);
+  border:1px solid rgba(220,50,50,0.4);
+  border-radius:10px;padding:12px 16px;
+  font-size:12px;color:#ffb3b3;text-align:center;
+  width:100%;max-width:320px;
+}
+
+/* ── REGISTRATION ── */
+#step-register{
+  width:100%;max-width:320px;
+  display:none;overflow-y:auto;
+  max-height:80vh;
+}
+#step-register input,
+#step-register select{
+  width:100%;padding:14px;
+  border-radius:12px;border:none;
+  font-size:14px;font-family:'Nunito',sans-serif;
+  margin-bottom:10px;outline:none;
+  background:rgba(255,255,255,0.95);
+  color:#1a2e1e;
+}
+
+/* ── PROFILE MENU ── */
+#profile-menu{
+  display:none;
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.5);
+  z-index:10000;
+}
+.profile-dropdown{
+  position:absolute;
+  top:70px;right:16px;
+  background:white;border-radius:16px;
+  padding:8px;min-width:240px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.2);
+}
+.profile-info{
+  padding:12px 16px;
+  border-bottom:1.5px solid #f0ebe0;
+  margin-bottom:8px;
+}
+.profile-info .pname{font-size:15px;font-weight:800;color:#1a2e1e;}
+.profile-info .pphone{font-size:12px;color:#888;margin-top:2px;}
+.profile-info .pdetails{font-size:11px;color:#4a7c5f;
+  margin-top:4px;font-weight:700;}
+.menu-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;border-radius:10px;
+  cursor:pointer;font-size:14px;font-weight:700;
+  color:#1a2e1e;transition:background 0.15s;
+}
+.menu-item:hover{background:#f8f5f0;}
+.menu-item.danger{color:#e74c3c;}
+.menu-item.danger:hover{background:#fff5f5;}
+.menu-divider{height:1px;background:#f0ebe0;margin:6px 0;}
+
+/* ── PROFILE/EDIT SCREEN ── */
+#profile-screen{
+  display:none;
+  position:fixed;inset:0;
+  background:#f8f5f0;
+  z-index:10001;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.profile-header{
+  background:linear-gradient(135deg,#1a4a2e,#2d7a4f);
+  padding:16px;
+  display:flex;align-items:center;
+  justify-content:space-between;
+  position:sticky;top:0;z-index:10;
+}
+.profile-back{
+  background:rgba(255,255,255,0.2);border:none;
+  border-radius:8px;padding:8px 14px;
+  color:white;font-size:13px;font-weight:700;
+  font-family:'Nunito',sans-serif;cursor:pointer;
+}
+.profile-title{font-size:16px;font-weight:900;color:white;}
+.profile-save-top{
+  background:#f5a623;color:#3d2000;
+  border:none;border-radius:8px;
+  padding:8px 14px;font-size:13px;font-weight:800;
+  font-family:'Nunito',sans-serif;cursor:pointer;
+}
+.profile-body{padding:20px 16px;}
+.profile-avatar-area{text-align:center;margin-bottom:24px;}
+.profile-avatar-circle{
+  width:72px;height:72px;background:#e8f0eb;
+  border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:36px;margin:0 auto 8px;
+  border:3px solid #c8ddc8;
+}
+.profile-avatar-name{font-size:16px;font-weight:800;color:#1a2e1e;}
+.profile-avatar-phone{font-size:12px;color:#888;margin-top:2px;}
+.field-group{margin-bottom:16px;}
+.field-label{
+  font-size:11px;color:#888;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;
+  margin-bottom:6px;
+}
+.field-input{
+  width:100%;padding:14px;
+  border:1.5px solid #e0d8c8;
+  border-radius:12px;font-size:14px;
+  font-family:'Nunito',sans-serif;
+  outline:none;background:white;color:#1a2e1e;
+  transition:border-color 0.2s;
+}
+.field-input:focus{border-color:#1a6e35;}
+.save-btn{
+  width:100%;padding:16px;background:#1a6e35;
+  color:white;border:none;border-radius:14px;
+  font-size:15px;font-weight:800;
+  font-family:'Nunito',sans-serif;cursor:pointer;
+  margin-bottom:12px;
+}
+.logout-btn{
+  width:100%;padding:16px;background:transparent;
+  color:#e74c3c;border:1.5px solid #e74c3c;
+  border-radius:14px;font-size:15px;font-weight:800;
+  font-family:'Nunito',sans-serif;cursor:pointer;
+}
+
+/* ── LANG TOGGLE ── */
+.lang-toggle{
+  display:flex;gap:6px;padding:8px 16px 0;
+  justify-content:flex-end;
+}
+.lang-btn{
+  padding:4px 12px;border-radius:20px;
+  font-size:11px;font-weight:700;
+  background:#f8f5f0;border:1.5px solid #e8e0d0;
+  cursor:pointer;color:#555;font-family:'Nunito',sans-serif;
+}
+.lang-btn.active{background:#1a6e35;border-color:#1a6e35;color:white;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .app-shell{max-width:100%;}
+  .main{width:100%;}
+}
+@media(min-width:769px){
+  .bottom-nav{display:none;}
+  .app-shell{
+    border:1px solid #e8e0d0;
+    margin:20px auto;
+    border-radius:20px;
+    overflow:hidden;
+    height:calc(100vh - 40px);
+    box-shadow:0 20px 60px rgba(0,0,0,0.1);
+  }
+}
+</style>
 </head>
 <body>
- 
-<div class="app-title-area">
-  <h1>Rytu<span>AI</span></h1>
-  <p>Smart Farming — Andhra Pradesh | రైతు AI అప్లికేషన్</p>
-</div>
 
- <!-- LOGIN SCREEN -->
-<div id="login-screen" style="
-  position: fixed;
-  inset: 0;
-  background: linear-gradient(135deg, #0d3d1e, #1a6e35);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  padding: 32px;
-  overflow-y: auto;
-">
-  <!-- Logo -->
-  <div style="text-align:center; margin-bottom:40px;">
-    <div style="font-size:56px;">🌶️</div>
-    <div style="font-family:'Nunito',sans-serif; font-size:32px; font-weight:900; color:white; margin-top:8px;">
-      Rytu<span style="color:#f5a623;">AI</span>
-    </div>
-    <div style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:6px; font-family:'Tiro Telugu',serif;">
-      రైతు AI అప్లికేషన్
-    </div>
-  </div>
- 
-  <!-- Phone Input -->
-  <div id="step-phone" style="width:100%; max-width:320px;">
-    <div style="font-size:13px; color:rgba(255,255,255,0.8); margin-bottom:10px; font-family:'Nunito',sans-serif; font-weight:700;">
-      📱 Enter Your Mobile Number
-    </div>
-    <input 
-      type="tel" 
-      id="login-phone" 
-      placeholder="10-digit mobile number"
-      maxlength="10"
-      style="
-        width:100%;
-        padding:16px;
-        border-radius:14px;
-        border:none;
-        font-size:18px;
-        font-family:'Nunito',sans-serif;
-        font-weight:700;
-        letter-spacing:2px;
-        outline:none;
-        text-align:center;
-        background:rgba(255,255,255,0.95);
-        color:#1a2e1e;
-        margin-bottom:12px;
-      "
-    />
-    <button onclick="sendOTP()" id="send-otp-btn" style="
-      width:100%;
-      padding:16px;
-      background:#f5a623;
-      color:#3d2000;
-      border:none;
-      border-radius:14px;
-      font-size:15px;
-      font-weight:800;
-      font-family:'Nunito',sans-serif;
-      cursor:pointer;
-    ">
-      📨 Send OTP
-    </button>
-  </div>
- 
-  <!-- OTP Input (hidden initially) -->
-  <div id="step-otp" style="width:100%; max-width:320px; display:none;">
-    <div style="font-size:13px; color:rgba(255,255,255,0.8); margin-bottom:6px; font-family:'Nunito',sans-serif; font-weight:700;">
-      🔐 Enter OTP sent to your phone
-    </div>
-    <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-bottom:10px; font-family:'Nunito',sans-serif;" id="otp-sent-to">
-    </div>
-    <input 
-      type="tel" 
-      id="login-otp" 
-      placeholder="6-digit OTP"
-      maxlength="6"
-      style="
-        width:100%;
-        padding:16px;
-        border-radius:14px;
-        border:none;
-        font-size:24px;
-        font-family:'Nunito',sans-serif;
-        font-weight:900;
-        letter-spacing:8px;
-        outline:none;
-        text-align:center;
-        background:rgba(255,255,255,0.95);
-        color:#1a2e1e;
-        margin-bottom:12px;
-      "
-    />
-    <button onclick="verifyOTP()" style="
-      width:100%;
-      padding:16px;
-      background:#f5a623;
-      color:#3d2000;
-      border:none;
-      border-radius:14px;
-      font-size:15px;
-      font-weight:800;
-      font-family:'Nunito',sans-serif;
-      cursor:pointer;
-      margin-bottom:10px;
-    ">
-      ✅ Verify & Login
-    </button>
-    <button onclick="backToPhone()" style="
-      width:100%;
-      padding:12px;
-      background:transparent;
-      color:rgba(255,255,255,0.6);
-      border:1px solid rgba(255,255,255,0.2);
-      border-radius:14px;
-      font-size:13px;
-      font-weight:700;
-      font-family:'Nunito',sans-serif;
-      cursor:pointer;
-    ">
-      ← Change Number
-    </button>
-  </div>
-  <!-- REGISTRATION SCREEN -->
-<div id="step-register" style="
-  width:100%;
-  max-width:320px;
-  display:none;
-  overflow-y: auto;
-  max-height: 80vh;">
- 
-  <div style="font-size:13px;
-    color:rgba(255,255,255,0.8);
-    margin-bottom:16px;
-    font-family:'Nunito',sans-serif;
-    font-weight:700;text-align:center;">
-    👨‍🌾 Complete Your Profile
+<!-- ══ LOGIN SCREEN ══ -->
+<div id="login-screen">
+  <div class="login-logo">
+    <div class="chilli">🌶️</div>
+    <h1>Rytu<span>AI</span></h1>
+    <p>రైతు AI అప్లికేషన్</p>
   </div>
 
-  <button onclick="backToOTP()" style="
-    background:transparent;
-    border:1px solid rgba(255,255,255,0.3);
-    color:rgba(255,255,255,0.7);
-    border-radius:10px;
-    padding:8px 16px;
-    font-size:12px;
-    font-weight:700;
-    font-family:'Nunito',sans-serif;
-    cursor:pointer;
-    margin-bottom:16px;">
-    ← Back to OTP
-  </button>
- 
-  <input type="text" id="reg-name"
-    placeholder="Full Name — మీ పేరు"
-    style="width:100%;padding:14px;
-    border-radius:12px;border:none;
-    font-size:14px;
-    font-family:'Nunito',sans-serif;
-    margin-bottom:10px;outline:none;">
- 
-  <input type="text" id="reg-village"
-    placeholder="Village — మీ గ్రామం"
-    style="width:100%;padding:14px;
-    border-radius:12px;border:none;
-    font-size:14px;
-    font-family:'Nunito',sans-serif;
-    margin-bottom:10px;outline:none;">
- 
-  <input type="text" id="reg-district"
-    placeholder="District — జిల్లా"
-    style="width:100%;padding:14px;
-    border-radius:12px;border:none;
-    font-size:14px;
-    font-family:'Nunito',sans-serif;
-    margin-bottom:10px;outline:none;">
- 
-  <input type="number" id="reg-acres"
-    placeholder="Land in Acres — ఎకరాలు"
-    style="width:100%;padding:14px;
-    border-radius:12px;border:none;
-    font-size:14px;
-    font-family:'Nunito',sans-serif;
-    margin-bottom:10px;outline:none;">
- 
-  <select id="reg-crop"
-    style="width:100%;padding:14px;
-    border-radius:12px;border:none;
-    font-size:14px;
-    font-family:'Nunito',sans-serif;
-    margin-bottom:10px;outline:none;
-    background:white;">
-    <option value="">Select Crop — పంట</option>
-    <option value="Chilli">🌶️ Chilli — మిరప</option>
-    <option value="Paddy">🌾 Paddy — వరి</option>
-    <option value="Cotton">🌿 Cotton — పత్తి</option>
-    <option value="Groundnut">🥜 Groundnut — వేరుశెనగ</option>
-    <option value="Maize">🌽 Maize — మొక్కజొన్న</option>
-  </select>
- 
-  <input type="date" id="reg-sowing"
-    style="width:100%;padding:14px;
-    border-radius:12px;border:none;
-    font-size:14px;
-    font-family:'Nunito',sans-serif;
-    margin-bottom:16px;outline:none;">
- 
-  <button onclick="registerFarmer()" style="
-    width:100%;padding:16px;
-    background:#f5a623;color:#3d2000;
-    border:none;border-radius:14px;
-    font-size:15px;font-weight:800;
-    font-family:'Nunito',sans-serif;
-    cursor:pointer;margin-bottom:10px;">
-    ✅ Save and Continue
-  </button>
- 
-</div>
- 
+  <!-- Phone Step -->
+  <div id="step-phone" class="login-box">
+    <div class="login-label">📱 Enter Your Mobile Number</div>
+    <input type="tel" id="login-phone" class="login-input"
+      placeholder="10-digit number" maxlength="10">
+    <button class="login-btn" onclick="sendOTP()">📨 Send OTP</button>
+  </div>
+
+  <!-- OTP Step -->
+  <div id="step-otp" class="login-box" style="display:none;">
+    <div class="login-label">🔐 Enter OTP</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.5);
+      margin-bottom:10px;" id="otp-sent-to"></div>
+    <input type="tel" id="login-otp" class="login-input"
+      placeholder="6-digit OTP" maxlength="6"
+      style="letter-spacing:8px;font-size:24px;">
+    <button class="login-btn" onclick="verifyOTP()">✅ Verify & Login</button>
+    <button class="login-btn-ghost" onclick="backToPhone()">← Change Number</button>
+  </div>
+
+  <!-- Registration Step -->
+  <div id="step-register">
+    <div style="font-size:13px;color:rgba(255,255,255,0.8);
+      font-weight:700;text-align:center;margin-bottom:16px;">
+      👨‍🌾 Complete Your Profile
+    </div>
+    <button class="login-btn-ghost" onclick="backToOTP()"
+      style="margin-bottom:16px;width:auto;padding:8px 16px;">
+      ← Back to OTP
+    </button>
+    <input type="text" id="reg-name" placeholder="Full Name — మీ పేరు">
+    <input type="text" id="reg-village" placeholder="Village — మీ గ్రామం">
+    <input type="text" id="reg-district" placeholder="District — జిల్లా">
+    <input type="number" id="reg-acres" placeholder="Land in Acres — ఎకరాలు">
+    <select id="reg-crop">
+      <option value="">Select Crop — పంట</option>
+      <option value="Chilli">🌶️ Chilli — మిరప</option>
+      <option value="Paddy">🌾 Paddy — వరి</option>
+      <option value="Cotton">🌿 Cotton — పత్తి</option>
+      <option value="Groundnut">🥜 Groundnut — వేరుశెనగ</option>
+      <option value="Maize">🌽 Maize — మొక్కజొన్న</option>
+    </select>
+    <input type="date" id="reg-sowing">
+    <button class="login-btn" onclick="registerFarmer()">✅ Save and Continue</button>
+  </div>
+
   <!-- Loading -->
-  <div id="login-loading" style="display:none; text-align:center; color:white; font-family:'Nunito',sans-serif;">
-    <div style="font-size:32px; margin-bottom:12px;">⏳</div>
-    <div style="font-size:14px; font-weight:700;" id="loading-text">Sending OTP...</div>
+  <div id="login-loading">
+    <div class="spinner" style="border-color:rgba(255,255,255,0.3);
+      border-top-color:white;"></div>
+    <p id="loading-text">Sending OTP...</p>
   </div>
- 
-  <!-- Error Message -->
-  <div id="login-error" style="
-    display:none;
-    margin-top:14px;
-    background:rgba(220,50,50,0.2);
-    border:1px solid rgba(220,50,50,0.4);
-    border-radius:10px;
-    padding:12px 16px;
-    font-size:12px;
-    color:#ffb3b3;
-    font-family:'Nunito',sans-serif;
-    text-align:center;
-    width:100%;
-    max-width:320px;
-  " id="error-msg">
-  </div>
+
+  <!-- Error -->
+  <div class="login-error" id="login-error"></div>
 </div>
- 
-<div class="phone-wrapper">
- 
-  <!-- SIDEBAR (desktop) -->
-  <div class="desktop-sidebar">
-    <div style="font-size:11px;font-weight:800;color:var(--muted);padding:0 16px 8px;text-transform:uppercase;letter-spacing:1px;">Navigation</div>
-    <div class="sidebar-item active" onclick="switchScreen('home')"><span class="s-icon">🏠</span> Home</div>
-    <div class="sidebar-item" onclick="switchScreen('detect')"><span class="s-icon">🔬</span> Detect Disease</div>
-    <div class="sidebar-item" onclick="switchScreen('shop')"><span class="s-icon">🏪</span> Rytu Shop</div>
-    <div class="sidebar-item" onclick="switchScreen('roadmap')"><span class="s-icon">🗓️</span> Crop Roadmap</div>
-    <div class="sidebar-item" onclick="switchScreen('tracker')"><span class="s-icon">📋</span> My Tracker</div>
-    <div style="margin-top:20px;padding:14px 16px;background:var(--green-light);border-radius:var(--radius);border:1.5px solid var(--border);">
-      <div style="font-size:11px;font-weight:800;color:var(--green);">🌶️ Chilli Season</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;">Kharif 2025</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:2px;">Guntur District</div>
+
+<!-- ══ APP SHELL ══ -->
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <h1>Rytu<span>AI</span></h1>
+      <p>Smart Farming — Andhra Pradesh</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="s-item active" onclick="switchScreen('home')">
+        <span class="s-icon">🏠</span> Home
+      </div>
+      <div class="s-item" onclick="switchScreen('detect')">
+        <span class="s-icon">🔬</span> Detect Disease
+      </div>
+      <div class="s-item" onclick="switchScreen('shop')">
+        <span class="s-icon">🏪</span> Rytu Shop
+      </div>
+      <div class="s-item" onclick="switchScreen('roadmap')">
+        <span class="s-icon">🗓️</span> Crop Roadmap
+      </div>
+      <div class="s-item" onclick="switchScreen('tracker')">
+        <span class="s-icon">📋</span> My Tracker
+      </div>
+    </nav>
+    <div class="sidebar-season">
+      <div class="ss-label">🌶️ Chilli Season</div>
+      <div class="ss-val">Kharif 2025 · Guntur District</div>
     </div>
   </div>
- 
-  <!-- PHONE -->
-  <div class="phone-frame">
-    <div class="phone-notch"></div>
- 
-    <!-- HOME SCREEN -->
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- ── HOME SCREEN ── -->
     <div class="screen active" id="screen-home">
       <div class="app-header">
         <div class="header-row">
-  <div>
-    <div class="app-logo">Rytu<span>AI</span></div>
-    <div class="header-subtitle" id="farmer-greeting">
-      నమస్కారం 🙏
-    </div>
-  </div>
-  <div style="display:flex;align-items:center;gap:8px;">
-    <div class="avatar" onclick="toggleProfileMenu()"
-    style="cursor: pointer;position: relative;z-index:999;">
-    👨‍🌾
-   </div>
-   <!-- PROFILE DROPDOWN MENU -->
-</div>
-<div id="profile-menu" style="
-  display:none;
-  position:fixed;
-  top:0;left:0;right:0;bottom:0;
-  background:rgba(0,0,0,0.5);
-  z-index:9998;">
- 
-  <div style="
-    position:absolute;
-    top:70px;right:16px;
-    background:white;
-    border-radius:16px;
-    padding:8px;
-    min-width:240px;
-    box-shadow:0 8px 32px rgba(0,0,0,0.2);">
- 
-    <!-- Farmer Info -->
-    <div style="padding:12px 16px;
-      border-bottom:1px solid #f0f0f0;
-      margin-bottom:8px;">
-      <div id="menu-farmer-name" 
-        style="font-size:15px;font-weight:800;
-        color:#1a2e1e;">
-        Farmer Name
-      </div>
-      <div id="menu-farmer-phone" 
-        style="font-size:12px;color:#888;margin-top:2px;">
-        Phone
-      </div>
-      <div id="menu-farmer-details" 
-        style="font-size:11px;color:#4a7c5f;
-        margin-top:4px;font-weight:600;">
-        Crop · Village
-      </div>
-    </div>
- 
-    <!-- Edit Profile -->
-    <div onclick="openEditProfile()" style="
-      display:flex;align-items:center;gap:12px;
-      padding:12px 16px;border-radius:10px;
-      cursor:pointer;font-size:14px;font-weight:700;
-      color:#1a2e1e;">
-      ✏️ Edit Profile
-    </div>
- 
-    <!-- Settings -->
-    <div onclick="openSettings()" style="
-      display:flex;align-items:center;gap:12px;
-      padding:12px 16px;border-radius:10px;
-      cursor:pointer;font-size:14px;font-weight:700;
-      color:#1a2e1e;">
-      ⚙️ Settings
-    </div>
- 
-    <!-- Orders -->
-    <div onclick="openOrders()" style="
-      display:flex;align-items:center;gap:12px;
-      padding:12px 16px;border-radius:10px;
-      cursor:pointer;font-size:14px;font-weight:700;
-      color:#1a2e1e;">
-      📦 My Orders
-    </div>
- 
-    <div style="height:1px;background:#f0f0f0;
-      margin:8px 0;">
-    </div>
- 
-    <!-- Logout -->
-    <div onclick="localStorage.clear();
-      window.location.replace('/');" style="
-      display:flex;align-items:center;gap:12px;
-      padding:12px 16px;border-radius:10px;
-      cursor:pointer;font-size:14px;font-weight:700;
-      color:#e74c3c;">
-      🚪 Logout
-    </div>
- 
-  </div>
-</div>
- 
-<!-- PROFILE / EDIT SCREEN -->
-
- <!-- PROFILE / EDIT SCREEN -->
-<div id="profile-screen" style="
-  display:none;
-  position:fixed;
-  top:0;left:0;right:0;bottom:0;
-  background:white;
-  z-index:9997;
-  overflow-y:auto;">
- 
-  <div style="background:linear-gradient(135deg,#1a4a2e,#2d7a4f);
-    padding:20px 16px 24px;">
-    <div style="display:flex;align-items:center;
-      justify-content:space-between;">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <button onclick="closeProfile()" style="
-          background:rgba(255,255,255,0.2);
-          border:none;border-radius:8px;
-          padding:8px 12px;color:white;
-          font-size:13px;cursor:pointer;">
-          ← Back
-        </button>
-        <div style="font-size:18px;font-weight:800;color:white;">
-          My Profile
+          <div>
+            <div class="app-logo">Rytu<span>AI</span></div>
+            <div class="header-subtitle" id="farmer-greeting">నమస్కారం 🙏</div>
+          </div>
+          <div class="avatar" id="profile-avatar"
+            onclick="toggleProfileMenu()">👨‍🌾</div>
         </div>
-      </div>
-      <button onclick="saveProfile()" style="
-        background:#f5a623;color:#3d2000;
-        border:none;border-radius:8px;
-        padding:8px 16px;font-size:13px;
-        font-weight:800;cursor:pointer;">
-        Save ✅
-      </button>
-    </div>
-  </div>
- 
-  <div style="padding:20px 16px;">
- 
-    <!-- Avatar -->
-    <div style="text-align:center;margin-bottom:24px;">
-      <div style="width:80px;height:80px;
-        background:#e8f0eb;border-radius:50%;
-        display:flex;align-items:center;
-        justify-content:center;font-size:40px;
-        margin:0 auto;">
-        👨‍🌾
-      </div>
-      <div id="profile-name-display" style="font-size:18px;
-        font-weight:800;color:#1a2e1e;margin-top:8px;">
-        —
-      </div>
-      <div id="profile-phone-display" style="font-size:13px;
-        color:#888;">
-        —
-      </div>
-    </div>
- 
-    <!-- Edit Fields -->
-    <div style="display:flex;flex-direction:column;gap:12px;">
- 
-      <div>
-        <div style="font-size:11px;color:#888;font-weight:700;
-          text-transform:uppercase;margin-bottom:6px;">
-          Full Name
-        </div>
-        <input type="text" id="edit-name"
-          placeholder="Your full name"
-          style="width:100%;padding:14px;
-          border:1.5px solid #e0e0e0;
-          border-radius:12px;font-size:14px;
-          font-family:'Nunito',sans-serif;
-          outline:none;box-sizing:border-box;">
-      </div>
- 
-      <div>
-        <div style="font-size:11px;color:#888;font-weight:700;
-          text-transform:uppercase;margin-bottom:6px;">
-          Village
-        </div>
-        <input type="text" id="edit-village"
-          placeholder="Your village"
-          style="width:100%;padding:14px;
-          border:1.5px solid #e0e0e0;
-          border-radius:12px;font-size:14px;
-          font-family:'Nunito',sans-serif;
-          outline:none;box-sizing:border-box;">
-      </div>
- 
-      <div>
-        <div style="font-size:11px;color:#888;font-weight:700;
-          text-transform:uppercase;margin-bottom:6px;">
-          District
-        </div>
-        <input type="text" id="edit-district"
-          placeholder="Your district"
-          style="width:100%;padding:14px;
-          border:1.5px solid #e0e0e0;
-          border-radius:12px;font-size:14px;
-          font-family:'Nunito',sans-serif;
-          outline:none;box-sizing:border-box;">
-      </div>
- 
-      <div>
-        <div style="font-size:11px;color:#888;font-weight:700;
-          text-transform:uppercase;margin-bottom:6px;">
-          Land in Acres
-        </div>
-        <input type="number" id="edit-acres"
-          placeholder="Total acres"
-          style="width:100%;padding:14px;
-          border:1.5px solid #e0e0e0;
-          border-radius:12px;font-size:14px;
-          font-family:'Nunito',sans-serif;
-          outline:none;box-sizing:border-box;">
-      </div>
- 
-      <div>
-        <div style="font-size:11px;color:#888;font-weight:700;
-          text-transform:uppercase;margin-bottom:6px;">
-          Crop Type
-        </div>
-        <select id="edit-crop"
-          style="width:100%;padding:14px;
-          border:1.5px solid #e0e0e0;
-          border-radius:12px;font-size:14px;
-          font-family:'Nunito',sans-serif;
-          outline:none;background:white;
-          box-sizing:border-box;">
-          <option value="">Select Crop</option>
-          <option value="Chilli">🌶️ Chilli — మిరప</option>
-          <option value="Paddy">🌾 Paddy — వరి</option>
-          <option value="Cotton">🌿 Cotton — పత్తి</option>
-          <option value="Groundnut">🥜 Groundnut — వేరుశెనగ</option>
-          <option value="Maize">🌽 Maize — మొక్కజొన్న</option>
-        </select>
-      </div>
- 
-      <div>
-        <div style="font-size:11px;color:#888;font-weight:700;
-          text-transform:uppercase;margin-bottom:6px;">
-          Sowing Date
-        </div>
-        <input type="date" id="edit-sowing"
-          style="width:100%;padding:14px;
-          border:1.5px solid #e0e0e0;
-          border-radius:12px;font-size:14px;
-          font-family:'Nunito',sans-serif;
-          outline:none;box-sizing:border-box;">
-      </div>
- 
-    </div>
- 
-    <!-- Save Button -->
-    <button onclick="saveProfile()"
-      style="width:100%;padding:16px;
-      background:#1a6e35;color:white;
-      border:none;border-radius:14px;
-      font-size:15px;font-weight:800;
-      font-family:'Nunito',sans-serif;
-      cursor:pointer;margin-top:24px;">
-      ✅ Save Changes
-    </button>
- 
-    <!-- Logout -->
-    <button onclick="localStorage.clear();
-      window.location.replace('/');"
-      style="width:100%;padding:16px;
-      background:transparent;color:#e74c3c;
-      border:1.5px solid #e74c3c;
-      border-radius:14px;font-size:15px;
-      font-weight:800;
-      font-family:'Nunito',sans-serif;
-      cursor:pointer;margin-top:12px;">
-      🚪 Logout
-    </button>
- 
-  </div>
-</div>
- 
-  </div>
-</div>
         <div class="weather-strip">
           <div style="font-size:28px;">⛅</div>
           <div>
@@ -567,12 +781,12 @@
           </div>
         </div>
       </div>
- 
+
       <div class="lang-toggle">
         <button class="lang-btn active">EN</button>
         <button class="lang-btn">తె</button>
       </div>
- 
+
       <div class="section-title">⚡ Quick Actions</div>
       <div class="quick-actions">
         <div class="quick-card primary" onclick="switchScreen('detect')">
@@ -596,7 +810,7 @@
           <div class="qc-desc">Log farm work</div>
         </div>
       </div>
- 
+
       <div class="section-title">⚠️ Alert</div>
       <div class="alert-banner">
         <div style="font-size:24px;">🐛</div>
@@ -605,250 +819,256 @@
           <div class="alert-sub">3 farmers near you reported thrips. Check your crop today.</div>
         </div>
       </div>
- 
+
       <div class="section-title">🌶️ My Crop Status</div>
       <div class="crop-status">
         <div class="crop-status-row">
           <div class="crop-name">Guntur Chilli</div>
           <div class="crop-stage">Flowering Stage</div>
         </div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Sowed: June 12 · 2.5 acres</div>
+        <div style="font-size:11px;color:#888;margin-top:4px;">
+          Sowed: June 12 · 2.5 acres</div>
         <div class="progress-bar-wrap">
           <div class="progress-label">Season Progress — 45% complete</div>
-          <div class="progress-bar"><div class="progress-fill" style="width:45%"></div></div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:45%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item active" id="nav-home" onclick="switchScreen('home')">
+          <div class="nav-icon">🏠</div><span>Home</span>
+        </div>
+        <div class="nav-item" id="nav-detect" onclick="switchScreen('detect')">
+          <div class="nav-icon">🔬</div><span>Detect</span>
+        </div>
+        <div class="nav-item" id="nav-shop" onclick="switchScreen('shop')" style="position:relative;">
+          <div class="nav-icon">🏪</div><span>Shop</span>
+          <div class="badge">3</div>
+        </div>
+        <div class="nav-item" id="nav-roadmap" onclick="switchScreen('roadmap')">
+          <div class="nav-icon">🗓️</div><span>Roadmap</span>
+        </div>
+        <div class="nav-item" id="nav-tracker" onclick="switchScreen('tracker')">
+          <div class="nav-icon">📋</div><span>Tracker</span>
         </div>
       </div>
     </div>
- 
-    <!-- DETECT SCREEN -->
+
+    <!-- ── DETECT SCREEN ── -->
     <div class="screen" id="screen-detect">
       <div class="detect-hero">
         <h2>🔬 Detect Crop Disease</h2>
-        <p>పంట జబ్బులు గుర్తించండి — Upload 3-4 photos for best results</p>
+        <p>పంట జబ్బులు గుర్తించండి — Upload photos for best results</p>
       </div>
- 
-      <div class="tip-box" style="margin:14px 16px 0;">
-        <strong>📸 Photo Tips for Best Accuracy:</strong>
-        Take close-ups from different angles. Include healthy + affected leaves. Good lighting helps AI detect better.
+
+      <div class="tip-box">
+        <strong>📸 Photo Tips:</strong>
+        Take close-ups from different angles. Include healthy + affected leaves.
       </div>
- 
+
       <div class="section-title">📷 Upload Images (min. 1)</div>
-      <div class="upload-grid" id="upload-grid">
-      <div class="upload-slot" id="slot-0" onclick="triggerUpload(0)">
-      <div class="slot-icon">📷</div>
-      <div class="slot-label">Photo 1 — Leaf</div>
-  </div>
-  <div class="upload-slot" id="slot-1" onclick="triggerUpload(1)">
-    <div class="slot-icon">📷</div>
-    <div class="slot-label">Photo 2 — Stem</div>
-  </div>
-  <div class="upload-slot" id="slot-2" onclick="triggerUpload(2)">
-    <div class="slot-icon">📷</div>
-    <div class="slot-label">Photo 3 — Plant</div>
-  </div>
-  <div class="upload-slot" id="slot-3" onclick="triggerUpload(3)">
-    <div class="slot-icon">➕</div>
-    <div class="slot-label">Photo 4 — Extra</div>
-  </div>
-</div>
- 
-<!-- Hidden file inputs -->
-<input type="file" id="file-0" accept="image/*"
-  style="display:none" onchange="handleUpload(0, this)">
-<input type="file" id="file-1" accept="image/*"
-  style="display:none" onchange="handleUpload(1, this)">
-<input type="file" id="file-2" accept="image/*"
-  style="display:none" onchange="handleUpload(2, this)">
-<input type="file" id="file-3" accept="image/*"
-  style="display:none" onchange="handleUpload(3, this)">
- 
-<div id="upload-count-msg" style="text-align:center;
-  font-size:12px;color:var(--muted);font-weight:700;padding:6px 16px 0;">
-  0 photos uploaded
-</div>
- 
-      <div class="info-card" style="margin-top:8px;">
+      <div class="upload-grid">
+        <div class="upload-slot" id="slot-0" onclick="triggerUpload(0)">
+          <div class="slot-icon">📷</div>
+          <div class="slot-label">Photo 1 — Leaf</div>
+        </div>
+        <div class="upload-slot" id="slot-1" onclick="triggerUpload(1)">
+          <div class="slot-icon">📷</div>
+          <div class="slot-label">Photo 2 — Stem</div>
+        </div>
+        <div class="upload-slot" id="slot-2" onclick="triggerUpload(2)">
+          <div class="slot-icon">📷</div>
+          <div class="slot-label">Photo 3 — Plant</div>
+        </div>
+        <div class="upload-slot" id="slot-3" onclick="triggerUpload(3)">
+          <div class="slot-icon">➕</div>
+          <div class="slot-label">Photo 4 — Extra</div>
+        </div>
+      </div>
+
+      <input type="file" id="file-0" accept="image/*"
+        style="display:none" onchange="handleUpload(0,this)">
+      <input type="file" id="file-1" accept="image/*"
+        style="display:none" onchange="handleUpload(1,this)">
+      <input type="file" id="file-2" accept="image/*"
+        style="display:none" onchange="handleUpload(2,this)">
+      <input type="file" id="file-3" accept="image/*"
+        style="display:none" onchange="handleUpload(3,this)">
+
+      <div id="upload-count-msg" style="text-align:center;
+        font-size:12px;color:#888;font-weight:700;padding:8px 16px;">
+        0 photos uploaded
+      </div>
+
+      <div class="info-card">
         <h4>🌶️ Crop Details</h4>
-        <div style="display:flex;gap:8px;margin-top:4px;">
-          <div style="flex:1;background:var(--green-light);border-radius:8px;padding:8px;text-align:center;">
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <div style="flex:1;background:#e8f0eb;border-radius:8px;
+            padding:8px;text-align:center;">
             <div style="font-size:11px;font-weight:800;">Chilli</div>
-            <div style="font-size:10px;color:var(--muted);">Crop</div>
+            <div style="font-size:10px;color:#666;">Crop</div>
           </div>
-          <div style="flex:1;background:var(--green-light);border-radius:8px;padding:8px;text-align:center;">
+          <div style="flex:1;background:#e8f0eb;border-radius:8px;
+            padding:8px;text-align:center;">
             <div style="font-size:11px;font-weight:800;">Flowering</div>
-            <div style="font-size:10px;color:var(--muted);">Stage</div>
+            <div style="font-size:10px;color:#666;">Stage</div>
           </div>
-          <div style="flex:1;background:var(--green-light);border-radius:8px;padding:8px;text-align:center;">
+          <div style="flex:1;background:#e8f0eb;border-radius:8px;
+            padding:8px;text-align:center;">
             <div style="font-size:11px;font-weight:800;">Guntur</div>
-            <div style="font-size:10px;color:var(--muted);">District</div>
+            <div style="font-size:10px;color:#666;">District</div>
           </div>
         </div>
       </div>
- 
-      <button class="analyze-btn" id="analyze-btn" 
-       onclick="analyzeImages()" 
-       style="opacity:0.4;cursor:not-allowed;">
- 
-    </div>
- 
-    <!-- RESULT SCREEN -->
-     <!-- RESULT SCREEN -->
-<div class="screen" id="screen-result">
-    <div style="padding:12px 16px;">
-  <button onclick="goBack()" style="
-    background:transparent;
-    border:none;
-    font-size:14px;
-    font-weight:700;
-    color:var(--green);
-    cursor:pointer;
-    font-family:'Nunito',sans-serif;">
-    ← Back
-  </button>
-</div>
- 
 
-  <!-- LOADING STATE -->
-  <div id="result-loading" style="display:none;
-    flex-direction:column;align-items:center;
-    justify-content:center;padding:60px 20px;gap:16px;">
-    <div style="width:64px;height:64px;
-      border:5px solid var(--green-light);
-      border-top-color:var(--green);
-      border-radius:50%;
-      animation:spin 1s linear infinite;">
-    </div>
-    <div style="font-size:15px;font-weight:800;
-      color:var(--green);">
-      Analyzing your photos...
-    </div>
-    <div style="font-size:12px;color:var(--muted);
-      text-align:center;">
-      AI is examining your chilli crop images
-    </div>
-  </div>
- 
-  <!-- ERROR STATE -->
-  <div id="result-error" style="display:none;
-    padding:30px 20px;text-align:center;">
-    <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
-    <div style="font-size:15px;font-weight:800;
-      color:var(--red);">Analysis Failed</div>
-    <div id="error-msg" style="font-size:12px;
-      color:var(--muted);margin-top:6px;"></div>
-    <button onclick="switchScreen('detect')"
-      style="margin-top:20px;background:var(--green);
-      color:white;border:none;border-radius:12px;
-      padding:12px 24px;font-size:13px;font-weight:800;
-      cursor:pointer;font-family:'Nunito',sans-serif;">
-      ← Try Again
-    </button>
-  </div>
- 
-  <!-- ACTUAL RESULT -->
-  <div id="result-content" style="display:none;">
-    <div id="result-header-div" class="result-header">
-      <div style="font-size:36px;margin-bottom:8px;"
-        id="r-emoji">🦠</div>
-      <div class="disease-name" id="r-disease">—</div>
-      <div style="font-size:12px;font-family:'Tiro Telugu';
-        margin-top:4px;opacity:0.9;" id="r-telugu">—</div>
-      <div class="confidence-badge" id="r-confidence">
-        Analysing...
+      <button class="analyze-btn" id="analyze-btn"
+        onclick="analyzeImages()"
+        style="opacity:0.4;cursor:not-allowed;">
+        🤖 Analyze with AI
+      </button>
+
+      <div class="bottom-nav">
+        <div class="nav-item" id="nav-home2" onclick="switchScreen('home')">
+          <div class="nav-icon">🏠</div><span>Home</span>
+        </div>
+        <div class="nav-item active" id="nav-detect2" onclick="switchScreen('detect')">
+          <div class="nav-icon">🔬</div><span>Detect</span>
+        </div>
+        <div class="nav-item" id="nav-shop2" onclick="switchScreen('shop')">
+          <div class="nav-icon">🏪</div><span>Shop</span>
+        </div>
+        <div class="nav-item" id="nav-roadmap2" onclick="switchScreen('roadmap')">
+          <div class="nav-icon">🗓️</div><span>Roadmap</span>
+        </div>
+        <div class="nav-item" id="nav-tracker2" onclick="switchScreen('tracker')">
+          <div class="nav-icon">📋</div><span>Tracker</span>
+        </div>
       </div>
     </div>
- 
-    <div class="severity-row">
-      <div class="severity-chip high" id="r-sev">
-        🔴 Severity<br>
-        <span id="r-sev-val">—</span>
+
+    <!-- ── RESULT SCREEN ── -->
+    <div class="screen" id="screen-result">
+      <button class="back-btn" onclick="goBack()">← Back</button>
+
+      <div id="result-loading">
+        <div class="spinner"></div>
+        <div style="font-size:15px;font-weight:800;color:#1a6e35;">
+          Analyzing your photos...</div>
+        <div style="font-size:12px;color:#888;">
+          AI is examining your crop images</div>
       </div>
-      <div class="severity-chip medium" id="r-spread">
-        ⚡ Spread<br>
-        <span id="r-spread-val">—</span>
+
+      <div id="result-error">
+        <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
+        <div style="font-size:15px;font-weight:800;color:#e74c3c;">
+          Analysis Failed</div>
+        <div id="error-msg" style="font-size:12px;color:#888;margin-top:6px;"></div>
+        <button onclick="switchScreen('detect')"
+          style="margin-top:20px;background:#1a6e35;color:white;
+          border:none;border-radius:12px;padding:12px 24px;
+          font-size:13px;font-weight:800;cursor:pointer;
+          font-family:'Nunito',sans-serif;">
+          ← Try Again
+        </button>
       </div>
-      <div class="severity-chip low" id="r-treat">
-        🕐 Treat<br>
-        <span id="r-treat-val">—</span>
+
+      <div id="result-content">
+        <div id="result-header-div" class="result-header">
+          <div style="font-size:36px;margin-bottom:8px;" id="r-emoji">🦠</div>
+          <div class="disease-name" id="r-disease">—</div>
+          <div style="font-size:12px;font-family:'Tiro Telugu',serif;
+            margin-top:4px;opacity:0.9;" id="r-telugu">—</div>
+          <div class="confidence-badge" id="r-confidence">Analysing...</div>
+        </div>
+
+        <div class="severity-row">
+          <div class="severity-chip">
+            🔴 Severity<br><strong id="r-sev-val">—</strong>
+          </div>
+          <div class="severity-chip">
+            ⚡ Spread<br><strong id="r-spread-val">—</strong>
+          </div>
+          <div class="severity-chip">
+            🕐 Treat<br><strong id="r-treat-val">—</strong>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <h4>What Is This?</h4>
+          <p id="r-what">—</p>
+        </div>
+        <div class="info-card">
+          <h4>Symptoms Found</h4>
+          <p id="r-symptoms">—</p>
+        </div>
+
+        <div class="section-title">💊 Recommended Pesticides</div>
+        <div class="pesticide-list" id="r-pesticides"></div>
+
+        <div class="info-card" style="margin-bottom:0;">
+          <h4>Prevention Tips</h4>
+          <p id="r-prevention">—</p>
+        </div>
+
+        <button class="order-btn" onclick="switchScreen('shop')">
+          🛒 Order from Rytu Shop
+        </button>
+        <button onclick="switchScreen('detect')"
+          style="margin:8px 16px 16px;width:calc(100% - 32px);
+          background:transparent;color:#1a6e35;
+          border:1.5px solid #1a6e35;border-radius:14px;
+          padding:12px;font-size:13px;font-weight:800;
+          cursor:pointer;font-family:'Nunito',sans-serif;">
+          🔄 Scan Again
+        </button>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="switchScreen('home')">
+          <div class="nav-icon">🏠</div><span>Home</span>
+        </div>
+        <div class="nav-item active" onclick="switchScreen('detect')">
+          <div class="nav-icon">🔬</div><span>Detect</span>
+        </div>
+        <div class="nav-item" onclick="switchScreen('shop')">
+          <div class="nav-icon">🏪</div><span>Shop</span>
+        </div>
+        <div class="nav-item" onclick="switchScreen('roadmap')">
+          <div class="nav-icon">🗓️</div><span>Roadmap</span>
+        </div>
+        <div class="nav-item" onclick="switchScreen('tracker')">
+          <div class="nav-icon">📋</div><span>Tracker</span>
+        </div>
       </div>
     </div>
- 
-    <div class="info-card" style="margin-top:12px;">
-      <h4>What Is This?</h4>
-      <p id="r-what">—</p>
-    </div>
- 
-    <div class="info-card">
-      <h4>Symptoms Found</h4>
-      <p id="r-symptoms">—</p>
-    </div>
- 
-    <div class="section-title">💊 Recommended Pesticides</div>
-    <div class="pesticide-list" id="r-pesticides"></div>
- 
-    <div class="info-card" style="margin-bottom:0;">
-      <h4>Prevention Tips</h4>
-      <p id="r-prevention">—</p>
-    </div>
- 
-    <button class="order-btn"
-      onclick="switchScreen('shop')"
-      style="margin-top:12px;">
-      🛒 Order from Rytu Shop
-    </button>
- 
-    <button onclick="switchScreen('detect')"
-      style="margin:8px 16px 16px;
-      background:transparent;color:var(--green);
-      border:1.5px solid var(--green);
-      border-radius:var(--radius);padding:12px;
-      font-size:13px;font-weight:800;
-      width:calc(100% - 32px);cursor:pointer;
-      font-family:'Nunito',sans-serif;">
-      🔄 Scan Again
-    </button>
-  </div>
- 
-</div>
- 
-           
-        
- 
-    <!-- SHOP SCREEN -->
+
+    <!-- ── SHOP SCREEN ── -->
     <div class="screen" id="screen-shop">
-      <div style="padding:12px 16px;">
-  <button onclick="goBack()" style="
-    background:transparent;
-    border:none;
-    font-size:14px;
-    font-weight:700;
-    color:var(--green);
-    cursor:pointer;
-    font-family:'Nunito',sans-serif;">
-    ← Back
-  </button>
-</div>
- 
       <div class="shop-hero">
         <h2>🏪 Rytu Shop</h2>
         <p>మీ తోటకు అవసరమైనవి — Direct prices, no middlemen</p>
         <div style="display:flex;gap:10px;margin-top:10px;">
-          <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:8px 12px;font-size:10px;font-weight:700;">📍 Nearest store: 2.3 km</div>
-          <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:8px 12px;font-size:10px;font-weight:700;">🚚 Delivery: 4 hrs</div>
+          <div style="background:rgba(255,255,255,0.15);border-radius:8px;
+            padding:8px 12px;font-size:10px;font-weight:700;">
+            📍 Nearest: 2.3 km</div>
+          <div style="background:rgba(255,255,255,0.15);border-radius:8px;
+            padding:8px 12px;font-size:10px;font-weight:700;">
+            🚚 Delivery: 4 hrs</div>
         </div>
       </div>
- 
+
       <div class="search-bar">🔍 &nbsp;Search pesticides, fertilizers...</div>
- 
+
       <div class="category-scroll">
         <div class="cat-chip active">All</div>
         <div class="cat-chip">Insecticides</div>
         <div class="cat-chip">Fungicides</div>
         <div class="cat-chip">Fertilizers</div>
         <div class="cat-chip">Seeds</div>
-        <div class="cat-chip">Equipment</div>
       </div>
- 
+
       <div class="section-title">🎯 Recommended for Your Crop</div>
       <div class="product-grid">
         <div class="product-card">
@@ -896,40 +1116,49 @@
           <button class="add-btn">+ Add to Cart</button>
         </div>
       </div>
- 
-      <div style="margin:14px 16px 0;background:var(--green-light);border-radius:var(--radius);padding:14px;border:1.5px solid var(--border);">
-        <div style="font-size:13px;font-weight:800;color:var(--green);">📍 Nearest Rytu Franchise Store</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Rytu AgriCenter — Narasaraopet Road, Guntur</div>
-        <div style="font-size:11px;font-weight:700;color:var(--green);margin-top:6px;">2.3 km away · Open 7AM–8PM · ☎️ 98765 43210</div>
+
+      <div style="margin:14px 16px 16px;background:#e8f0eb;
+        border-radius:12px;padding:14px;border:1.5px solid #c8ddc8;">
+        <div style="font-size:13px;font-weight:800;color:#1a6e35;">
+          📍 Nearest Rytu Franchise Store</div>
+        <div style="font-size:11px;color:#666;margin-top:4px;">
+          Rytu AgriCenter — Narasaraopet Road, Guntur</div>
+        <div style="font-size:11px;font-weight:700;color:#1a6e35;margin-top:6px;">
+          2.3 km away · Open 7AM–8PM · ☎️ 98765 43210</div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="switchScreen('home')">
+          <div class="nav-icon">🏠</div><span>Home</span>
+        </div>
+        <div class="nav-item" onclick="switchScreen('detect')">
+          <div class="nav-icon">🔬</div><span>Detect</span>
+        </div>
+        <div class="nav-item active" onclick="switchScreen('shop')">
+          <div class="nav-icon">🏪</div><span>Shop</span>
+        </div>
+        <div class="nav-item" onclick="switchScreen('roadmap')">
+          <div class="nav-icon">🗓️</div><span>Roadmap</span>
+        </div>
+        <div class="nav-item" onclick="switchScreen('tracker')">
+          <div class="nav-icon">📋</div><span>Tracker</span>
+        </div>
       </div>
     </div>
- 
-    <!-- ROADMAP SCREEN -->
+
+    <!-- ── ROADMAP SCREEN ── -->
     <div class="screen" id="screen-roadmap">
-      <div style="padding:12px 16px;">
-  <button onclick="goBack()" style="
-    background:transparent;
-    border:none;
-    font-size:14px;
-    font-weight:700;
-    color:var(--green);
-    cursor:pointer;
-    font-family:'Nunito',sans-serif;">
-    ← Back
-  </button>
-</div>
- 
       <div class="roadmap-hero">
         <h2>🗓️ Chilli Crop Roadmap</h2>
         <p>సీజన్ పూర్తి గైడ్ — Kharif 2025 · Guntur District</p>
       </div>
- 
+
       <div class="season-selector">
         <button class="season-btn active">Kharif 2025</button>
         <button class="season-btn">Rabi 2025</button>
         <button class="season-btn">Summer 2026</button>
       </div>
- 
+
       <div class="section-title">📅 Season Timeline</div>
       <div class="timeline">
         <div class="timeline-item">
@@ -937,7 +1166,7 @@
           <div class="tl-content">
             <div class="tl-title">Land Preparation</div>
             <div class="tl-date">May 20 – June 5</div>
-            <div class="tl-desc">Deep ploughing, apply FYM @ 10 tons/acre. Soil test for pH.</div>
+            <div class="tl-desc">Deep ploughing, apply FYM @ 10 tons/acre.</div>
             <span class="tl-status done">Completed</span>
           </div>
         </div>
@@ -946,7 +1175,7 @@
           <div class="tl-content">
             <div class="tl-title">Nursery & Sowing</div>
             <div class="tl-date">June 10 – June 15</div>
-            <div class="tl-desc">Use LCA 334 or G4 variety. Treat seeds with Trichoderma before sowing.</div>
+            <div class="tl-desc">Use LCA 334 or G4 variety. Treat seeds with Trichoderma.</div>
             <span class="tl-status done">Completed</span>
           </div>
         </div>
@@ -955,7 +1184,7 @@
           <div class="tl-content active">
             <div class="tl-title">Flowering & Pest Watch ← You Are Here</div>
             <div class="tl-date">August 10 – September 10</div>
-            <div class="tl-desc">Apply DAP 50kg/acre. Watch for Thrips, Mites & Whitefly. Spray at 7-day intervals.</div>
+            <div class="tl-desc">Watch for Thrips, Mites & Whitefly. Spray at 7-day intervals.</div>
             <span class="tl-status ongoing">In Progress</span>
           </div>
         </div>
@@ -964,7 +1193,7 @@
           <div class="tl-content">
             <div class="tl-title">Fruit Development</div>
             <div class="tl-date">September 10 – October 20</div>
-            <div class="tl-desc">Micro-nutrient spray (Boron + Zinc). Continue disease monitoring. Reduce irrigation.</div>
+            <div class="tl-desc">Micro-nutrient spray. Reduce irrigation gradually.</div>
             <span class="tl-status upcoming">Upcoming</span>
           </div>
         </div>
@@ -973,32 +1202,38 @@
           <div class="tl-content">
             <div class="tl-title">Harvest</div>
             <div class="tl-date">November 1 – November 30</div>
-            <div class="tl-desc">Expected yield: 25–30 quintals/acre. Harvest when 60% fruits turn red.</div>
+            <div class="tl-desc">Expected yield: 25–30 quintals/acre.</div>
             <span class="tl-status upcoming">Upcoming</span>
           </div>
         </div>
       </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="switchScreen('home')">
+          <div class="nav-icon">🏠</div><span>Home</span>
+        </div>
+        <div class="nav-item" onclick="switchScreen('detect')">
+          <div class="nav-icon">🔬</div><span>Detect</span>
+        </div>
+        <div class="nav-item" onclick="switchScreen('shop')">
+          <div class="nav-icon">🏪</div><span>Shop</span>
+        </div>
+        <div class="nav-item active" onclick="switchScreen('roadmap')">
+          <div class="nav-icon">🗓️</div><span>Roadmap</span>
+        </div>
+        <div class="nav-item" onclick="switchScreen('tracker')">
+          <div class="nav-icon">📋</div><span>Tracker</span>
+        </div>
+      </div>
     </div>
-    <!-- TRACKER SCREEN -->
+
+    <!-- ── TRACKER SCREEN ── -->
     <div class="screen" id="screen-tracker">
-      <div style="padding:12px 16px;">
-  <button onclick="goBack()" style="
-    background:transparent;
-    border:none;
-    font-size:14px;
-    font-weight:700;
-    color:var(--green);
-    cursor:pointer;
-    font-family:'Nunito',sans-serif;">
-    ← Back
-  </button>
-</div>
- 
       <div class="tracker-hero">
         <h2>📋 My Farm Tracker</h2>
         <p>మీ పని రికార్డ్ — Track every activity on your farm</p>
       </div>
- 
+
       <div class="stats-row">
         <div class="stat-card">
           <div class="s-val">24</div>
@@ -1013,7 +1248,7 @@
           <div class="s-label">Spent so far</div>
         </div>
       </div>
- 
+
       <div class="section-title">📝 Recent Activity Log</div>
       <div class="log-list">
         <div class="log-item">
@@ -1029,71 +1264,121 @@
           <div class="log-info">
             <div class="log-title">Pesticide Sprayed</div>
             <div class="log-date">Yesterday, 7:00 AM</div>
-            <div class="log-note">Spinosad 45% SC — 1 litre in 200L water. Full field covered.</div>
+            <div class="log-note">Spinosad 45% SC — 1 litre in 200L water.</div>
           </div>
         </div>
         <div class="log-item">
-          <div class="log-icon-wrap" style="background:var(--green-light);">🌱</div>
+          <div class="log-icon-wrap" style="background:#e8f0eb;">🌱</div>
           <div class="log-info">
             <div class="log-title">Fertilizer Applied</div>
             <div class="log-date">Aug 18</div>
-            <div class="log-note">DAP 50 kg/acre applied. Followed roadmap recommendation.</div>
-          </div>
-        </div>
-        <div class="log-item">
-          <div class="log-icon-wrap" style="background:#f3e8ff;">🔬</div>
-          <div class="log-info">
-            <div class="log-title">Disease Scan Completed</div>
-            <div class="log-date">Aug 20</div>
-            <div class="log-note">AI detected Thrips. Ordered treatment from Rytu Shop.</div>
+            <div class="log-note">DAP 50 kg/acre. Followed roadmap recommendation.</div>
           </div>
         </div>
       </div>
- 
-      <button class="add-log-btn">
-        ➕ Add New Activity Log
-      </button>
- 
-      <div style="margin:14px 16px 0;background:var(--green-light);border-radius:var(--radius);padding:14px;border:1.5px solid var(--border);">
-        <div style="font-size:12px;font-weight:800;color:var(--green);">📊 Season Summary (so far)</div>
-        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;">
-          <div><span style="font-weight:700;">Irrigations:</span> 8 times</div>
-          <div><span style="font-weight:700;">Sprays:</span> 3 times</div>
-          <div><span style="font-weight:700;">Scans:</span> 2 times</div>
+
+      <button class="add-log-btn">➕ Add New Activity Log</button>
+
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="switchScreen('home')">
+          <div class="nav-icon">🏠</div><span>Home</span>
+        </div>
+        <div class="nav-item" onclick="switchScreen('detect')">
+          <div class="nav-icon">🔬</div><span>Detect</span>
+        </div>
+        <div class="nav-item" onclick="switchScreen('shop')">
+          <div class="nav-icon">🏪</div><span>Shop</span>
+        </div>
+        <div class="nav-item" onclick="switchScreen('roadmap')">
+          <div class="nav-icon">🗓️</div><span>Roadmap</span>
+        </div>
+        <div class="nav-item active" onclick="switchScreen('tracker')">
+          <div class="nav-icon">📋</div><span>Tracker</span>
         </div>
       </div>
     </div>
- 
-    <!-- BOTTOM NAV -->
-    <div class="bottom-nav">
-      <div class="nav-item active" id="nav-home" onclick="switchScreen('home')">
-        <div class="nav-icon">🏠</div>
-        <span>Home</span>
-      </div>
-      <div class="nav-item" id="nav-detect" onclick="switchScreen('detect')">
-        <div class="nav-icon">🔬</div>
-        <span>Detect</span>
-      </div>
-      <div class="nav-item" id="nav-shop" onclick="switchScreen('shop')" style="position:relative;">
-        <div class="nav-icon">🏪</div>
-        <span>Shop</span>
-        <div class="badge">3</div>
-      </div>
-      <div class="nav-item" id="nav-roadmap" onclick="switchScreen('roadmap')">
-        <div class="nav-icon">🗓️</div>
-        <span>Roadmap</span>
-      </div>
-      <div class="nav-item" id="nav-tracker" onclick="switchScreen('tracker')">
-        <div class="nav-icon">📋</div>
-        <span>Tracker</span>
-      </div>
+
+  </div><!-- end main -->
+</div><!-- end app-shell -->
+
+<!-- ══ PROFILE MENU — outside everything ══ -->
+<div id="profile-menu" onclick="toggleProfileMenu()">
+  <div class="profile-dropdown" onclick="event.stopPropagation()">
+    <div class="profile-info">
+      <div class="pname" id="menu-farmer-name">Farmer Name</div>
+      <div class="pphone" id="menu-farmer-phone">Phone</div>
+      <div class="pdetails" id="menu-farmer-details">Crop · Village</div>
+    </div>
+    <div class="menu-item" onclick="openEditProfile()">✏️ Edit Profile</div>
+    <div class="menu-item" onclick="openSettings()">⚙️ Settings</div>
+    <div class="menu-item" onclick="openOrders()">📦 My Orders</div>
+    <div class="menu-divider"></div>
+    <div class="menu-item danger"
+      onclick="localStorage.clear();window.location.replace('/');">
+      🚪 Logout
     </div>
   </div>
- 
 </div>
+
+<!-- ══ PROFILE/EDIT SCREEN — outside everything ══ -->
+<div id="profile-screen">
+  <div class="profile-header">
+    <button class="profile-back" onclick="closeProfile()">← Back</button>
+    <div class="profile-title">Edit Profile</div>
+    <button class="profile-save-top" onclick="saveProfile()">Save ✅</button>
+  </div>
+
+  <div class="profile-body">
+    <div class="profile-avatar-area">
+      <div class="profile-avatar-circle">👨‍🌾</div>
+      <div class="profile-avatar-name" id="profile-name-display">—</div>
+      <div class="profile-avatar-phone" id="profile-phone-display">—</div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Full Name</div>
+      <input type="text" id="edit-name" class="field-input"
+        placeholder="Your full name">
+    </div>
+    <div class="field-group">
+      <div class="field-label">Village</div>
+      <input type="text" id="edit-village" class="field-input"
+        placeholder="Your village">
+    </div>
+    <div class="field-group">
+      <div class="field-label">District</div>
+      <input type="text" id="edit-district" class="field-input"
+        placeholder="Your district">
+    </div>
+    <div class="field-group">
+      <div class="field-label">Land in Acres</div>
+      <input type="number" id="edit-acres" class="field-input"
+        placeholder="Total acres">
+    </div>
+    <div class="field-group">
+      <div class="field-label">Crop Type</div>
+      <select id="edit-crop" class="field-input">
+        <option value="">Select Crop</option>
+        <option value="Chilli">🌶️ Chilli — మిరప</option>
+        <option value="Paddy">🌾 Paddy — వరి</option>
+        <option value="Cotton">🌿 Cotton — పత్తి</option>
+        <option value="Groundnut">🥜 Groundnut</option>
+        <option value="Maize">🌽 Maize — మొక్కజొన్న</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <div class="field-label">Sowing Date</div>
+      <input type="date" id="edit-sowing" class="field-input">
+    </div>
+
+    <button class="save-btn" onclick="saveProfile()">✅ Save Changes</button>
+    <button class="logout-btn"
+      onclick="localStorage.clear();window.location.replace('/');">
+      🚪 Logout
+    </button>
+  </div>
+</div>
+
 <script src="app.js"></script>
 </body>
 </html>
- 
-        
- 
