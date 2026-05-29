@@ -33,6 +33,11 @@ app.use(helmet({
     contentSecurityPolicy:false
 }))
 
+//Import Routes for farmers
+const farmersRoute = require('./routes/farmers')
+const authRoute = require('./routes/auth')
+const detectionRoute = require('./routes/detection')
+
 //Detect limit for detect route
 const detectLimiter = rateLimit({
     windowMs:15 * 60 *1000,
@@ -52,15 +57,12 @@ const authLimiter = rateLimit({
 })
 
 app.use('/detect',detectLimiter)
-app.use('/auth',authLimiter)
+app.use('/auth/send-otp',authLimiter)
 
 
 app.use(express.static(path.join(__dirname,'web')))
 
-//Import Routes for farmers
-const farmersRoute = require('./routes/farmers')
-const authRoute = require('./routes/auth')
-const detectionRoute = require('./routes/detection')
+
 
 app.use('/farmers',farmersRoute)
 
