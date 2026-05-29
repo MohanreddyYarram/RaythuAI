@@ -26,7 +26,7 @@ router.post('/send-otp',async(req,res)=>{
     const otp = Math.floor(100000+Math.random()*900000).toString()
 
         //Save OTP with phone number and expires in 5 minutes
-    try{
+    
 
      await supabase
         .from('otp_store')
@@ -50,9 +50,7 @@ router.post('/send-otp',async(req,res)=>{
         }else{
             console.log(`OTP saved for ${phone} : ${otp}`)
         }
-    }catch(err){
-        console.log('OTP storage error: ',err.message)
-    }
+    
     console.log(`OTP for ${phone} : ${otp}`)
     // Send SMS
     
