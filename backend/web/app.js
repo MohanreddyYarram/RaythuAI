@@ -438,71 +438,99 @@ function toggleProfileMenu() {
  
 function openEditProfile() {
   document.getElementById('profile-menu').style.display = 'none'
-  document.getElementById('profile-screen').style.display ='block'
+  
   
   // Load farmer data into profile screen
   const farmerData = localStorage.getItem('rytuai_farmer')
-  if (farmerData) {
-    const farmer = JSON.parse(farmerData)
-    document.getElementById('profile-name').textContent =
-      farmer.name || '—'
-    document.getElementById('profile-phone').textContent =
-      farmer.phone || '—'
-      //Fill Edit Fields
-    document.getElementById('profile-village').textContent =
-      farmer.village || ''
-    document.getElementById('profile-district').textContent =
-      farmer.district || ''
-    document.getElementById('profile-acres').textContent =
-      farmer.land_acres ? `${farmer.land_acres} acres` : ''
-    document.getElementById('profile-crop').textContent =
-      farmer.crop_type || ''
-    document.getElementById('profile-sowing').textContent =
-      farmer.sowing_date || ''
+
+  if(!farmerData){
+    alert('Please login again')
+    return
   }
- 
+   const farmer = JSON.parse(farmerData)
+   console.log('Loading farmer: ',farmer)
+   //Show name phone at top
+   const nameDisplay = document.getElementById('profile-name-display')
+   const phoneDisplay = document.getElementById('profile-phone-display')
+   if(nameDisplay) nameDisplay.textContent = farmer.name || '-'
+   if(phoneDisplay) phoneDisplay.textContent = farmer.phone || '-'
+
+   //Filling all the fields with existing values
+   const editName = document.getElementById('edit-name')
+  const editVillage = document.getElementById('edit-village')
+  const editDistrict = document.getElementById('edit-district')
+  const editAcres = document.getElementById('edit-acres')
+  const editCrop = document.getElementById('edit-crop')
+  const editSowing = document.getElementById('edit-sowing')
+
+  if (editName) editName.value = farmer.name || ''
+  if (editVillage) editVillage.value = farmer.village || ''
+  if (editDistrict) editDistrict.value = farmer.district || ''
+  if (editAcres) editAcres.value = farmer.land_acres || ''
+  if (editCrop) editCrop.value = farmer.crop_type || ''
+  if (editSowing) editSowing.value = farmer.sowing_date || ''
+
+  // Show profile screen
   document.getElementById('profile-screen').style.display = 'block'
+  // Scroll to top
+  document.getElementById('profile-screen').scrollTop = 0
+   
+ 
+
 }
 
 async function saveProfile(){
   const farmerData = localStorage.getItem('rytuai_farmer')
-  if(!farmerData) return
+  if(!farmerData){
+
+    alert('No farmer data found. Please login again')
+    return
+  }
+
 
   const farmer = JSON.parse(farmerData)
+  const phone = farmer.phone
+  const name = document.getElementById('edit-name').value.trim()
+  const village=document.getElementById('edit-village').value.trim()
+  const district=document.getElementById('edit-district').value.trim()
+  const land_acres=document.getElementById('edit-acres').value
+  const crop_type=document.getElementById('edit-crop').value
+  const sowing_date =document.getElementById('edit-swoing').value
 
-  const updatedFarmer = {
-    name:document.getElementById('edit-name').value.trim(),
-    village:document.getElementById('edit-village').value.trim(),
-    district:document.getElementById('edit-district').value.trim(),
-    land_acres:document.getElementById('edit-acres').value,
-    crop_type:document.getElementById('edit-crop').value,
-    sowing_date:document.getElementById('edit-swoing').value
-  }
-  if(!updatedFarmer.name || !updatedFarmer.village){
-    alert('Please fill name and village')
+  if(!name || !village || !district){
+    alert('Please fill name , village and district')
     return
   }
   try{
-    const response = await fetch(`${API}/farmers/${farmer.phone}`,{
+    const response = await fetch(`${API}/farmers/${phone}`,{
       method:'PUT',
       headers:{
         'Content-Type' : 'application/json',
         'Authorization':`Bearer ${localStorage.getItem('rytuai_token')}`
       },
-      body:JSON.stringify(updatedFarmer)
+      body:JSON.stringify({
+        name, village, district,
+        land_acres: parseFloat(land_acres) || 0,
+        crop_type , sowing_date
+      })
     })
     const data = await response.json()
 
     if (response.ok){
       //Updating localStorage
-      const updated = {...farmer, ...updatedFarmer}
+      const updated = {
+        ...farmer,
+        name,village, district,
+        land_acres:parseFloat(land_acres) || 0,
+        crop_type, sowing_date
+      }
       localStorage.setItem('rytuai_farmer', JSON.stringify(updated))
 
       //Update Home Screen Name
-      const nameEl = document.querySelector('.header-subtitle')
+      const nameEl = document.getElementById('farmer-greeting')
       if (nameEl){
         nameEl.textContent =
-        `నమస్కారం, ${updatedFarmer.name} గారు 🙏`
+        `నమస్కారం, ${name} గారు 🙏`
       }
       alert('Profile updated successfully!')
       closeProfile()
