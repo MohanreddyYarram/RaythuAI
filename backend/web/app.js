@@ -490,12 +490,17 @@ async function saveProfile(){
 
   const farmer = JSON.parse(farmerData)
   const phone = farmer.phone
-  const name = document.getElementById('edit-name').value.trim()
-  const village=document.getElementById('edit-village').value.trim()
-  const district=document.getElementById('edit-district').value.trim()
-  const land_acres=document.getElementById('edit-acres').value
-  const crop_type=document.getElementById('edit-crop').value
-  const sowing_date =document.getElementById('edit-swoing').value
+  function getVal(id){
+    const el = document.getElementById(id)
+    return el ? el.value.trim():''
+  }
+  const name = getVal('edit-name')
+  const village=getVal('edit-village')
+  const district=getVal('edit-district')
+  const land_acres=getVal('edit-acres')
+  const crop_type=getVal('edit-crop')
+  const sowing_date =getVal('edit-swoing')
+  console.log('Saving: ',{name , village , district})
 
   if(!name || !village || !district){
     alert('Please fill name , village and district')
