@@ -85,7 +85,7 @@ router.post('/',async(req,res)=>{
             })
         }
         //Validating phone  number
-        if(phone.length !==10 || isNaN(phone)){
+        if(phone.length !==10){
             return res.status(400).json({
                 message:'Please enter a valid 10-digit phone number'
             })
@@ -128,7 +128,7 @@ router.post('/',async(req,res)=>{
         }
         res.status(201).json({
             message:'Farmer Created Sucessfully',
-            Farmer:data[0]
+            farmer:data[0]
 
         })
 
