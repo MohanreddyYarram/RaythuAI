@@ -1,4 +1,3 @@
-
 /* ═══════════════════════════════════════
    RYTUAI — APP.JS
    Complete frontend logic
@@ -21,6 +20,8 @@ window.onload = function () {
 function showApp() {
   document.getElementById('login-screen').style.display = 'none'
   document.getElementById('app').style.display = 'flex'
+  // Load farmer data after app is visible
+  setTimeout(loadFarmerData, 100)
 }
 
 function loadFarmerData() {
@@ -33,17 +34,20 @@ function loadFarmerData() {
 
     const greeting = 'నమస్కారం, ' + farmer.name + ' గారు 🙏'
 
-    const el = document.getElementById('farmer-greeting')
-    if (el) el.textContent = greeting
+    // Update ALL greeting elements on page
+    document.querySelectorAll('[id^="farmer-greeting"]').forEach(function(el) {
+      el.textContent = greeting
+    })
 
-    const elD = document.getElementById('farmer-greeting-desktop')
-    if (elD) elD.textContent = greeting
-
+    // Topbar name
     const topEl = document.getElementById('topbar-farmer-name')
     if (topEl) topEl.textContent = farmer.name
 
+    // Sidebar name
     const sbEl = document.getElementById('sidebar-farmer-name')
     if (sbEl) sbEl.textContent = farmer.name
+
+    console.log('Farmer loaded:', farmer.name)
 
   } catch (e) {
     console.log('loadFarmerData error:', e)
@@ -63,30 +67,45 @@ const screenTitles = {
 }
 
 function switchScreen(name) {
+  // Hide all screens
   document.querySelectorAll('.screen').forEach(function(s) {
     s.classList.remove('active')
   })
 
+  // Show target screen
   const screen = document.getElementById('screen-' + name)
   if (screen) {
     screen.classList.add('active')
     screen.scrollTop = 0
   }
 
+  // Update topbar title
   const titleEl = document.getElementById('topbar-title')
   if (titleEl) titleEl.textContent = screenTitles[name] || ''
 
+  // Update sidebar active
   document.querySelectorAll('.s-item').forEach(function(s) {
     s.classList.remove('active')
   })
   const sItem = document.getElementById('s-' + name)
   if (sItem) sItem.classList.add('active')
 
+  // Remove active from all nav items
   document.querySelectorAll('.nav-item').forEach(function(n) {
     n.classList.remove('active')
   })
-  const navItem = document.getElementById('nav-' + name)
-  if (navItem) navItem.classList.add('active')
+
+  // Find and highlight correct nav in the NOW active screen
+  const activeScreen = document.getElementById('screen-' + name)
+  if (activeScreen) {
+    activeScreen.querySelectorAll('.nav-item').forEach(function(n) {
+      const onclick = n.getAttribute('onclick') || ''
+      if (onclick.indexOf("'" + name + "'") !== -1 ||
+          onclick.indexOf('"' + name + '"') !== -1) {
+        n.classList.add('active')
+      }
+    })
+  }
 }
 
 function goBack() {
