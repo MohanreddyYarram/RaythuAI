@@ -75,6 +75,24 @@ function loadFarmerData() {
     var sbEl = document.getElementById('sidebar-farmer-name')
     if (sbEl) sbEl.textContent = farmer.name
 
+    // Update crop status with real farmer data
+if (farmer.crop_type) {
+  var cropNameEl = document.querySelector('.crop-name')
+  if (cropNameEl) cropNameEl.textContent = farmer.crop_type + ' — Chilli'
+}
+
+if (farmer.sowing_date) {
+  var cropMetaEl = document.querySelector('.crop-meta')
+  if (cropMetaEl) {
+    var sowDate = new Date(farmer.sowing_date)
+    var sowFormatted = sowDate.toLocaleDateString('en-IN', {
+      day: 'numeric', month: 'short'
+    })
+    var acres = farmer.land_acres || '—'
+    cropMetaEl.textContent = 'Sowed: ' + sowFormatted + ' · ' + acres + ' acres'
+  }
+}
+
   } catch (e) {
     console.log('loadFarmerData error:', e)
   }
@@ -958,7 +976,8 @@ async function saveActivity() {
 
 // ── DELETE ACTIVITY ──
 async function deleteActivity(id) {
-  if (!confirm('Delete this activity?')) return
+  var confirmed = await showConfirm('Delete this activity')
+  if(!confirmed) return
 
   try {
     var response = await fetch(API + '/activities/' + id, {
@@ -977,6 +996,26 @@ async function deleteActivity(id) {
   } catch (err) {
     showToast('Cannot connect to server', 'error')
   }
+}
+
+function showConfirm(msg) {
+  return new Promise(function(resolve) {
+    var old = document.getElementById('rytu-confirm')
+    if (old) old.remove()
+
+    var box = document.createElement('div')
+    box.id = 'rytu-confirm'
+    box.style.cssText = 'position:fixed;bottom:90px;left:16px;right:16px;background:white;border-radius:16px;padding:20px;z-index:99999;box-shadow:0 8px 32px rgba(0,0,0,0.2);border:1.5px solid #e8e0d0;'
+    box.innerHTML =
+      '<div style="font-size:15px;font-weight:800;color:#1a1a1a;margin-bottom:16px;text-align:center;">' + msg + '</div>' +
+      '<div style="display:flex;gap:10px;">' +
+      '<button onclick="document.getElementById(\'rytu-confirm\').remove();window._confirmResolve(false);" style="flex:1;padding:12px;background:#f8f8f8;color:#555;border:1.5px solid #e0e0e0;border-radius:10px;font-size:14px;font-weight:700;font-family:Nunito,sans-serif;cursor:pointer;">Cancel</button>' +
+      '<button onclick="document.getElementById(\'rytu-confirm\').remove();window._confirmResolve(true);" style="flex:1;padding:12px;background:#e74c3c;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:Nunito,sans-serif;cursor:pointer;">Delete</button>' +
+      '</div>'
+
+    window._confirmResolve = resolve
+    document.body.appendChild(box)
+  })
 }
 
 // ── AUTO ADD FROM SHOP ──
@@ -1009,45 +1048,90 @@ async function addShopActivityToTracker(item, price) {
 }
 
 /* ══════════════════════════════════════
-   PULL TO REFRESH
+   PULL TO REFRESH — FIXED
+   Replace the existing pull to refresh
+   code in app.js with this
 ══════════════════════════════════════ */
 (function() {
   var startY = 0
   var threshold = 80
   var refreshing = false
+  var indicator = null
 
-  // Find the active screen
   function getActiveScreen() {
     return document.querySelector('.screen.active')
   }
 
-  // Show refresh indicator
-  function showRefreshIndicator() {
-    var existing = document.getElementById('pull-refresh')
-    if (existing) return
+  function getActiveScreenName() {
+    var screen = getActiveScreen()
+    if (!screen) return 'home'
+    return screen.id.replace('screen-', '')
+  }
 
-    var indicator = document.createElement('div')
-    indicator.id = 'pull-refresh'
+  function showIndicator() {
+    if (indicator) return
+    indicator = document.createElement('div')
     indicator.style.cssText = [
       'position:fixed;top:56px;left:50%;',
       'transform:translateX(-50%);',
       'background:#1a6e35;color:white;',
-      'padding:8px 20px;border-radius:0 0 20px 20px;',
+      'padding:8px 20px;border-radius:0 0 16px 16px;',
       'font-size:13px;font-weight:700;',
       'font-family:Nunito,sans-serif;',
       'z-index:9999;',
-      'display:flex;align-items:center;gap:8px;'
+      'display:flex;align-items:center;gap:8px;',
+      'white-space:nowrap;'
     ].join('')
-    indicator.innerHTML = '<div id="pull-spinner" style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;"></div> Refreshing...'
+    indicator.innerHTML = '<div style="width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;"></div> Refreshing...'
     document.body.appendChild(indicator)
   }
 
-  function hideRefreshIndicator() {
-    var indicator = document.getElementById('pull-refresh')
-    if (indicator) indicator.remove()
+  function hideIndicator() {
+    if (indicator) {
+      indicator.remove()
+      indicator = null
+    }
   }
 
-  // Touch start
+  // Refresh only current screen data — NO page reload
+  function refreshCurrentScreen() {
+    var name = getActiveScreenName()
+
+    switch(name) {
+      case 'tracker':
+        if (typeof loadActivities === 'function') loadActivities()
+        break
+      case 'shop':
+        if (typeof loadStores === 'function') loadStores()
+        break
+      case 'home':
+        if (typeof loadFarmerData === 'function') loadFarmerData()
+        break
+      case 'detect':
+        // Reset upload slots
+        Object.keys(uploadedImages).forEach(function(k) {
+          uploadedImages[k] = null
+        })
+        if (typeof updateCountMsg === 'function') updateCountMsg()
+        if (typeof checkAnalyzeReady === 'function') checkAnalyzeReady()
+        // Reset slot UI
+        for (var i = 0; i < 4; i++) {
+          var slot = document.getElementById('slot-' + i)
+          if (slot) {
+            slot.classList.remove('filled')
+            slot.innerHTML = '<div class="slot-plus">+</div>' +
+              '<div class="slot-label">' + (['Leaf Photo','Stem Photo','Full Plant','Extra'][i]) + '</div>'
+          }
+        }
+        break
+      default:
+        // For roadmap — nothing to refresh
+        break
+    }
+
+    showToast('Refreshed!', 'success')
+  }
+
   document.addEventListener('touchstart', function(e) {
     var screen = getActiveScreen()
     if (!screen) return
@@ -1058,33 +1142,33 @@ async function addShopActivityToTracker(item, price) {
     }
   }, { passive: true })
 
-  // Touch end
-  document.addEventListener('touchend', function(e) {
+  document.addEventListener('touchmove', function(e) {
     if (!startY || refreshing) return
+    var diff = e.touches[0].clientY - startY
+    if (diff > 40) {
+      showIndicator()
+    }
+  }, { passive: true })
+
+  document.addEventListener('touchend', function(e) {
+    if (!startY || refreshing) {
+      hideIndicator()
+      startY = 0
+      return
+    }
 
     var endY = e.changedTouches[0].clientY
     var diff = endY - startY
 
     if (diff > threshold) {
       refreshing = true
-      showRefreshIndicator()
-
-      // Reload current screen data
-      var screen = getActiveScreen()
-      if (screen) {
-        var screenId = screen.id
-
-        if (screenId === 'screen-tracker') {
-          if (typeof loadActivities === 'function') loadActivities()
-        }
-      }
-
-      // Reload page after short delay
       setTimeout(function() {
-        hideRefreshIndicator()
+        refreshCurrentScreen()
+        hideIndicator()
         refreshing = false
-        window.location.reload()
-      }, 1000)
+      }, 800)
+    } else {
+      hideIndicator()
     }
 
     startY = 0
