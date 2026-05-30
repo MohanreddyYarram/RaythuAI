@@ -1,6 +1,7 @@
+
 /* ═══════════════════════════════════════
    RYTUAI — APP.JS
-   All frontend logic
+   Complete frontend logic
 ═══════════════════════════════════════ */
 
 const API = ''
@@ -13,7 +14,7 @@ window.onload = function () {
   const token = localStorage.getItem('rytuai_token')
   if (token) {
     showApp()
-    loadFarmerGreeting()
+    loadFarmerData()
   }
 }
 
@@ -22,14 +23,26 @@ function showApp() {
   document.getElementById('app').style.display = 'flex'
 }
 
-function loadFarmerGreeting() {
+function loadFarmerData() {
   const farmerData = localStorage.getItem('rytuai_farmer')
   if (!farmerData) return
   const farmer = JSON.parse(farmerData)
+
+  // Mobile greeting
   const el = document.getElementById('farmer-greeting')
-  if (el && farmer.name) {
-    el.textContent = `నమస్కారం, ${farmer.name} గారు 🙏`
-  }
+  if (el && farmer.name) el.textContent = `నమస్కారం, ${farmer.name} గారు 🙏`
+
+  // Desktop greeting
+  const elD = document.getElementById('farmer-greeting-desktop')
+  if (elD && farmer.name) elD.textContent = `నమస్కారం, ${farmer.name} గారు 🙏`
+
+  // Topbar farmer name
+  const topEl = document.getElementById('topbar-farmer-name')
+  if (topEl && farmer.name) topEl.textContent = farmer.name
+
+  // Sidebar farmer name
+  const sbEl = document.getElementById('sidebar-farmer-name')
+  if (sbEl && farmer.name) sbEl.textContent = farmer.name
 }
 
 /* ══════════════════════════════════════
@@ -41,7 +54,7 @@ const screenTitles = {
   result: 'AI Result',
   shop: 'Rytu Shop',
   roadmap: 'Crop Roadmap',
-  tracker: 'My Tracker'
+  tracker: 'Farm Tracker'
 }
 
 function switchScreen(name) {
@@ -50,25 +63,26 @@ function switchScreen(name) {
     s.classList.remove('active')
   })
 
-  // Remove active from all nav items
-  document.querySelectorAll('.nav-item').forEach(n => {
-    n.classList.remove('active')
-  })
-
   // Show target screen
   const screen = document.getElementById('screen-' + name)
-  if (screen) screen.classList.add('active')
+  if (screen) {
+    screen.classList.add('active')
+    screen.scrollTop = 0
+  }
 
-  // Activate nav item
-  const navItem = document.getElementById('nav-' + name)
-  if (navItem) navItem.classList.add('active')
-
-  // Update topbar title
+  // Update topbar title (mobile)
   const titleEl = document.getElementById('topbar-title')
   if (titleEl) titleEl.textContent = screenTitles[name] || ''
 
-  // Scroll screen to top
-  if (screen) screen.scrollTop = 0
+  // Update sidebar active state
+  document.querySelectorAll('.s-item').forEach(s => s.classList.remove('active'))
+  const sItem = document.getElementById('s-' + name)
+  if (sItem) sItem.classList.add('active')
+
+  // Update mobile nav active state
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+  const navItem = document.getElementById('nav-' + name)
+  if (navItem) navItem.classList.add('active')
 }
 
 function goBack() {
@@ -80,6 +94,7 @@ function goBack() {
 ══════════════════════════════════════ */
 function showLoginError(msg) {
   const el = document.getElementById('login-error')
+  if (!el) return
   el.textContent = msg
   el.style.display = 'block'
   setTimeout(() => { el.style.display = 'none' }, 4000)
@@ -89,12 +104,21 @@ function showLoginLoading(text) {
   document.getElementById('step-phone').style.display = 'none'
   document.getElementById('step-otp').style.display = 'none'
   document.getElementById('step-register').style.display = 'none'
-  document.getElementById('login-loading').style.display = 'block'
-  document.getElementById('loading-text').textContent = text
+  const loading = document.getElementById('login-loading')
+  const loadingText = document.getElementById('loading-text')
+  if (loading) loading.style.display = 'block'
+  if (loadingText) loadingText.textContent = text
 }
 
 function hideLoginLoading() {
-  document.getElementById('login-loading').style.display = 'none'
+  const loading = document.getElementById('login-loading')
+  if (loading) loading.style.display = 'none'
+}
+
+function showStep(id) {
+  hideLoginLoading()
+  const el = document.getElementById(id)
+  if (el) el.style.display = 'flex'
 }
 
 async function sendOTP() {
@@ -115,24 +139,19 @@ async function sendOTP() {
     })
 
     const data = await response.json()
-    hideLoginLoading()
 
     if (response.ok) {
-      document.getElementById('step-otp').style.display = 'flex'
-      document.getElementById('step-otp').style.flexDirection = 'column'
-      document.getElementById('otp-sent-to').textContent =
-        `OTP sent to ${phone}`
-      document.getElementById('login-otp').focus()
+      showStep('step-otp')
+      const hint = document.getElementById('otp-sent-to')
+      if (hint) hint.textContent = `OTP sent to ${phone}`
+      const otpInput = document.getElementById('login-otp')
+      if (otpInput) otpInput.focus()
     } else {
-      document.getElementById('step-phone').style.display = 'flex'
-      document.getElementById('step-phone').style.flexDirection = 'column'
+      showStep('step-phone')
       showLoginError(data.message || 'Failed to send OTP')
     }
-
   } catch (err) {
-    hideLoginLoading()
-    document.getElementById('step-phone').style.display = 'flex'
-    document.getElementById('step-phone').style.flexDirection = 'column'
+    showStep('step-phone')
     showLoginError('Cannot connect to server')
   }
 }
@@ -154,7 +173,6 @@ async function verifyOTP() {
     })
 
     const data = await response.json()
-    hideLoginLoading()
 
     if (response.ok) {
       localStorage.setItem('rytuai_token', data.token)
@@ -163,45 +181,40 @@ async function verifyOTP() {
       if (data.farmer) {
         localStorage.setItem('rytuai_farmer', JSON.stringify(data.farmer))
         showApp()
-        loadFarmerGreeting()
+        loadFarmerData()
       } else {
-        // New farmer
         showRegistrationStep()
       }
-
     } else {
-      document.getElementById('step-otp').style.display = 'flex'
-      document.getElementById('step-otp').style.flexDirection = 'column'
+      showStep('step-otp')
       showLoginError(data.message || 'Invalid OTP. Please try again')
     }
-
   } catch (err) {
-    hideLoginLoading()
-    document.getElementById('step-otp').style.display = 'flex'
-    document.getElementById('step-otp').style.flexDirection = 'column'
+    showStep('step-otp')
     showLoginError('Cannot connect to server')
   }
 }
 
 function backToPhone() {
   document.getElementById('step-otp').style.display = 'none'
-  document.getElementById('step-phone').style.display = 'flex'
-  document.getElementById('step-phone').style.flexDirection = 'column'
-  document.getElementById('login-otp').value = ''
+  showStep('step-phone')
+  const otpEl = document.getElementById('login-otp')
+  if (otpEl) otpEl.value = ''
 }
 
 function showRegistrationStep() {
   document.getElementById('step-phone').style.display = 'none'
   document.getElementById('step-otp').style.display = 'none'
-  document.getElementById('step-register').style.display = 'flex'
-  document.getElementById('step-register').style.flexDirection = 'column'
-  document.getElementById('login-screen').scrollTop = 0
+  document.getElementById('login-loading').style.display = 'none'
+  const reg = document.getElementById('step-register')
+  if (reg) reg.style.display = 'flex'
+  const loginScreen = document.getElementById('login-screen')
+  if (loginScreen) loginScreen.scrollTop = 0
 }
 
 function backToOTP() {
   document.getElementById('step-register').style.display = 'none'
-  document.getElementById('step-otp').style.display = 'flex'
-  document.getElementById('step-otp').style.flexDirection = 'column'
+  showStep('step-otp')
 }
 
 async function registerFarmer() {
@@ -238,23 +251,22 @@ async function registerFarmer() {
     })
 
     const data = await response.json()
-    hideLoginLoading()
 
     if (response.ok) {
-      const farmer = data.farmer || data.Farmer || { name, phone: currentPhone, village, district }
+      const farmer = data.farmer || data.Farmer || {
+        name, phone: currentPhone, village, district,
+        land_acres: parseFloat(land_acres) || 0,
+        crop_type, sowing_date
+      }
       localStorage.setItem('rytuai_farmer', JSON.stringify(farmer))
       showApp()
-      loadFarmerGreeting()
+      loadFarmerData()
     } else {
-      document.getElementById('step-register').style.display = 'flex'
-      document.getElementById('step-register').style.flexDirection = 'column'
-      showLoginError(data.message || 'Registration failed')
+      showRegistrationStep()
+      showLoginError(data.message || 'Registration failed. Please try again.')
     }
-
   } catch (err) {
-    hideLoginLoading()
-    document.getElementById('step-register').style.display = 'flex'
-    document.getElementById('step-register').style.flexDirection = 'column'
+    showRegistrationStep()
     showLoginError('Cannot connect to server')
   }
 }
@@ -264,10 +276,10 @@ async function registerFarmer() {
 ══════════════════════════════════════ */
 function toggleProfileMenu() {
   const menu = document.getElementById('profile-menu')
+  if (!menu) return
   const isVisible = menu.style.display === 'block'
 
   if (!isVisible) {
-    // Load farmer data
     const farmerData = localStorage.getItem('rytuai_farmer')
     if (farmerData) {
       const farmer = JSON.parse(farmerData)
@@ -286,7 +298,8 @@ function toggleProfileMenu() {
 }
 
 function closeProfileMenu() {
-  document.getElementById('profile-menu').style.display = 'none'
+  const menu = document.getElementById('profile-menu')
+  if (menu) menu.style.display = 'none'
 }
 
 function openSettings() {
@@ -313,18 +326,19 @@ function openEditProfile() {
 
   const farmer = JSON.parse(farmerData)
 
-  // Set display info
-  const nameDisp = document.getElementById('profile-name-display')
-  const phoneDisp = document.getElementById('profile-phone-display')
-  if (nameDisp) nameDisp.textContent = farmer.name || '—'
-  if (phoneDisp) phoneDisp.textContent = farmer.phone || '—'
+  // Set display info at top
+  function setText(id, val) {
+    const el = document.getElementById(id)
+    if (el) el.textContent = val || '—'
+  }
+  setText('profile-name-display', farmer.name)
+  setText('profile-phone-display', farmer.phone)
 
-  // Pre-fill fields safely
+  // Pre-fill all fields
   function setVal(id, val) {
     const el = document.getElementById(id)
     if (el) el.value = val || ''
   }
-
   setVal('edit-name', farmer.name)
   setVal('edit-village', farmer.village)
   setVal('edit-district', farmer.district)
@@ -332,14 +346,16 @@ function openEditProfile() {
   setVal('edit-crop', farmer.crop_type)
   setVal('edit-sowing', farmer.sowing_date)
 
-  // Show profile screen
   const screen = document.getElementById('profile-screen')
-  screen.style.display = 'block'
-  screen.scrollTop = 0
+  if (screen) {
+    screen.style.display = 'block'
+    screen.scrollTop = 0
+  }
 }
 
 function closeProfile() {
-  document.getElementById('profile-screen').style.display = 'none'
+  const screen = document.getElementById('profile-screen')
+  if (screen) screen.style.display = 'none'
 }
 
 async function saveProfile() {
@@ -352,7 +368,6 @@ async function saveProfile() {
   const farmer = JSON.parse(farmerData)
   const phone = farmer.phone
 
-  // Safe getValue helper
   function getVal(id) {
     const el = document.getElementById(id)
     return el ? el.value.trim() : ''
@@ -370,7 +385,6 @@ async function saveProfile() {
     return
   }
 
-  // Show saving state
   const saveBtn = document.querySelector('.fs-save')
   if (saveBtn) { saveBtn.textContent = 'Saving...'; saveBtn.disabled = true }
 
@@ -391,7 +405,6 @@ async function saveProfile() {
     const data = await response.json()
 
     if (response.ok) {
-      // Update localStorage
       const updated = {
         ...farmer, name, village, district,
         land_acres: parseFloat(land_acres) || 0,
@@ -399,23 +412,15 @@ async function saveProfile() {
       }
       localStorage.setItem('rytuai_farmer', JSON.stringify(updated))
 
-      // Update greeting
-      const greetEl = document.getElementById('farmer-greeting')
-      if (greetEl) greetEl.textContent = `నమస్కారం, ${name} గారు 🙏`
-
-      // Update profile display
-      const nameDisp = document.getElementById('profile-name-display')
-      if (nameDisp) nameDisp.textContent = name
+      // Update all name displays
+      loadFarmerData()
 
       alert('✅ Profile updated successfully!')
       closeProfile()
-
     } else {
       alert(data.message || 'Update failed. Please try again.')
     }
-
   } catch (err) {
-    console.log('Save error:', err)
     alert('Cannot connect to server. Please try again.')
   } finally {
     if (saveBtn) { saveBtn.textContent = 'Save'; saveBtn.disabled = false }
@@ -486,8 +491,7 @@ function updateUploadCount() {
 function updateAnalyzeBtn() {
   const btn = document.getElementById('analyze-btn')
   if (!btn) return
-  const n = countUploaded()
-  btn.disabled = n < 1
+  btn.disabled = countUploaded() < 1
 }
 
 /* ══════════════════════════════════════
@@ -501,26 +505,25 @@ async function analyzeImages() {
 
   switchScreen('result')
 
-  // Show loading
   const loading = document.getElementById('result-loading')
   const error = document.getElementById('result-error')
   const content = document.getElementById('result-content')
+
   if (loading) loading.style.display = 'flex'
   if (error) error.style.display = 'none'
   if (content) content.style.display = 'none'
 
   try {
-    // Build FormData
     const formData = new FormData()
     Object.values(uploadedImages)
       .filter(v => v !== null)
       .forEach((base64, index) => {
-        const byteString = atob(base64.split(',')[1])
+        const byteStr = atob(base64.split(',')[1])
         const mime = base64.split(',')[0].split(':')[1].split(';')[0]
-        const ab = new ArrayBuffer(byteString.length)
+        const ab = new ArrayBuffer(byteStr.length)
         const ia = new Uint8Array(ab)
-        for (let i = 0; i < byteString.length; i++) {
-          ia[i] = byteString.charCodeAt(i)
+        for (let i = 0; i < byteStr.length; i++) {
+          ia[i] = byteStr.charCodeAt(i)
         }
         const blob = new Blob([ab], { type: mime })
         formData.append('photos', blob, `photo${index}.jpg`)
@@ -542,11 +545,9 @@ async function analyzeImages() {
     } else {
       throw new Error(data.message || 'Detection failed')
     }
-
   } catch (err) {
     if (loading) loading.style.display = 'none'
-    if (error) error.style.display = 'flex'
-    if (error) error.style.flexDirection = 'column'
+    if (error) { error.style.display = 'flex'; error.style.flexDirection = 'column' }
     const errMsg = document.getElementById('error-msg')
     if (errMsg) errMsg.textContent = err.message || 'Something went wrong'
   }
@@ -556,7 +557,6 @@ function renderResult(r) {
   const content = document.getElementById('result-content')
   if (content) content.style.display = 'block'
 
-  // Header
   const headerDiv = document.getElementById('result-header-div')
   if (headerDiv) {
     headerDiv.className = r.healthy ? 'result-hero healthy' : 'result-hero'
@@ -570,7 +570,7 @@ function renderResult(r) {
   setText('r-emoji', r.healthy ? '✅' : '🦠')
   setText('r-disease', r.disease)
   setText('r-telugu', r.teluguName)
-  setText('r-confidence', `${r.confidence} · ${countUploaded()} images`)
+  setText('r-confidence', `${r.confidence} · ${countUploaded()} images analyzed`)
   setText('r-sev-val', r.severity)
   setText('r-spread-val', r.spread)
   setText('r-treat-val', r.treatWithin)
@@ -578,7 +578,6 @@ function renderResult(r) {
   setText('r-symptoms', r.symptomsFound)
   setText('r-prevention', r.prevention)
 
-  // Pesticides
   const pestDiv = document.getElementById('r-pesticides')
   if (pestDiv) {
     pestDiv.innerHTML = (r.pesticides || []).map(p => {
@@ -588,7 +587,7 @@ function renderResult(r) {
           <div class="pest-icon">${p.icon || '🧴'}</div>
           <div class="pest-info">
             <div class="pest-name">${p.name}</div>
-            <div class="pest-brand">${p.brand} · Rytu Shop</div>
+            <div class="pest-brand">${p.brand} · Available in Rytu Shop</div>
           </div>
           <div class="pest-price-col">
             <div class="price">₹${p.priceRytu}</div>
