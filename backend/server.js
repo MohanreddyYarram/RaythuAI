@@ -37,6 +37,7 @@ app.use(helmet({
 const farmersRoute = require('./routes/farmers')
 const authRoute = require('./routes/auth')
 const detectionRoute = require('./routes/detection')
+const activitiesRoute = require('./routes/activities')
 
 //Detect limit for detect route
 const detectLimiter = rateLimit({
@@ -71,6 +72,8 @@ app.use('/farmers',farmersRoute)
 app.use('/auth',authRoute)
 
 app.use('/detect',detectionRoute)
+
+app.use('/activities',activitiesRoute)
 
 // Home Route
 app.get('/',(req,res)=>{

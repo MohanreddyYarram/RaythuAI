@@ -666,3 +666,345 @@ function logout() {
   localStorage.clear()
   window.location.replace('/')
 }
+
+/* ══════════════════════════════════════
+   TRACKER SYSTEM
+══════════════════════════════════════ */
+
+var currentEditActivityId = null
+var allActivities = []
+
+var typeConfig = {
+  irrigation: { icon: '💧', color: 'type-irrigation', label: 'Irrigation' },
+  spray:      { icon: '🧴', color: 'type-spray',      label: 'Spray' },
+  fertilizer: { icon: '🌱', color: 'type-fertilizer', label: 'Fertilizer' },
+  harvest:    { icon: '🌾', color: 'type-harvest',    label: 'Harvest' },
+  labour:     { icon: '👨‍🌾', color: 'type-labour',    label: 'Labour' },
+  shop:       { icon: '🛒', color: 'type-shop',       label: 'Purchase' },
+  other:      { icon: '📝', color: 'type-other',      label: 'Other' }
+}
+
+// Load activities when tracker screen opens
+var originalSwitchScreen = switchScreen
+function switchScreen(name) {
+  originalSwitchScreen(name)
+  if (name === 'tracker') {
+    loadActivities()
+  }
+}
+
+async function loadActivities() {
+  var farmerData = localStorage.getItem('rytuai_farmer')
+  if (!farmerData) return
+
+  var farmer = JSON.parse(farmerData)
+  var phone = farmer.phone
+
+  var listEl = document.getElementById('activities-list')
+  if (!listEl) return
+
+  listEl.innerHTML = '<div id="activities-loading" style="text-align:center;padding:40px;color:#888;"><div style="font-size:32px;margin-bottom:8px;">⏳</div><div style="font-size:13px;font-weight:700;">Loading activities...</div></div>'
+
+  try {
+    var response = await fetch(API + '/activities/' + phone, {
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
+    })
+    var data = await response.json()
+
+    if (response.ok) {
+      allActivities = data.activities || []
+      renderActivities(allActivities)
+      updateTrackerStats(allActivities)
+    } else {
+      listEl.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;font-weight:700;">Error loading activities</div>'
+    }
+  } catch (err) {
+    listEl.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;font-weight:700;">Cannot connect to server</div>'
+  }
+}
+
+function updateTrackerStats(activities) {
+  // Unique days
+  var days = new Set(activities.map(function(a) { return a.date })).size
+  var tasks = activities.length
+  var totalCost = activities.reduce(function(sum, a) {
+    return sum + (parseFloat(a.cost) || 0)
+  }, 0)
+
+  var daysEl = document.getElementById('stat-days')
+  var tasksEl = document.getElementById('stat-tasks')
+  var costEl = document.getElementById('stat-cost')
+
+  if (daysEl) daysEl.textContent = days
+  if (tasksEl) tasksEl.textContent = tasks
+  if (costEl) costEl.textContent = totalCost >= 1000
+    ? '₹' + (totalCost / 1000).toFixed(1) + 'k'
+    : '₹' + totalCost
+}
+
+function renderActivities(activities) {
+  var listEl = document.getElementById('activities-list')
+  if (!listEl) return
+
+  if (!activities || activities.length === 0) {
+    listEl.innerHTML = '<div class="tracker-empty">' +
+      '<div class="tracker-empty-icon">📋</div>' +
+      '<div class="tracker-empty-title">No activities yet</div>' +
+      '<div class="tracker-empty-sub">Start logging your daily farm work</div>' +
+      '<button onclick="openAddActivity()" style="background:#1a6e35;color:white;border:none;border-radius:12px;padding:12px 24px;font-size:14px;font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;">➕ Add First Activity</button>' +
+      '</div>'
+    return
+  }
+
+  // Group by date
+  var grouped = {}
+  activities.forEach(function(a) {
+    var date = a.date
+    if (!grouped[date]) grouped[date] = []
+    grouped[date].push(a)
+  })
+
+  var html = ''
+  Object.keys(grouped).forEach(function(date) {
+    // Format date nicely
+    var d = new Date(date + 'T00:00:00')
+    var today = new Date().toISOString().split('T')[0]
+    var yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+
+    var dateLabel = ''
+    if (date === today) {
+      dateLabel = 'Today'
+    } else if (date === yesterday) {
+      dateLabel = 'Yesterday'
+    } else {
+      dateLabel = d.toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric'
+      })
+    }
+
+    html += '<div class="date-group-header">' + dateLabel + '</div>'
+
+    grouped[date].forEach(function(activity) {
+      var config = typeConfig[activity.type] || typeConfig['other']
+      var isShop = activity.source === 'shop'
+
+      html += '<div class="activity-card">' +
+        '<div class="activity-card-header">' +
+        '<div class="activity-type-icon ' + config.color + '">' + config.icon + '</div>' +
+        '<div class="activity-card-info">' +
+        '<div class="activity-card-title">' + activity.title +
+        (isShop ? '<span class="shop-badge-activity">🛒 Shop</span>' : '') +
+        '</div>' +
+        '<div class="activity-card-date">' + config.label +
+        (activity.quantity ? ' · ' + activity.quantity + ' ' + (activity.unit || '') : '') +
+        '</div>' +
+        '</div>' +
+        (activity.cost > 0 ? '<div class="activity-card-cost">₹' + activity.cost + '</div>' : '') +
+        '</div>'
+
+      if (activity.description) {
+        html += '<div class="activity-card-desc">' + activity.description + '</div>'
+      }
+
+      // Don't show edit/delete for shop purchases
+      if (!isShop) {
+        html += '<div class="activity-card-footer">' +
+          '<button class="activity-action-btn activity-edit-btn" onclick="openEditActivity(' + activity.id + ')">✏️ Edit</button>' +
+          '<button class="activity-action-btn activity-delete-btn" onclick="deleteActivity(' + activity.id + ')">🗑️ Delete</button>' +
+          '</div>'
+      }
+
+      html += '</div>'
+    })
+  })
+
+  listEl.innerHTML = html
+}
+
+// ── ADD ACTIVITY ──
+function openAddActivity() {
+  currentEditActivityId = null
+  var titleEl = document.getElementById('activity-screen-title')
+  if (titleEl) titleEl.textContent = 'Add Activity'
+
+  // Reset all fields
+  document.getElementById('activity-type').value = ''
+  document.getElementById('activity-date').value = new Date().toISOString().split('T')[0]
+  document.getElementById('activity-title').value = ''
+  document.getElementById('activity-desc').value = ''
+  document.getElementById('activity-cost').value = ''
+  document.getElementById('activity-quantity').value = ''
+  document.getElementById('activity-unit').value = ''
+
+  // Reset type chips
+  document.querySelectorAll('.type-chip').forEach(function(c) {
+    c.classList.remove('selected')
+  })
+
+  var screen = document.getElementById('activity-screen')
+  if (screen) { screen.style.display = 'block'; screen.scrollTop = 0 }
+}
+
+// ── EDIT ACTIVITY ──
+function openEditActivity(id) {
+  var activity = allActivities.find(function(a) { return a.id === id })
+  if (!activity) return
+
+  currentEditActivityId = id
+  var titleEl = document.getElementById('activity-screen-title')
+  if (titleEl) titleEl.textContent = 'Edit Activity'
+
+  // Fill fields
+  document.getElementById('activity-type').value = activity.type || ''
+  document.getElementById('activity-date').value = activity.date || ''
+  document.getElementById('activity-title').value = activity.title || ''
+  document.getElementById('activity-desc').value = activity.description || ''
+  document.getElementById('activity-cost').value = activity.cost || ''
+  document.getElementById('activity-quantity').value = activity.quantity || ''
+  document.getElementById('activity-unit').value = activity.unit || ''
+
+  // Select type chip
+  document.querySelectorAll('.type-chip').forEach(function(c) {
+    c.classList.remove('selected')
+    if (c.getAttribute('data-type') === activity.type) {
+      c.classList.add('selected')
+    }
+  })
+
+  var screen = document.getElementById('activity-screen')
+  if (screen) { screen.style.display = 'block'; screen.scrollTop = 0 }
+}
+
+function selectType(type) {
+  document.getElementById('activity-type').value = type
+  document.querySelectorAll('.type-chip').forEach(function(c) {
+    c.classList.remove('selected')
+  })
+  var chip = document.querySelector('[data-type="' + type + '"]')
+  if (chip) chip.classList.add('selected')
+}
+
+function closeActivityScreen() {
+  var screen = document.getElementById('activity-screen')
+  if (screen) screen.style.display = 'none'
+}
+
+// ── SAVE ACTIVITY ──
+async function saveActivity() {
+  var type = document.getElementById('activity-type').value
+  var date = document.getElementById('activity-date').value
+  var title = document.getElementById('activity-title').value.trim()
+  var desc = document.getElementById('activity-desc').value.trim()
+  var cost = document.getElementById('activity-cost').value
+  var quantity = document.getElementById('activity-quantity').value.trim()
+  var unit = document.getElementById('activity-unit').value
+
+  if (!type) { showToast('Please select activity type', 'error'); return }
+  if (!title) { showToast('Please enter a title', 'error'); return }
+  if (!date) { showToast('Please select a date', 'error'); return }
+
+  var farmerData = localStorage.getItem('rytuai_farmer')
+  if (!farmerData) { showToast('Please login again', 'error'); return }
+  var farmer = JSON.parse(farmerData)
+
+  var saveBtn = document.getElementById('activity-save-btn')
+  if (saveBtn) { saveBtn.textContent = 'Saving...'; saveBtn.disabled = true }
+
+  try {
+    var url = API + '/activities'
+    var method = 'POST'
+
+    if (currentEditActivityId) {
+      url = API + '/activities/' + currentEditActivityId
+      method = 'PUT'
+    }
+
+    var response = await fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token')
+      },
+      body: JSON.stringify({
+        farmer_id: farmer.phone,
+        date: date,
+        type: type,
+        title: title,
+        description: desc,
+        cost: parseFloat(cost) || 0,
+        quantity: quantity,
+        unit: unit,
+        source: 'manual'
+      })
+    })
+
+    var data = await response.json()
+
+    if (response.ok) {
+      showToast(
+        currentEditActivityId ? 'Activity updated!' : 'Activity added!',
+        'success'
+      )
+      closeActivityScreen()
+      loadActivities()
+    } else {
+      showToast(data.message || 'Failed to save', 'error')
+    }
+  } catch (err) {
+    showToast('Cannot connect to server', 'error')
+  } finally {
+    if (saveBtn) { saveBtn.textContent = 'Save'; saveBtn.disabled = false }
+  }
+}
+
+// ── DELETE ACTIVITY ──
+async function deleteActivity(id) {
+  if (!confirm('Delete this activity?')) return
+
+  try {
+    var response = await fetch(API + '/activities/' + id, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token')
+      }
+    })
+
+    if (response.ok) {
+      showToast('Activity deleted', 'success')
+      loadActivities()
+    } else {
+      showToast('Failed to delete', 'error')
+    }
+  } catch (err) {
+    showToast('Cannot connect to server', 'error')
+  }
+}
+
+// ── AUTO ADD FROM SHOP ──
+async function addShopActivityToTracker(item, price) {
+  var farmerData = localStorage.getItem('rytuai_farmer')
+  if (!farmerData) return
+
+  var farmer = JSON.parse(farmerData)
+
+  try {
+    await fetch(API + '/activities', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token')
+      },
+      body: JSON.stringify({
+        farmer_id: farmer.phone,
+        date: new Date().toISOString().split('T')[0],
+        type: 'spray',
+        title: 'Purchased: ' + item,
+        description: 'Ordered from Rytu Shop',
+        cost: parseFloat(price) || 0,
+        source: 'shop'
+      })
+    })
+  } catch (err) {
+    console.log('Auto tracker error:', err)
+  }
+}

@@ -1536,3 +1536,174 @@ html, body {
   .screen { padding-bottom: 0 !important; }
   .mobile-only { display: none !important; }
 }
+
+/* ═══════════════════════════════════════
+   TRACKER STYLES
+═══════════════════════════════════════ */
+
+/* Type chips */
+.type-chip {
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 8px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-mid);
+  transition: all 0.15s;
+}
+
+.type-chip:hover {
+  border-color: var(--green);
+  background: var(--green-pale);
+}
+
+.type-chip.selected {
+  border-color: var(--green);
+  background: var(--green);
+  color: white;
+}
+
+/* Activity card */
+.activity-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.activity-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+.activity-type-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.activity-card-info { flex: 1; }
+
+.activity-card-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.activity-card-date {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.activity-card-cost {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--green);
+  flex-shrink: 0;
+}
+
+.activity-card-desc {
+  font-size: 12px;
+  color: var(--text-mid);
+  padding: 0 14px 10px;
+  line-height: 1.5;
+}
+
+.activity-card-footer {
+  display: flex;
+  gap: 8px;
+  padding: 8px 14px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.activity-action-btn {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Nunito', sans-serif;
+  cursor: pointer;
+}
+
+.activity-edit-btn {
+  background: var(--green-light);
+  color: var(--green);
+}
+
+.activity-delete-btn {
+  background: #ffeaea;
+  color: var(--red);
+}
+
+/* Shop badge on activity */
+.shop-badge-activity {
+  font-size: 9px;
+  font-weight: 800;
+  background: #fff3cd;
+  color: #856404;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-left: 8px;
+}
+
+/* Date group header */
+.date-group-header {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-group-header::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Empty state */
+.tracker-empty {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.tracker-empty-icon { font-size: 48px; margin-bottom: 12px; }
+.tracker-empty-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.tracker-empty-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+/* Type icon colors */
+.type-irrigation { background: #e3f2fd; }
+.type-spray { background: #fce4ec; }
+.type-fertilizer { background: #e8f5e9; }
+.type-harvest { background: #fff8e1; }
+.type-labour { background: #f3e5f5; }
+.type-shop { background: #e8f5e9; }
+.type-other { background: #f5f5f5; }
