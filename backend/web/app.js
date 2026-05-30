@@ -1,576 +1,668 @@
-// -- Global State---
+
+/* ═══════════════════════════════════════
+   RYTUAI — APP.JS
+═══════════════════════════════════════ */
+
 const API = ''
-const uploadedImages = { 0: null, 1: null, 2: null, 3: null }
-const labels = ['Leaf', 'Stem', 'Whole Plant', 'Extra']
-// ── LOGIN SYSTEM ──
 let currentPhone = ''
- 
-function showError(msg) {
-  const el = document.getElementById('login-error')
+
+/* ══════════════════════════════════════
+   TOAST NOTIFICATION (replaces alert)
+══════════════════════════════════════ */
+function showToast(msg, type) {
+  var existing = document.getElementById('rytu-toast')
+  if (existing) existing.remove()
+
+  var color = type === 'error' ? '#e74c3c' : '#1a6e35'
+  var icon = type === 'error' ? '❌' : '✅'
+
+  var toast = document.createElement('div')
+  toast.id = 'rytu-toast'
+  toast.style.cssText = [
+    'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);',
+    'background:' + color + ';color:white;',
+    'padding:12px 20px;border-radius:12px;',
+    'font-size:14px;font-weight:700;font-family:Nunito,sans-serif;',
+    'z-index:99999;white-space:nowrap;',
+    'box-shadow:0 4px 20px rgba(0,0,0,0.2);',
+    'animation:fadeInUp 0.3s ease;'
+  ].join('')
+  toast.textContent = icon + ' ' + msg
+
+  var style = document.createElement('style')
+  style.textContent = '@keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}'
+  document.head.appendChild(style)
+
+  document.body.appendChild(toast)
+  setTimeout(function() { if (toast.parentNode) toast.remove() }, 3000)
+}
+
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+window.onload = function () {
+  const token = localStorage.getItem('rytuai_token')
+  if (token) {
+    showApp()
+  }
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none'
+  document.getElementById('app').style.display = 'flex'
+  setTimeout(loadFarmerData, 200)
+}
+
+function loadFarmerData() {
+  const farmerData = localStorage.getItem('rytuai_farmer')
+  if (!farmerData) return
+
+  try {
+    const farmer = JSON.parse(farmerData)
+    if (!farmer || !farmer.name) return
+
+    const greeting = 'నమస్కారం, ' + farmer.name + ' గారు 🙏'
+
+    // Update every possible greeting element
+    var greetEls = document.querySelectorAll(
+      '#farmer-greeting, #farmer-greeting-desktop'
+    )
+    greetEls.forEach(function(el) { el.textContent = greeting })
+
+    var topEl = document.getElementById('topbar-farmer-name')
+    if (topEl) topEl.textContent = farmer.name
+
+    var sbEl = document.getElementById('sidebar-farmer-name')
+    if (sbEl) sbEl.textContent = farmer.name
+
+  } catch (e) {
+    console.log('loadFarmerData error:', e)
+  }
+}
+
+/* ══════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════ */
+var currentScreen = 'home'
+
+var screenTitles = {
+  home: 'Home',
+  detect: 'Detect Disease',
+  result: 'AI Result',
+  shop: 'Rytu Shop',
+  roadmap: 'Crop Roadmap',
+  tracker: 'Farm Tracker'
+}
+
+function switchScreen(name) {
+  currentScreen = name
+
+  // Hide all screens
+  document.querySelectorAll('.screen').forEach(function(s) {
+    s.classList.remove('active')
+  })
+
+  // Show target
+  var screen = document.getElementById('screen-' + name)
+  if (screen) {
+    screen.classList.add('active')
+    screen.scrollTop = 0
+  }
+
+  // Topbar title
+  var titleEl = document.getElementById('topbar-title')
+  if (titleEl) titleEl.textContent = screenTitles[name] || ''
+
+  // Sidebar active
+  document.querySelectorAll('.s-item').forEach(function(s) {
+    s.classList.remove('active')
+  })
+  var sItem = document.getElementById('s-' + name)
+  if (sItem) sItem.classList.add('active')
+
+  // Bottom nav — update ALL nav items on the page
+  // Mark active based on which screen they go to
+  document.querySelectorAll('.nav-item').forEach(function(n) {
+    n.classList.remove('active')
+    var onclick = n.getAttribute('onclick') || ''
+    if (onclick.indexOf("'" + name + "'") !== -1 ||
+        onclick.indexOf('"' + name + '"') !== -1) {
+      n.classList.add('active')
+    }
+  })
+}
+
+function goBack() {
+  switchScreen('home')
+}
+
+/* ══════════════════════════════════════
+   LOGIN
+══════════════════════════════════════ */
+function showLoginError(msg) {
+  var el = document.getElementById('login-error')
+  if (!el) return
   el.textContent = msg
   el.style.display = 'block'
-  setTimeout(() => el.style.display = 'none', 4000)
+  setTimeout(function() { el.style.display = 'none' }, 4000)
 }
- 
-function showLoading(text) {
+
+function showLoginLoading(text) {
   document.getElementById('step-phone').style.display = 'none'
   document.getElementById('step-otp').style.display = 'none'
-  document.getElementById('login-loading').style.display = 'block'
-  document.getElementById('loading-text').textContent = text
+  document.getElementById('step-register').style.display = 'none'
+  var loading = document.getElementById('login-loading')
+  var loadingText = document.getElementById('loading-text')
+  if (loading) loading.style.display = 'block'
+  if (loadingText) loadingText.textContent = text
 }
- 
-function hideLoading() {
-  document.getElementById('login-loading').style.display = 'none'
+
+function hideLoginLoading() {
+  var loading = document.getElementById('login-loading')
+  if (loading) loading.style.display = 'none'
 }
- 
+
+function showStep(id) {
+  hideLoginLoading()
+  var el = document.getElementById(id)
+  if (el) {
+    el.style.display = 'flex'
+    el.style.flexDirection = 'column'
+  }
+}
+
 async function sendOTP() {
-  const phone = document.getElementById('login-phone').value.trim()
+  var phone = document.getElementById('login-phone').value.trim()
   if (phone.length !== 10) {
-    showError('Please enter a valid 10-digit mobile number')
+    showLoginError('Please enter a valid 10-digit mobile number')
     return
   }
   currentPhone = phone
-  showLoading('Sending OTP...')
+  showLoginLoading('Sending OTP...')
   try {
-    const response = await fetch(`${API}/auth/send-otp`, {
+    var response = await fetch(API + '/auth/send-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone })
+      body: JSON.stringify({ phone: phone })
     })
-    const data = await response.json()
-    hideLoading()
+    var data = await response.json()
     if (response.ok) {
-      document.getElementById('step-otp').style.display = 'block'
-      document.getElementById('otp-sent-to').textContent = 
-        `OTP sent to ${phone}`
+      showStep('step-otp')
+      var hint = document.getElementById('otp-sent-to')
+      if (hint) hint.textContent = 'OTP sent to ' + phone
     } else {
-      document.getElementById('step-phone').style.display = 'block'
-      showError(data.message || 'Failed to send OTP')
+      showStep('step-phone')
+      showLoginError(data.message || 'Failed to send OTP')
     }
   } catch (err) {
-    hideLoading()
-    document.getElementById('step-phone').style.display = 'block'
-    showError('Cannot connect to server. Make sure backend is running.')
+    showStep('step-phone')
+    showLoginError('Cannot connect to server')
   }
 }
- 
+
 async function verifyOTP() {
-  const otp = document.getElementById('login-otp').value.trim()
+  var otp = document.getElementById('login-otp').value.trim()
   if (otp.length !== 6) {
-    showError('Please enter the 6-digit OTP')
+    showLoginError('Please enter the 6-digit OTP')
     return
   }
-  showLoading('Verifying OTP...')
+  showLoginLoading('Verifying OTP...')
   try {
-    const response = await fetch(`${API}/auth/verify-otp`, {
+    var response = await fetch(API + '/auth/verify-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: currentPhone, otp })
+      body: JSON.stringify({ phone: currentPhone, otp: otp })
     })
-    const data = await response.json()
-    hideLoading()
+    var data = await response.json()
     if (response.ok) {
-  // Save token always
-  localStorage.setItem('rytuai_token', data.token)
-  localStorage.setItem('rytuai_phone', currentPhone)
- 
-  if (data.farmer) {
-    // Existing farmer — update name and go home
-    localStorage.setItem('rytuai_farmer',
-      JSON.stringify(data.farmer))
- 
-    const nameEl = document.querySelector('.header-subtitle')
-    if (nameEl) {
-      nameEl.textContent =
-        `నమస్కారం, ${data.farmer.name} గారు 🙏`
+      localStorage.setItem('rytuai_token', data.token)
+      localStorage.setItem('rytuai_phone', currentPhone)
+      if (data.farmer) {
+        localStorage.setItem('rytuai_farmer', JSON.stringify(data.farmer))
+        showApp()
+      } else {
+        showRegistrationStep()
+      }
+    } else {
+      showStep('step-otp')
+      showLoginError(data.message || 'Invalid OTP')
     }
- 
-    document.getElementById('login-screen').style.display = 'none'
-    switchScreen('home')
- 
-  } else {
-    // New farmer — show registration form
-    showRegistration()
-  }
- }a
-     
   } catch (err) {
-    hideLoading()
-    document.getElementById('step-otp').style.display = 'block'
-    showError('Cannot connect to server.')
+    showStep('step-otp')
+    showLoginError('Cannot connect to server')
   }
 }
- 
+
 function backToPhone() {
   document.getElementById('step-otp').style.display = 'none'
-  document.getElementById('step-phone').style.display = 'block'
-  document.getElementById('login-otp').value = ''
-}
- 
-// Check if already logged in
-window.onload = function() {
-  const token = localStorage.getItem('rytuai_token')
-  if (token) {
-  document.getElementById('login-screen').style.display = 'none'
-  }
-  
-}
- 
- 
-function switchScreen(name) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelectorAll('.sidebar-item').forEach(n => n.classList.remove('active'));
- 
-  document.getElementById('screen-' + name).classList.add('active');
-  const navEl = document.getElementById('nav-' + name);
-  if (navEl) navEl.classList.add('active');
- 
-  // sidebar
-  document.querySelectorAll('.sidebar-item').forEach(item => {
-    if (item.getAttribute('onclick') && item.getAttribute('onclick').includes("'" + name + "'")) {
-      item.classList.add('active');
-    }
-  });
+  showStep('step-phone')
+  var otpEl = document.getElementById('login-otp')
+  if (otpEl) otpEl.value = ''
 }
 
-function showResult() {
-  switchScreen('result');
-}
-
-// ── IMAGE UPLOAD SYSTEM ──
-
- 
-function triggerUpload(idx) {
-  document.getElementById('file-' + idx).click()
-}
- 
-function handleUpload(idx, input) {
-  const file = input.files[0]
-  if (!file) return
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    const base64 = e.target.result
-    uploadedImages[idx] = base64
-    updateSlot(idx, base64)
-    updateCountMsg()
-    checkAnalyzeReady()
-  }
-  reader.readAsDataURL(file)
-}
- 
-function updateSlot(idx, base64) {
-  const slot = document.getElementById('slot-' + idx)
-  slot.classList.add('filled')
-  slot.innerHTML = `
-    <img src="${base64}" 
-      style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
-    <div class="check">✓</div>
-    <div style="position:absolute;bottom:4px;left:0;right:0;
-      text-align:center;font-size:9px;font-weight:800;
-      color:var(--green);background:rgba(255,255,255,0.85);
-      padding:2px 0;">${labels[idx]}</div>
-  `
-}
- 
-function countUploaded() {
-  return Object.values(uploadedImages).filter(v => v !== null).length
-}
- 
-function updateCountMsg() {
-  const n = countUploaded()
-  const el = document.getElementById('upload-count-msg')
-  if (!el) return
-  if (n >= 1) {
-    el.style.color = 'var(--green)'
-    el.textContent = `✅ ${n} photo(s) uploaded — ready to analyze!`
-  } else {
-    el.style.color = 'var(--muted)'
-    el.textContent = `0 photos uploaded`
-  }
-}
- 
-function checkAnalyzeReady() {
-  const btn = document.getElementById('analyze-btn')
-  if (!btn) return
-  if (countUploaded() >= 1) {
-    btn.style.opacity = '1'
-    btn.style.cursor = 'pointer'
-  } else {
-    btn.style.opacity = '0.4'
-    btn.style.cursor = 'not-allowed'
-  }
-}
- 
-// ── REAL AI DETECTION ──
-async function analyzeImages() {
-  if (countUploaded() < 1) {
-    alert('Please upload at least 1 photo')
-    return
-  }
- 
-  switchScreen('result')
- 
-  document.getElementById('result-loading').style.display = 'flex'
-  document.getElementById('result-error').style.display = 'none'
-  document.getElementById('result-content').style.display = 'none'
- 
-  try {
-    // Create form data with photos
-    const formData = new FormData()
- 
-    Object.values(uploadedImages)
-      .filter(v => v !== null)
-      .forEach((base64, index) => {
-        const byteString = atob(base64.split(',')[1])
-        const mimeType = base64.split(',')[0].split(':')[1].split(';')[0]
-        const ab = new ArrayBuffer(byteString.length)
-        const ia = new Uint8Array(ab)
-        for (let i = 0; i < byteString.length; i++) {
-          ia[i] = byteString.charCodeAt(i)
-        }
-        const blob = new Blob([ab], { type: mimeType })
-        formData.append('photos', blob, `photo${index}.jpg`)
-      })
- 
-    // Send to backend
-    const response = await fetch(`${API}/detect`, {
-      method: 'POST',
-      body: formData
-    })
- 
-    const data = await response.json()
- 
-    if (response.ok) {
-      renderResult(data.result)
-    } else {
-      throw new Error(data.message || 'Detection failed')
-    }
- 
-  } catch (err) {
-    document.getElementById('result-loading').style.display = 'none'
-    document.getElementById('result-error').style.display = 'block'
-    document.getElementById('error-msg').textContent =
-      err.message || 'Something went wrong. Please try again.'
-  }
-}
- 
-// ── RENDER RESULT ──
-function renderResult(r) {
-  document.getElementById('result-loading').style.display = 'none'
-  document.getElementById('result-content').style.display = 'block'
- 
-  const headerDiv = document.getElementById('result-header-div')
-  if (headerDiv) {
-    headerDiv.className = r.healthy ? 'result-header healthy' : 'result-header'
-  }
- 
-  const emoji = document.getElementById('r-emoji')
-  if (emoji) emoji.textContent = r.healthy ? '✅' : '🦠'
- 
-  const disease = document.getElementById('r-disease')
-  if (disease) disease.textContent = r.disease
- 
-  const telugu = document.getElementById('r-telugu')
-  if (telugu) telugu.textContent = r.teluguName || ''
- 
-  const confidence = document.getElementById('r-confidence')
-  if (confidence) {
-    confidence.textContent =
-      `${r.confidence} Confidence · ${countUploaded()} images analysed`
-  }
- 
-  const sevVal = document.getElementById('r-sev-val')
-  if (sevVal) sevVal.textContent = r.severity
- 
-  const spreadVal = document.getElementById('r-spread-val')
-  if (spreadVal) spreadVal.textContent = r.spread
- 
-  const treatVal = document.getElementById('r-treat-val')
-  if (treatVal) treatVal.textContent = r.treatWithin
- 
-  const what = document.getElementById('r-what')
-  if (what) what.textContent = r.whatIsThis
- 
-  const symptoms = document.getElementById('r-symptoms')
-  if (symptoms) {
-    symptoms.innerHTML = r.symptomsFound.replace(/\n/g, '<br>')
-  }
- 
-  const prevention = document.getElementById('r-prevention')
-  if (prevention) {
-    prevention.innerHTML = r.prevention.replace(/\n/g, '<br>')
-  }
- 
-  // Pesticides
-  const pestDiv = document.getElementById('r-pesticides')
-  if (pestDiv) {
-    pestDiv.innerHTML = ''
-    ;(r.pesticides || []).forEach(p => {
-      const disc = Math.round((1 - p.priceRytu / p.priceMRP) * 100)
-      pestDiv.innerHTML += `
-        <div class="pest-item" onclick="switchScreen('shop')">
-          <div class="pest-icon">${p.icon || '🧴'}</div>
-          <div class="pest-info">
-            <div class="pest-name">${p.name}</div>
-            <div class="pest-brand">${p.brand} · Rytu Shop</div>
-          </div>
-          <div class="pest-price">
-            <div class="price">₹${p.priceRytu}</div>
-            <div class="mrp">₹${p.priceMRP}</div>
-            <div class="discount">${disc}% OFF</div>
-          </div>
-        </div>`
-    })
-  }
-}
- 
-// Farmer Registration
-function showRegistration() {
-  document.getElementById('step-otp').style.display = 'none'
+function showRegistrationStep() {
   document.getElementById('step-phone').style.display = 'none'
-  document.getElementById('step-register').style.display = 'block'
-  document.getElementById('login-loading').style.display ='none'
-  document.getElementById('login-error').style.display ='none'
-  document.getElementById('login-screen').scrollTop = 0
+  document.getElementById('step-otp').style.display = 'none'
+  document.getElementById('login-loading').style.display = 'none'
+  var reg = document.getElementById('step-register')
+  if (reg) {
+    reg.style.display = 'flex'
+    reg.style.flexDirection = 'column'
+  }
+  var ls = document.getElementById('login-screen')
+  if (ls) ls.scrollTop = 0
 }
- 
+
+function backToOTP() {
+  document.getElementById('step-register').style.display = 'none'
+  showStep('step-otp')
+}
+
 async function registerFarmer() {
-  const name = document.getElementById('reg-name').value.trim()
-  const village = document.getElementById('reg-village').value.trim()
-  const district = document.getElementById('reg-district').value.trim()
-  const land_acres = document.getElementById('reg-acres').value
-  const crop_type = document.getElementById('reg-crop').value
-  const sowing_date = document.getElementById('reg-sowing').value
- 
+  var name = document.getElementById('reg-name').value.trim()
+  var village = document.getElementById('reg-village').value.trim()
+  var district = document.getElementById('reg-district').value.trim()
+  var land_acres = document.getElementById('reg-acres').value
+  var crop_type = document.getElementById('reg-crop').value
+  var sowing_date = document.getElementById('reg-sowing').value
+
   if (!name || !village || !district) {
-    showError('Please fill all required fields')
+    showLoginError('Please fill name, village and district')
     return
   }
- 
-  showLoading('Saving your profile...')
- 
+  showLoginLoading('Saving your profile...')
   try {
-    const response = await fetch(`${API}/farmers`, {
+    var response = await fetch(API + '/farmers', {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
-        'Authorization':`Bearer ${localStorage.getItem('rytuai_token')}`
-       },
+        'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token')
+      },
       body: JSON.stringify({
-        name,
-        phone: currentPhone,
-        village,
-        district,
-        land_acres: parseFloat(land_acres),
-        crop_type,
-        sowing_date
+        name: name, phone: currentPhone,
+        village: village, district: district,
+        land_acres: parseFloat(land_acres) || 0,
+        crop_type: crop_type, sowing_date: sowing_date
       })
     })
- 
-    const data = await response.json()
-    hideLoading()
- 
+    var data = await response.json()
     if (response.ok) {
-      // Save farmer details locally
-      document.getElementById('login-error').style.display = 'none'
-      localStorage.setItem('rytuai_farmer', JSON.stringify(data.farmer))
- 
-      // Update home screen name
-      const nameEl = document.querySelector('.header-subtitle')
-      if (nameEl) {
-        nameEl.textContent = `నమస్కారం, ${data.farmer.name} గారు 🙏`
+      var farmer = data.farmer || data.Farmer || {
+        name: name, phone: currentPhone,
+        village: village, district: district,
+        land_acres: parseFloat(land_acres) || 0,
+        crop_type: crop_type, sowing_date: sowing_date
       }
- 
-      // Show home screen
-      document.getElementById('login-screen').style.display = 'none'
-      switchScreen('home')
- 
+      localStorage.setItem('rytuai_farmer', JSON.stringify(farmer))
+      showApp()
     } else {
-      showError(data.message || 'Registration failed')
-      document.getElementById('step-register').style.display = 'block'
+      showRegistrationStep()
+      showLoginError(data.message || 'Registration failed')
     }
- 
   } catch (err) {
-    hideLoading()
-    document.getElementById('step-register').style.display = 'block'
-    showError('Cannot connect to server')
+    showRegistrationStep()
+    showLoginError('Cannot connect to server')
   }
 }
 
-//log out function
-function logout() {
-  localStorage.removeItem('rytuai_token')
-  localStorage.removeItem('rytuai_phone')
-  localStorage.removeItem('rytuai_farmer')
-  //document.getElementById('login-screen').style.display = 'flex'
-  location.reload()
-}
-//Back screen
-function goBack(){
-  switchScreen('home')
-}
-//Back to otp screen from registration from
-function backToOTP(){
-  document.getElementById('step-register').style.display ='none'
-  document.getElementById('step-otp').style.display = 'block'
-}
-
-// ── PROFILE MENU ──
+/* ══════════════════════════════════════
+   PROFILE MENU
+══════════════════════════════════════ */
 function toggleProfileMenu() {
-  const menu = document.getElementById('profile-menu')
-  if (menu.style.display === 'none' || menu.style.display === '') {
-    const farmerData = localStorage.getItem('rytuai_farmer')
+  var menu = document.getElementById('profile-menu')
+  if (!menu) return
+  var isVisible = menu.style.display === 'block'
+  if (!isVisible) {
+    var farmerData = localStorage.getItem('rytuai_farmer')
     if (farmerData) {
-      const farmer = JSON.parse(farmerData)
-      document.getElementById('menu-farmer-name').textContent =
-        farmer.name || 'Farmer'
-      document.getElementById('menu-farmer-phone').textContent =
-        farmer.phone || ''
-      document.getElementById('menu-farmer-details').textContent =
-        `${farmer.crop_type || 'Crop'} · ${farmer.village || 'Village'}`
+      try {
+        var farmer = JSON.parse(farmerData)
+        var n = document.getElementById('menu-farmer-name')
+        var p = document.getElementById('menu-farmer-phone')
+        var d = document.getElementById('menu-farmer-details')
+        if (n) n.textContent = farmer.name || '—'
+        if (p) p.textContent = farmer.phone || '—'
+        if (d) d.textContent = (farmer.crop_type || 'Crop') + ' · ' + (farmer.village || 'Village')
+      } catch (e) {}
     }
     menu.style.display = 'block'
   } else {
     menu.style.display = 'none'
   }
 }
- 
-function openEditProfile() {
-  document.getElementById('profile-menu').style.display = 'none'
-  
-  
-  // Load farmer data into profile screen
-  const farmerData = localStorage.getItem('rytuai_farmer')
 
-  if(!farmerData){
-    alert('Please login again')
-    return
-  }
-   const farmer = JSON.parse(farmerData)
-   console.log('Loading farmer: ',farmer)
-   //Show name phone at top
-   const nameDisplay = document.getElementById('profile-name-display')
-   const phoneDisplay = document.getElementById('profile-phone-display')
-   if(nameDisplay) nameDisplay.textContent = farmer.name || '-'
-   if(phoneDisplay) phoneDisplay.textContent = farmer.phone || '-'
-
-   //Filling all the fields with existing values
-   const editName = document.getElementById('edit-name')
-  const editVillage = document.getElementById('edit-village')
-  const editDistrict = document.getElementById('edit-district')
-  const editAcres = document.getElementById('edit-acres')
-  const editCrop = document.getElementById('edit-crop')
-  const editSowing = document.getElementById('edit-sowing')
-
-  if (editName) editName.value = farmer.name || ''
-  if (editVillage) editVillage.value = farmer.village || ''
-  if (editDistrict) editDistrict.value = farmer.district || ''
-  if (editAcres) editAcres.value = farmer.land_acres || ''
-  if (editCrop) editCrop.value = farmer.crop_type || ''
-  if (editSowing) editSowing.value = farmer.sowing_date || ''
-
-  // Show profile screen
-  document.getElementById('profile-screen').style.display = 'block'
-  // Scroll to top
-  document.getElementById('profile-screen').scrollTop = 0
-   
- 
-
+function closeProfileMenu() {
+  var menu = document.getElementById('profile-menu')
+  if (menu) menu.style.display = 'none'
 }
 
-async function saveProfile(){
-  const farmerData = localStorage.getItem('rytuai_farmer')
-  if(!farmerData){
-
-    alert('No farmer data found. Please login again')
-    return
-  }
-
-
-  const farmer = JSON.parse(farmerData)
-  const phone = farmer.phone
-  function getVal(id){
-    const el = document.getElementById(id)
-    return el ? el.value.trim():''
-  }
-  const name = getVal('edit-name')
-  const village=getVal('edit-village')
-  const district=getVal('edit-district')
-  const land_acres=getVal('edit-acres')
-  const crop_type=getVal('edit-crop')
-  const sowing_date =getVal('edit-swoing')
-  console.log('Saving: ',{name , village , district})
-
-  if(!name || !village || !district){
-    alert('Please fill name , village and district')
-    return
-  }
-  try{
-    const response = await fetch(`${API}/farmers/${phone}`,{
-      method:'PUT',
-      headers:{
-        'Content-Type' : 'application/json',
-        'Authorization':`Bearer ${localStorage.getItem('rytuai_token')}`
-      },
-      body:JSON.stringify({
-        name, village, district,
-        land_acres: parseFloat(land_acres) || 0,
-        crop_type , sowing_date
-      })
-    })
-    const data = await response.json()
-
-    if (response.ok){
-      //Updating localStorage
-      const updated = {
-        ...farmer,
-        name,village, district,
-        land_acres:parseFloat(land_acres) || 0,
-        crop_type, sowing_date
-      }
-      localStorage.setItem('rytuai_farmer', JSON.stringify(updated))
-
-      //Update Home Screen Name
-      const nameEl = document.getElementById('farmer-greeting')
-      if (nameEl){
-        nameEl.textContent =
-        `నమస్కారం, ${name} గారు 🙏`
-      }
-      alert('Profile updated successfully!')
-      closeProfile()
-    }else{
-      alert(data.message || 'Update failed')
-    }
-  }catch(err){
-    alert ('Cannot connect to server')
-  }
-}
- 
-function closeProfile() {
-  document.getElementById('profile-screen').style.display = 'none'
-}
- 
 function openSettings() {
-  document.getElementById('profile-menu').style.display = 'none'
-  alert('Settings coming soon!')
+  closeProfileMenu()
+  showToast('Settings coming soon!', 'info')
 }
- 
+
 function openOrders() {
-  document.getElementById('profile-menu').style.display = 'none'
+  closeProfileMenu()
   switchScreen('shop')
 }
- 
-// Close menu when tapping outside
-window.addEventListener('click', function(e) {
-  const menu = document.getElementById('profile-menu')
-  if (menu && menu.style.display === 'block') {
-    if (e.target === menu) {
-      menu.style.display = 'none'
-    }
-  }
-})
- 
 
- 
- 
+/* ══════════════════════════════════════
+   EDIT PROFILE
+══════════════════════════════════════ */
+function openEditProfile() {
+  closeProfileMenu()
+  var farmerData = localStorage.getItem('rytuai_farmer')
+  if (!farmerData) { showToast('Please login again', 'error'); return }
+
+  try {
+    var farmer = JSON.parse(farmerData)
+    var nd = document.getElementById('profile-name-display')
+    var pd = document.getElementById('profile-phone-display')
+    if (nd) nd.textContent = farmer.name || '—'
+    if (pd) pd.textContent = farmer.phone || '—'
+
+    function setVal(id, val) {
+      var el = document.getElementById(id)
+      if (el) el.value = val || ''
+    }
+    setVal('edit-name', farmer.name)
+    setVal('edit-village', farmer.village)
+    setVal('edit-district', farmer.district)
+    setVal('edit-acres', farmer.land_acres)
+    setVal('edit-crop', farmer.crop_type)
+    setVal('edit-sowing', farmer.sowing_date)
+
+    var screen = document.getElementById('profile-screen')
+    if (screen) { screen.style.display = 'block'; screen.scrollTop = 0 }
+  } catch (e) {
+    showToast('Error loading profile', 'error')
+  }
+}
+
+function closeProfile() {
+  var screen = document.getElementById('profile-screen')
+  if (screen) screen.style.display = 'none'
+}
+
+async function saveProfile() {
+  var farmerData = localStorage.getItem('rytuai_farmer')
+  if (!farmerData) { showToast('Please login again', 'error'); return }
+
+  var farmer = JSON.parse(farmerData)
+  var phone = farmer.phone
+
+  function getVal(id) {
+    var el = document.getElementById(id)
+    return el ? el.value.trim() : ''
+  }
+
+  var name = getVal('edit-name')
+  var village = getVal('edit-village')
+  var district = getVal('edit-district')
+  var land_acres = getVal('edit-acres')
+  var crop_type = getVal('edit-crop')
+  var sowing_date = getVal('edit-sowing')
+
+  if (!name || !village || !district) {
+    showToast('Please fill name, village and district', 'error')
+    return
+  }
+
+  var saveBtn = document.querySelector('.fs-save')
+  if (saveBtn) { saveBtn.textContent = 'Saving...'; saveBtn.disabled = true }
+
+  try {
+    var response = await fetch(API + '/farmers/' + phone, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token')
+      },
+      body: JSON.stringify({
+        name: name, village: village, district: district,
+        land_acres: parseFloat(land_acres) || 0,
+        crop_type: crop_type, sowing_date: sowing_date
+      })
+    })
+
+    var data = await response.json()
+
+    if (response.ok) {
+      var updated = Object.assign({}, farmer, {
+        name: name, village: village, district: district,
+        land_acres: parseFloat(land_acres) || 0,
+        crop_type: crop_type, sowing_date: sowing_date
+      })
+      localStorage.setItem('rytuai_farmer', JSON.stringify(updated))
+      loadFarmerData()
+      showToast('Profile updated successfully!', 'success')
+      setTimeout(closeProfile, 1500)
+    } else {
+      showToast(data.message || 'Update failed', 'error')
+    }
+  } catch (err) {
+    showToast('Cannot connect to server', 'error')
+  } finally {
+    if (saveBtn) { saveBtn.textContent = 'Save'; saveBtn.disabled = false }
+  }
+}
+
+/* ══════════════════════════════════════
+   IMAGE UPLOAD + CAMERA
+══════════════════════════════════════ */
+var uploadedImages = { 0: null, 1: null, 2: null, 3: null }
+var slotLabels = ['Leaf Photo', 'Stem Photo', 'Full Plant', 'Extra']
+
+function triggerUpload(idx) {
+  var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+  if (isMobile) {
+    showUploadChoice(idx)
+  } else {
+    document.getElementById('file-' + idx).click()
+  }
+}
+
+function showUploadChoice(idx) {
+  var existing = document.getElementById('upload-choice')
+  if (existing) existing.remove()
+  var existingBd = document.getElementById('upload-backdrop')
+  if (existingBd) existingBd.remove()
+
+  var backdrop = document.createElement('div')
+  backdrop.id = 'upload-backdrop'
+  backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;'
+  backdrop.onclick = function() { closeUploadChoice() }
+
+  var choice = document.createElement('div')
+  choice.id = 'upload-choice'
+  choice.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:white;border-radius:20px 20px 0 0;padding:24px 20px;z-index:9999;box-shadow:0 -4px 20px rgba(0,0,0,0.15);'
+
+  choice.innerHTML = '<div style="text-align:center;margin-bottom:20px;"><div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 16px;"></div><div style="font-size:15px;font-weight:800;">Upload Photo</div></div>' +
+    '<button onclick="openCamera(' + idx + ')" style="width:100%;padding:16px;background:#1a6e35;color:white;border:none;border-radius:14px;font-size:15px;font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;margin-bottom:10px;display:block;">📷 Take Photo with Camera</button>' +
+    '<button onclick="openGallery(' + idx + ')" style="width:100%;padding:16px;background:#f8f8f8;color:#1a1a1a;border:1.5px solid #e0e0e0;border-radius:14px;font-size:15px;font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;margin-bottom:10px;display:block;">🖼️ Choose from Gallery</button>' +
+    '<button onclick="closeUploadChoice()" style="width:100%;padding:14px;background:transparent;color:#888;border:none;font-size:14px;font-weight:700;font-family:Nunito,sans-serif;cursor:pointer;display:block;">Cancel</button>'
+
+  document.body.appendChild(backdrop)
+  document.body.appendChild(choice)
+}
+
+function closeUploadChoice() {
+  var c = document.getElementById('upload-choice')
+  if (c) c.remove()
+  var b = document.getElementById('upload-backdrop')
+  if (b) b.remove()
+}
+
+function openCamera(idx) {
+  closeUploadChoice()
+  var input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  input.capture = 'environment'
+  input.style.display = 'none'
+  input.onchange = function() {
+    if (this.files[0]) handleUploadFile(idx, this.files[0])
+    if (document.body.contains(input)) document.body.removeChild(input)
+  }
+  document.body.appendChild(input)
+  input.click()
+}
+
+function openGallery(idx) {
+  closeUploadChoice()
+  var input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  input.style.display = 'none'
+  input.onchange = function() {
+    if (this.files[0]) handleUploadFile(idx, this.files[0])
+    if (document.body.contains(input)) document.body.removeChild(input)
+  }
+  document.body.appendChild(input)
+  input.click()
+}
+
+function handleUpload(idx, input) {
+  if (input.files[0]) handleUploadFile(idx, input.files[0])
+}
+
+function handleUploadFile(idx, file) {
+  var reader = new FileReader()
+  reader.onload = function(e) {
+    uploadedImages[idx] = e.target.result
+    updateSlotUI(idx, e.target.result)
+    updateUploadCount()
+    updateAnalyzeBtn()
+  }
+  reader.readAsDataURL(file)
+}
+
+function updateSlotUI(idx, base64) {
+  var slot = document.getElementById('slot-' + idx)
+  if (!slot) return
+  slot.classList.add('filled')
+  slot.innerHTML = '<img src="' + base64 + '" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" />' +
+    '<div style="position:absolute;top:6px;right:6px;background:#1a6e35;color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;">✓</div>' +
+    '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(26,110,53,0.85);color:white;font-size:10px;font-weight:800;text-align:center;padding:4px;border-radius:0 0 12px 12px;">' + slotLabels[idx] + '</div>'
+}
+
+function countUploaded() {
+  return Object.values(uploadedImages).filter(function(v) { return v !== null }).length
+}
+
+function updateUploadCount() {
+  var n = countUploaded()
+  var el = document.getElementById('upload-count-msg')
+  if (!el) return
+  if (n > 0) {
+    el.textContent = n + ' photo' + (n > 1 ? 's' : '') + ' ready to analyze'
+    el.classList.add('ready')
+  } else {
+    el.textContent = 'Tap any slot to upload a photo'
+    el.classList.remove('ready')
+  }
+}
+
+function updateAnalyzeBtn() {
+  var btn = document.getElementById('analyze-btn')
+  if (!btn) return
+  btn.disabled = countUploaded() < 1
+}
+
+/* ══════════════════════════════════════
+   AI DETECTION
+══════════════════════════════════════ */
+async function analyzeImages() {
+  if (countUploaded() < 1) {
+    showToast('Please upload at least 1 photo', 'error')
+    return
+  }
+
+  switchScreen('result')
+
+  var loading = document.getElementById('result-loading')
+  var error = document.getElementById('result-error')
+  var content = document.getElementById('result-content')
+
+  if (loading) loading.style.display = 'flex'
+  if (error) error.style.display = 'none'
+  if (content) content.style.display = 'none'
+
+  try {
+    var formData = new FormData()
+    Object.values(uploadedImages)
+      .filter(function(v) { return v !== null })
+      .forEach(function(base64, index) {
+        var byteStr = atob(base64.split(',')[1])
+        var mime = base64.split(',')[0].split(':')[1].split(';')[0]
+        var ab = new ArrayBuffer(byteStr.length)
+        var ia = new Uint8Array(ab)
+        for (var i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i)
+        var blob = new Blob([ab], { type: mime })
+        formData.append('photos', blob, 'photo' + index + '.jpg')
+      })
+
+    var response = await fetch(API + '/detect', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') },
+      body: formData
+    })
+
+    var data = await response.json()
+    if (loading) loading.style.display = 'none'
+
+    if (response.ok) {
+      renderResult(data.result)
+    } else {
+      throw new Error(data.message || 'Detection failed')
+    }
+  } catch (err) {
+    if (loading) loading.style.display = 'none'
+    if (error) { error.style.display = 'flex'; error.style.flexDirection = 'column' }
+    var errMsg = document.getElementById('error-msg')
+    if (errMsg) errMsg.textContent = err.message || 'Something went wrong'
+  }
+}
+
+function renderResult(r) {
+  var content = document.getElementById('result-content')
+  if (content) content.style.display = 'block'
+
+  var headerDiv = document.getElementById('result-header-div')
+  if (headerDiv) headerDiv.className = r.healthy ? 'result-hero healthy' : 'result-hero'
+
+  function setText(id, val) {
+    var el = document.getElementById(id)
+    if (el) el.textContent = val || '—'
+  }
+
+  setText('r-emoji', r.healthy ? '✅' : '🦠')
+  setText('r-disease', r.disease)
+  setText('r-telugu', r.teluguName)
+  setText('r-confidence', r.confidence + ' · ' + countUploaded() + ' images')
+  setText('r-sev-val', r.severity)
+  setText('r-spread-val', r.spread)
+  setText('r-treat-val', r.treatWithin)
+  setText('r-what', r.whatIsThis)
+  setText('r-symptoms', r.symptomsFound)
+  setText('r-prevention', r.prevention)
+
+  var pestDiv = document.getElementById('r-pesticides')
+  if (pestDiv) {
+    pestDiv.innerHTML = (r.pesticides || []).map(function(p) {
+      var disc = Math.round((1 - p.priceRytu / p.priceMRP) * 100)
+      return '<div class="pest-item" onclick="switchScreen(\'shop\')">' +
+        '<div class="pest-icon">' + (p.icon || '🧴') + '</div>' +
+        '<div class="pest-info"><div class="pest-name">' + p.name + '</div>' +
+        '<div class="pest-brand">' + p.brand + '</div></div>' +
+        '<div class="pest-price-col"><div class="price">₹' + p.priceRytu + '</div>' +
+        '<div class="mrp">₹' + p.priceMRP + '</div>' +
+        '<div class="discount">' + disc + '% OFF</div></div></div>'
+    }).join('')
+  }
+}
+
+function logout() {
+  localStorage.clear()
+  window.location.replace('/')
+}
