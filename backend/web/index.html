@@ -13,7 +13,6 @@
 <!--         LOGIN SCREEN           -->
 <!-- ═══════════════════════════════ -->
 <div id="login-screen" class="login-screen">
-
   <div class="login-logo">
     <div class="login-chilli">🌶️</div>
     <h1>Rytu<span>AI</span></h1>
@@ -61,7 +60,6 @@
     <div class="loader-ring"></div>
     <p id="loading-text">Sending OTP...</p>
   </div>
-
   <div id="login-error" class="login-error" style="display:none;"></div>
 </div>
 
@@ -79,51 +77,41 @@
     <div class="topbar-center" id="topbar-title"></div>
     <div class="topbar-right">
       <div class="topbar-farmer" id="topbar-farmer-name">—</div>
-      <div class="topbar-avatar" onclick="toggleProfileMenu()">
-        <span>👨‍🌾</span>
-      </div>
+      <div class="topbar-avatar" onclick="toggleProfileMenu()"><span>👨‍🌾</span></div>
     </div>
   </header>
 
   <!-- APP BODY -->
   <div class="app-body">
 
-    <!-- SIDEBAR (desktop) -->
+    <!-- SIDEBAR (desktop only) -->
     <aside class="sidebar">
       <div class="sidebar-brand">
         <div class="sb-logo">Rytu<span>AI</span></div>
         <div class="sb-sub">రైతు AI అప్లికేషన్</div>
       </div>
-
       <nav class="sidebar-nav">
         <div class="s-item active" id="s-home" onclick="switchScreen('home')">
-          <span class="s-icon">🏠</span>
-          <span>Home</span>
+          <span class="s-icon">🏠</span><span>Home</span>
         </div>
         <div class="s-item" id="s-detect" onclick="switchScreen('detect')">
-          <span class="s-icon">🔬</span>
-          <span>Detect Disease</span>
+          <span class="s-icon">🔬</span><span>Detect Disease</span>
         </div>
         <div class="s-item" id="s-shop" onclick="switchScreen('shop')">
-          <span class="s-icon">🏪</span>
-          <span>Rytu Shop</span>
+          <span class="s-icon">🏪</span><span>Rytu Shop</span>
         </div>
         <div class="s-item" id="s-roadmap" onclick="switchScreen('roadmap')">
-          <span class="s-icon">🗓️</span>
-          <span>Crop Roadmap</span>
+          <span class="s-icon">🗓️</span><span>Crop Roadmap</span>
         </div>
         <div class="s-item" id="s-tracker" onclick="switchScreen('tracker')">
-          <span class="s-icon">📋</span>
-          <span>My Tracker</span>
+          <span class="s-icon">📋</span><span>My Tracker</span>
         </div>
       </nav>
-
       <div class="sidebar-season">
         <div class="ss-icon">🌶️</div>
         <div class="ss-title">Chilli Season</div>
         <div class="ss-val">Kharif 2025 · Guntur District</div>
       </div>
-
       <div class="sidebar-profile" onclick="toggleProfileMenu()">
         <div class="sp-avatar">👨‍🌾</div>
         <div class="sp-info">
@@ -133,13 +121,11 @@
       </div>
     </aside>
 
-    <!-- SCREENS -->
+    <!-- SCREENS CONTAINER -->
     <div class="screens-container">
 
-      <!-- ── HOME ── -->
+      <!-- ══ HOME SCREEN ══ -->
       <div class="screen active" id="screen-home">
-
-        <!-- Mobile hero -->
         <div class="home-hero mobile-only">
           <div class="home-greeting" id="farmer-greeting">నమస్కారం 🙏</div>
           <div class="home-subtext">Good morning, farmer</div>
@@ -152,7 +138,6 @@
           </div>
         </div>
 
-        <!-- Desktop hero -->
         <div class="desktop-hero desktop-only">
           <div class="dh-left">
             <div class="dh-greeting" id="farmer-greeting-desktop">నమస్కారం 🙏</div>
@@ -195,31 +180,17 @@
             </div>
           </div>
 
-          <!-- Desktop stats row -->
           <div class="desktop-only" style="padding:0 20px;">
             <div class="section-label" style="padding:16px 0 8px;">📊 Season Overview</div>
             <div class="stats-row">
-              <div class="stat-box">
-                <div class="stat-val">24</div>
-                <div class="stat-label">Days Active</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-val">12</div>
-                <div class="stat-label">Tasks Done</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-val">₹4.2k</div>
-                <div class="stat-label">Spent This Season</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-val">2</div>
-                <div class="stat-label">AI Scans Done</div>
-              </div>
+              <div class="stat-box"><div class="stat-val" id="home-stat-days">0</div><div class="stat-label">Days Active</div></div>
+              <div class="stat-box"><div class="stat-val" id="home-stat-tasks">0</div><div class="stat-label">Tasks Done</div></div>
+              <div class="stat-box"><div class="stat-val" id="home-stat-cost">₹0</div><div class="stat-label">Spent This Season</div></div>
+              <div class="stat-box"><div class="stat-val">2</div><div class="stat-label">AI Scans Done</div></div>
             </div>
           </div>
 
           <div class="home-bottom-grid">
-            <!-- Alert -->
             <div>
               <div class="section-label">⚠️ Latest Alert</div>
               <div class="alert-card">
@@ -230,8 +201,6 @@
                 </div>
               </div>
             </div>
-
-            <!-- Crop Status -->
             <div>
               <div class="section-label">🌶️ My Crop Status</div>
               <div class="crop-card">
@@ -249,13 +218,12 @@
           </div>
         </div>
 
-        <!-- Mobile bottom nav -->
         <nav class="bottom-nav mobile-only">
-          <div class="nav-item active" id="nav-home" onclick="switchScreen('home')">
+          <div class="nav-item active" onclick="switchScreen('home')">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
             <span>Home</span>
           </div>
-          <div class="nav-item" id="nav-detect" onclick="switchScreen('detect')">
+          <div class="nav-item" onclick="switchScreen('detect')">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
             <span>Detect</span>
           </div>
@@ -265,18 +233,18 @@
             </div>
             <span>Scan</span>
           </div>
-          <div class="nav-item" id="nav-shop" onclick="switchScreen('shop')">
+          <div class="nav-item" onclick="switchScreen('shop')">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96C5 16.1 6.1 17 7.5 17H19v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63H15c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0019.5 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
             <span>Shop</span>
           </div>
-          <div class="nav-item" id="nav-tracker" onclick="switchScreen('tracker')">
+          <div class="nav-item" onclick="switchScreen('tracker')">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
             <span>Tracker</span>
           </div>
         </nav>
       </div>
 
-      <!-- ── DETECT ── -->
+      <!-- ══ DETECT SCREEN ══ -->
       <div class="screen" id="screen-detect">
         <div class="detect-hero">
           <div class="detect-hero-text">
@@ -285,46 +253,33 @@
           </div>
           <div class="detect-camera-icon">📸</div>
         </div>
-
         <div class="detect-body">
           <div class="upload-tip">
             📸 Take clear close-up photos from different angles for the most accurate AI diagnosis
           </div>
-
           <div class="upload-grid">
             <div class="upload-slot" id="slot-0" onclick="triggerUpload(0)">
-              <div class="slot-plus">+</div>
-              <div class="slot-label">Leaf Photo</div>
+              <div class="slot-plus">+</div><div class="slot-label">Leaf Photo</div>
             </div>
             <div class="upload-slot" id="slot-1" onclick="triggerUpload(1)">
-              <div class="slot-plus">+</div>
-              <div class="slot-label">Stem Photo</div>
+              <div class="slot-plus">+</div><div class="slot-label">Stem Photo</div>
             </div>
             <div class="upload-slot" id="slot-2" onclick="triggerUpload(2)">
-              <div class="slot-plus">+</div>
-              <div class="slot-label">Full Plant</div>
+              <div class="slot-plus">+</div><div class="slot-label">Full Plant</div>
             </div>
             <div class="upload-slot" id="slot-3" onclick="triggerUpload(3)">
-              <div class="slot-plus">+</div>
-              <div class="slot-label">Extra</div>
+              <div class="slot-plus">+</div><div class="slot-label">Extra</div>
             </div>
           </div>
-
           <input type="file" id="file-0" accept="image/*" style="display:none" onchange="handleUpload(0,this)">
           <input type="file" id="file-1" accept="image/*" style="display:none" onchange="handleUpload(1,this)">
           <input type="file" id="file-2" accept="image/*" style="display:none" onchange="handleUpload(2,this)">
           <input type="file" id="file-3" accept="image/*" style="display:none" onchange="handleUpload(3,this)">
-
-          <div id="upload-count-msg" class="upload-count">
-            Tap any slot to upload a photo
-          </div>
-
-          <button class="analyze-btn" id="analyze-btn"
-            onclick="analyzeImages()" disabled>
+          <div id="upload-count-msg" class="upload-count">Tap any slot to upload a photo</div>
+          <button class="analyze-btn" id="analyze-btn" onclick="analyzeImages()" disabled>
             <span>🤖</span> Analyze with AI
           </button>
         </div>
-
         <nav class="bottom-nav mobile-only">
           <div class="nav-item" onclick="switchScreen('home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
           <div class="nav-item active" onclick="switchScreen('detect')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><span>Detect</span></div>
@@ -334,7 +289,7 @@
         </nav>
       </div>
 
-      <!-- ── RESULT ── -->
+      <!-- ══ RESULT SCREEN ══ -->
       <div class="screen" id="screen-result">
         <div id="result-loading" class="result-loading" style="display:none;">
           <div class="result-loader">
@@ -343,16 +298,12 @@
             <div class="loader-sub">AI is examining your photos</div>
           </div>
         </div>
-
         <div id="result-error" class="result-error" style="display:none;">
           <div class="error-icon">⚠️</div>
           <div class="error-title">Analysis Failed</div>
           <div id="error-msg" class="error-desc"></div>
-          <button class="btn-primary" onclick="switchScreen('detect')" style="margin-top:20px;width:auto;padding:12px 28px;">
-            Try Again
-          </button>
+          <button class="btn-primary" onclick="switchScreen('detect')" style="margin-top:20px;width:auto;padding:12px 28px;">Try Again</button>
         </div>
-
         <div id="result-content" style="display:none;">
           <div id="result-header-div" class="result-hero">
             <div class="result-emoji" id="r-emoji">🦠</div>
@@ -360,22 +311,11 @@
             <div class="result-telugu" id="r-telugu">—</div>
             <div class="result-confidence" id="r-confidence">—</div>
           </div>
-
           <div class="result-chips">
-            <div class="result-chip">
-              <div class="chip-label">Severity</div>
-              <div class="chip-val" id="r-sev-val">—</div>
-            </div>
-            <div class="result-chip">
-              <div class="chip-label">Spread</div>
-              <div class="chip-val" id="r-spread-val">—</div>
-            </div>
-            <div class="result-chip">
-              <div class="chip-label">Treat Within</div>
-              <div class="chip-val" id="r-treat-val">—</div>
-            </div>
+            <div class="result-chip"><div class="chip-label">Severity</div><div class="chip-val" id="r-sev-val">—</div></div>
+            <div class="result-chip"><div class="chip-label">Spread</div><div class="chip-val" id="r-spread-val">—</div></div>
+            <div class="result-chip"><div class="chip-label">Treat Within</div><div class="chip-val" id="r-treat-val">—</div></div>
           </div>
-
           <div class="result-body">
             <div class="result-section">
               <div class="result-section-title">What Is This?</div>
@@ -394,16 +334,11 @@
               <div class="result-section-text" id="r-prevention">—</div>
             </div>
             <div style="display:flex;gap:12px;flex-wrap:wrap;">
-              <button class="btn-primary" onclick="switchScreen('shop')" style="flex:1;min-width:140px;">
-                🛒 Order from Shop
-              </button>
-              <button class="btn-outline" onclick="switchScreen('detect')" style="flex:1;min-width:140px;">
-                🔄 Scan Again
-              </button>
+              <button class="btn-primary" onclick="switchScreen('shop')" style="flex:1;min-width:140px;">🛒 Order from Shop</button>
+              <button class="btn-outline" onclick="switchScreen('detect')" style="flex:1;min-width:140px;">🔄 Scan Again</button>
             </div>
           </div>
         </div>
-
         <nav class="bottom-nav mobile-only">
           <div class="nav-item" onclick="switchScreen('home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
           <div class="nav-item active" onclick="switchScreen('detect')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><span>Detect</span></div>
@@ -413,7 +348,7 @@
         </nav>
       </div>
 
-      <!-- ── SHOP ── -->
+      <!-- ══ SHOP SCREEN ══ -->
       <div class="screen" id="screen-shop">
         <div class="shop-hero">
           <div class="shop-title">🏪 Rytu Shop</div>
@@ -424,19 +359,15 @@
             <span class="shop-badge">💰 Up to 27% cheaper</span>
           </div>
         </div>
-
         <div class="shop-body">
           <div class="search-box">🔍 &nbsp;Search pesticides, fertilizers, seeds...</div>
-
           <div class="category-row">
             <div class="cat active">All</div>
             <div class="cat">Insecticides</div>
             <div class="cat">Fungicides</div>
             <div class="cat">Fertilizers</div>
             <div class="cat">Seeds</div>
-            <div class="cat">Equipment</div>
           </div>
-
           <div class="section-label">🎯 Recommended for Your Crop</div>
           <div class="product-list">
             <div class="product-item">
@@ -450,7 +381,7 @@
                   <span class="product-disc">24% OFF</span>
                 </div>
               </div>
-              <button class="add-btn">Add</button>
+              <button class="add-btn" onclick="addToTrackerFromShop('Spinosad 45% SC', 320)">Add</button>
             </div>
             <div class="product-item">
               <div class="product-icon">🧪</div>
@@ -463,7 +394,7 @@
                   <span class="product-disc">23% OFF</span>
                 </div>
               </div>
-              <button class="add-btn">Add</button>
+              <button class="add-btn" onclick="addToTrackerFromShop('Imidacloprid 17.8%', 185)">Add</button>
             </div>
             <div class="product-item">
               <div class="product-icon">🌿</div>
@@ -476,7 +407,7 @@
                   <span class="product-disc">27% OFF</span>
                 </div>
               </div>
-              <button class="add-btn">Add</button>
+              <button class="add-btn" onclick="addToTrackerFromShop('Neem Oil 10000PPM', 95)">Add</button>
             </div>
             <div class="product-item">
               <div class="product-icon">🪣</div>
@@ -489,17 +420,15 @@
                   <span class="product-disc">24% OFF</span>
                 </div>
               </div>
-              <button class="add-btn">Add</button>
+              <button class="add-btn" onclick="addToTrackerFromShop('NPK 19:19:19', 220)">Add</button>
             </div>
           </div>
-
           <div class="store-card">
             <div class="store-name">📍 Nearest Rytu Franchise Store</div>
             <div class="store-addr">Rytu AgriCenter — Narasaraopet Road, Guntur</div>
             <div class="store-info">2.3 km away · Open 7AM–8PM · ☎️ 98765 43210</div>
           </div>
         </div>
-
         <nav class="bottom-nav mobile-only">
           <div class="nav-item" onclick="switchScreen('home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
           <div class="nav-item" onclick="switchScreen('detect')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><span>Detect</span></div>
@@ -509,20 +438,18 @@
         </nav>
       </div>
 
-      <!-- ── ROADMAP ── -->
+      <!-- ══ ROADMAP SCREEN ══ -->
       <div class="screen" id="screen-roadmap">
         <div class="roadmap-hero">
           <div class="roadmap-title">🗓️ Crop Roadmap</div>
           <div class="roadmap-sub">Kharif 2025 · Guntur District · Chilli Season</div>
         </div>
-
         <div class="roadmap-body">
           <div class="season-tabs">
             <button class="season-tab active">Kharif 2025</button>
             <button class="season-tab">Rabi 2025</button>
             <button class="season-tab">Summer 2026</button>
           </div>
-
           <div class="timeline">
             <div class="tl-item">
               <div class="tl-line"><div class="tl-dot done">✓</div></div>
@@ -548,7 +475,7 @@
                 <div class="tl-title">Flowering & Pest Watch</div>
                 <div class="tl-you">← You Are Here</div>
                 <div class="tl-date">August 10 – September 10</div>
-                <div class="tl-desc">Watch for Thrips, Mites & Whitefly. Spray at 7-day intervals. Apply DAP 50kg/acre.</div>
+                <div class="tl-desc">Watch for Thrips, Mites & Whitefly. Spray at 7-day intervals.</div>
                 <span class="tl-badge active-badge">In Progress</span>
               </div>
             </div>
@@ -557,7 +484,7 @@
               <div class="tl-card">
                 <div class="tl-title">Fruit Development</div>
                 <div class="tl-date">September 10 – October 20</div>
-                <div class="tl-desc">Micro-nutrient spray (Boron + Zinc). Reduce irrigation gradually.</div>
+                <div class="tl-desc">Micro-nutrient spray. Reduce irrigation gradually.</div>
                 <span class="tl-badge upcoming-badge">Upcoming</span>
               </div>
             </div>
@@ -566,13 +493,12 @@
               <div class="tl-card">
                 <div class="tl-title">🏆 Harvest</div>
                 <div class="tl-date">November 1 – November 30</div>
-                <div class="tl-desc">Expected yield: 25–30 quintals/acre. Harvest when 60% fruits turn red.</div>
+                <div class="tl-desc">Expected yield: 25–30 quintals/acre.</div>
                 <span class="tl-badge upcoming-badge">Upcoming</span>
               </div>
             </div>
           </div>
         </div>
-
         <nav class="bottom-nav mobile-only">
           <div class="nav-item" onclick="switchScreen('home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
           <div class="nav-item" onclick="switchScreen('detect')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><span>Detect</span></div>
@@ -582,167 +508,88 @@
         </nav>
       </div>
 
-      <!-- ── TRACKER ── -->
-      <!-- ── TRACKER SCREEN ── -->
-<div class="screen" id="screen-tracker">
-
-  <!-- Hero -->
-  <div class="tracker-hero">
-    <div class="tracker-title">📋 Farm Tracker</div>
-    <div class="tracker-sub">మీ పని రికార్డ్ — Daily farm activities</div>
-  </div>
-
-  <!-- Stats Row -->
-  <div class="stats-row" id="tracker-stats">
-    <div class="stat-box">
-      <div class="stat-val" id="stat-days">0</div>
-      <div class="stat-label">Days Active</div>
-    </div>
-    <div class="stat-box">
-      <div class="stat-val" id="stat-tasks">0</div>
-      <div class="stat-label">Activities</div>
-    </div>
-    <div class="stat-box">
-      <div class="stat-val" id="stat-cost">₹0</div>
-      <div class="stat-label">Total Spent</div>
-    </div>
-  </div>
-
-  <!-- Add Activity Button -->
-  <div style="padding:0 16px 8px;">
-    <button onclick="openAddActivity()" style="
-      width:100%;padding:14px;
-      background:#1a6e35;color:white;
-      border:none;border-radius:14px;
-      font-size:15px;font-weight:800;
-      font-family:'Nunito',sans-serif;
-      cursor:pointer;
-      display:flex;align-items:center;
-      justify-content:center;gap:8px;">
-      ➕ Add Today's Activity
-    </button>
-  </div>
-
-  <!-- Activities List -->
-  <div class="section-label">📝 Activity History</div>
-  <div id="activities-list" style="padding:0 16px 16px;">
-    <div id="activities-loading" style="text-align:center;padding:40px;color:#888;">
-      <div style="font-size:32px;margin-bottom:8px;">⏳</div>
-      <div style="font-size:13px;font-weight:700;">Loading activities...</div>
-    </div>
-  </div>
-
-  <!-- Bottom Nav -->
-  <nav class="bottom-nav mobile-only">
-    <div class="nav-item" onclick="switchScreen('home')">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-      <span>Home</span>
-    </div>
-    <div class="nav-item" onclick="switchScreen('detect')">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-      <span>Detect</span>
-    </div>
-    <div class="nav-item nav-center" onclick="switchScreen('detect')">
-      <div class="nav-scan-btn">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/></svg>
+      <!-- ══ TRACKER SCREEN ══ -->
+      <div class="screen" id="screen-tracker">
+        <div class="tracker-hero">
+          <div class="tracker-title">📋 Farm Tracker</div>
+          <div class="tracker-sub">మీ పని రికార్డ్ — Daily farm activities</div>
+        </div>
+        <div class="stats-row" style="padding:12px 16px;">
+          <div class="stat-box"><div class="stat-val" id="stat-days">0</div><div class="stat-label">Days Active</div></div>
+          <div class="stat-box"><div class="stat-val" id="stat-tasks">0</div><div class="stat-label">Activities</div></div>
+          <div class="stat-box"><div class="stat-val" id="stat-cost">₹0</div><div class="stat-label">Total Spent</div></div>
+        </div>
+        <div style="padding:0 16px 12px;">
+          <button onclick="openAddActivity()" style="width:100%;padding:14px;background:#1a6e35;color:white;border:none;border-radius:14px;font-size:15px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+            ➕ Add Today's Activity
+          </button>
+        </div>
+        <div class="section-label">📝 Activity History</div>
+        <div id="activities-list" style="padding:0 16px 16px;">
+          <div style="text-align:center;padding:40px;color:#888;">
+            <div style="font-size:32px;margin-bottom:8px;">📋</div>
+            <div style="font-size:13px;font-weight:700;">Tap tracker to load activities</div>
+          </div>
+        </div>
+        <nav class="bottom-nav mobile-only">
+          <div class="nav-item" onclick="switchScreen('home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
+          <div class="nav-item" onclick="switchScreen('detect')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><span>Detect</span></div>
+          <div class="nav-item nav-center" onclick="switchScreen('detect')"><div class="nav-scan-btn"><svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/></svg></div><span>Scan</span></div>
+          <div class="nav-item" onclick="switchScreen('shop')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96C5 16.1 6.1 17 7.5 17H19v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63H15c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0019.5 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg><span>Shop</span></div>
+          <div class="nav-item active" onclick="switchScreen('tracker')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg><span>Tracker</span></div>
+        </nav>
       </div>
-      <span>Scan</span>
-    </div>
-    <div class="nav-item" onclick="switchScreen('shop')">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96C5 16.1 6.1 17 7.5 17H19v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63H15c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0019.5 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
-      <span>Shop</span>
-    </div>
-    <div class="nav-item active" onclick="switchScreen('tracker')">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-      <span>Tracker</span>
-    </div>
-  </nav>
-</div>
 
-<!-- ═══════════════════════════════ -->
-<!--     ADD / EDIT ACTIVITY        -->
-<!-- ═══════════════════════════════ -->
+    </div><!-- end screens-container -->
+  </div><!-- end app-body -->
+</div><!-- end app -->
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- ALL FULLSCREEN OVERLAYS — OUTSIDE APP DIV  -->
+<!-- ═══════════════════════════════════════════ -->
+
+<!-- ACTIVITY ADD/EDIT SCREEN -->
 <div id="activity-screen" class="fullscreen" style="display:none;">
   <div class="fs-header">
     <button class="fs-back" onclick="closeActivityScreen()">
-      <svg viewBox="0 0 24 24" fill="currentColor" width="20">
-        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-      </svg>
+      <svg viewBox="0 0 24 24" fill="currentColor" width="20"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
     </button>
     <div class="fs-title" id="activity-screen-title">Add Activity</div>
-    <button class="fs-save" onclick="saveActivity()" id="activity-save-btn">
-      Save
-    </button>
+    <button class="fs-save" onclick="saveActivity()" id="activity-save-btn">Save</button>
   </div>
-
   <div class="fs-body">
-
-    <!-- Activity Type -->
     <div class="form-group">
       <label class="form-label">Activity Type</label>
-      <div id="type-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-        <div class="type-chip" onclick="selectType('irrigation')" data-type="irrigation">
-          <div style="font-size:24px;">💧</div>
-          <div>Irrigation</div>
-        </div>
-        <div class="type-chip" onclick="selectType('spray')" data-type="spray">
-          <div style="font-size:24px;">🧴</div>
-          <div>Spray</div>
-        </div>
-        <div class="type-chip" onclick="selectType('fertilizer')" data-type="fertilizer">
-          <div style="font-size:24px;">🌱</div>
-          <div>Fertilizer</div>
-        </div>
-        <div class="type-chip" onclick="selectType('harvest')" data-type="harvest">
-          <div style="font-size:24px;">🌾</div>
-          <div>Harvest</div>
-        </div>
-        <div class="type-chip" onclick="selectType('labour')" data-type="labour">
-          <div style="font-size:24px;">👨‍🌾</div>
-          <div>Labour</div>
-        </div>
-        <div class="type-chip" onclick="selectType('other')" data-type="other">
-          <div style="font-size:24px;">📝</div>
-          <div>Other</div>
-        </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <div class="type-chip" onclick="selectType('irrigation')" data-type="irrigation"><div style="font-size:24px;">💧</div><div>Irrigation</div></div>
+        <div class="type-chip" onclick="selectType('spray')" data-type="spray"><div style="font-size:24px;">🧴</div><div>Spray</div></div>
+        <div class="type-chip" onclick="selectType('fertilizer')" data-type="fertilizer"><div style="font-size:24px;">🌱</div><div>Fertilizer</div></div>
+        <div class="type-chip" onclick="selectType('harvest')" data-type="harvest"><div style="font-size:24px;">🌾</div><div>Harvest</div></div>
+        <div class="type-chip" onclick="selectType('labour')" data-type="labour"><div style="font-size:24px;">👨‍🌾</div><div>Labour</div></div>
+        <div class="type-chip" onclick="selectType('other')" data-type="other"><div style="font-size:24px;">📝</div><div>Other</div></div>
       </div>
       <input type="hidden" id="activity-type" value="">
     </div>
-
-    <!-- Date -->
     <div class="form-group">
       <label class="form-label">Date</label>
       <input type="date" id="activity-date" class="form-input">
     </div>
-
-    <!-- Title -->
     <div class="form-group">
       <label class="form-label">Title</label>
-      <input type="text" id="activity-title" class="form-input"
-        placeholder="e.g. Drip irrigation — 2.5 acres">
+      <input type="text" id="activity-title" class="form-input" placeholder="e.g. Drip irrigation — 2.5 acres">
     </div>
-
-    <!-- Description -->
     <div class="form-group">
       <label class="form-label">Description (optional)</label>
-      <textarea id="activity-desc" class="form-input"
-        placeholder="Add more details..."
-        style="height:80px;resize:none;"></textarea>
+      <textarea id="activity-desc" class="form-input" placeholder="Add more details..." style="height:80px;resize:none;"></textarea>
     </div>
-
-    <!-- Cost -->
     <div class="form-group">
       <label class="form-label">Cost (₹)</label>
-      <input type="number" id="activity-cost" class="form-input"
-        placeholder="0">
+      <input type="number" id="activity-cost" class="form-input" placeholder="0">
     </div>
-
-    <!-- Quantity + Unit -->
     <div style="display:flex;gap:12px;">
       <div class="form-group" style="flex:1;">
         <label class="form-label">Quantity</label>
-        <input type="text" id="activity-quantity" class="form-input"
-          placeholder="e.g. 2.5">
+        <input type="text" id="activity-quantity" class="form-input" placeholder="e.g. 2.5">
       </div>
       <div class="form-group" style="flex:1;">
         <label class="form-label">Unit</label>
@@ -757,21 +604,11 @@
         </select>
       </div>
     </div>
-
-    <button class="btn-primary" onclick="saveActivity()" style="margin-top:8px;">
-      ✅ Save Activity
-    </button>
-
+    <button class="btn-primary" onclick="saveActivity()" style="margin-top:8px;">✅ Save Activity</button>
   </div>
 </div>
 
-    </div><!-- end screens-container -->
-  </div><!-- end app-body -->
-</div><!-- end app -->
-
-<!-- ═══════════════════════════════ -->
-<!--        PROFILE MENU            -->
-<!-- ═══════════════════════════════ -->
+<!-- PROFILE MENU -->
 <div id="profile-menu" class="overlay" onclick="closeProfileMenu()">
   <div class="profile-dropdown" onclick="event.stopPropagation()">
     <div class="pd-header">
@@ -793,9 +630,7 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════ -->
-<!--        EDIT PROFILE            -->
-<!-- ═══════════════════════════════ -->
+<!-- EDIT PROFILE SCREEN -->
 <div id="profile-screen" class="fullscreen" style="display:none;">
   <div class="fs-header">
     <button class="fs-back" onclick="closeProfile()">
@@ -804,14 +639,12 @@
     <div class="fs-title">Edit Profile</div>
     <button class="fs-save" onclick="saveProfile()">Save</button>
   </div>
-
   <div class="fs-body">
     <div class="fs-avatar-area">
       <div class="fs-avatar">👨‍🌾</div>
       <div class="fs-name" id="profile-name-display">—</div>
       <div class="fs-phone" id="profile-phone-display">—</div>
     </div>
-
     <div class="form-group">
       <label class="form-label">Full Name</label>
       <input type="text" id="edit-name" class="form-input" placeholder="Enter your name">
@@ -843,13 +676,8 @@
       <label class="form-label">Sowing Date</label>
       <input type="date" id="edit-sowing" class="form-input">
     </div>
-
-    <button class="btn-primary" onclick="saveProfile()" style="margin-bottom:12px;">
-      ✅ Save Changes
-    </button>
-    <button class="btn-danger" onclick="localStorage.clear();window.location.replace('/');">
-      🚪 Logout
-    </button>
+    <button class="btn-primary" onclick="saveProfile()" style="margin-bottom:12px;">✅ Save Changes</button>
+    <button class="btn-danger" onclick="localStorage.clear();window.location.replace('/');">🚪 Logout</button>
   </div>
 </div>
 

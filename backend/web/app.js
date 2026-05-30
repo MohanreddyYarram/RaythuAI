@@ -130,6 +130,11 @@ function switchScreen(name) {
       n.classList.add('active')
     }
   })
+  if (name === 'tracker') {
+         if (typeof loadActivities === 'function') loadActivities()
+    }
+
+
 }
 
 function goBack() {
@@ -685,13 +690,7 @@ var typeConfig = {
 }
 
 // Load activities when tracker screen opens
-var originalSwitchScreen = switchScreen
-function switchScreen(name) {
-  originalSwitchScreen(name)
-  if (name === 'tracker') {
-    loadActivities()
-  }
-}
+
 
 async function loadActivities() {
   var farmerData = localStorage.getItem('rytuai_farmer')
