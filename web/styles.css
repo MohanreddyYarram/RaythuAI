@@ -1455,3 +1455,84 @@ html, body {
 .alert-card {
   margin: 0 16px 4px;
 }
+
+/* ═══════════════════════════════════════
+   FINAL STABILITY FIXES
+═══════════════════════════════════════ */
+
+/* Bottom nav — ALWAYS fixed, never moves */
+.bottom-nav {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 64px !important;
+  background: white !important;
+  border-top: 1px solid #e8e0d0 !important;
+  z-index: 1000 !important;
+  display: flex !important;
+}
+
+/* All screens must have bottom padding to not hide behind nav */
+.screen {
+  padding-bottom: 72px !important;
+}
+
+/* App body must not overflow */
+.app {
+  overflow: hidden !important;
+}
+
+/* Screens container fills space correctly */
+.screens-container {
+  flex: 1 !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* Each screen fills the container */
+.screen {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  display: none !important;
+}
+
+.screen.active {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Nav item active highlight */
+.nav-item.active {
+  color: #1a6e35 !important;
+}
+
+.nav-item.active svg {
+  color: #1a6e35 !important;
+}
+
+.nav-item.active span {
+  color: #1a6e35 !important;
+  font-weight: 800 !important;
+}
+
+/* Hide desktop-only on mobile */
+@media (max-width: 1023px) {
+  .desktop-only { display: none !important; }
+  .sidebar { display: none !important; }
+  .bottom-nav { display: flex !important; }
+}
+
+/* Desktop — hide bottom nav, show sidebar */
+@media (min-width: 1024px) {
+  .bottom-nav { display: none !important; }
+  .sidebar { display: flex !important; }
+  .screen { padding-bottom: 0 !important; }
+  .mobile-only { display: none !important; }
+}
