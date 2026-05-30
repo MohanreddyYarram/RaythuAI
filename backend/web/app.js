@@ -76,22 +76,49 @@ function loadFarmerData() {
     if (sbEl) sbEl.textContent = farmer.name
 
     // Update crop status with real farmer data
-if (farmer.crop_type) {
-  var cropNameEl = document.querySelector('.crop-name')
-  if (cropNameEl) cropNameEl.textContent = farmer.crop_type + ' — Chilli'
-}
+    if (farmer.crop_type) {
+      var cropNameEl = document.querySelector('.crop-name')
+    if (cropNameEl) cropNameEl.textContent = farmer.crop_type + ' — Chilli'
+    }// Calculate crop stage based on sowing date
+    if (farmer.sowing_date) {
+      var sowDate = new Date(farmer.sowing_date)
+      var today = new Date()
+      var daysDiff = Math.floor((today - sowDate) / (1000 * 60 * 60 * 24))
 
-if (farmer.sowing_date) {
-  var cropMetaEl = document.querySelector('.crop-meta')
-  if (cropMetaEl) {
-    var sowDate = new Date(farmer.sowing_date)
-    var sowFormatted = sowDate.toLocaleDateString('en-IN', {
-      day: 'numeric', month: 'short'
-    })
-    var acres = farmer.land_acres || '—'
-    cropMetaEl.textContent = 'Sowed: ' + sowFormatted + ' · ' + acres + ' acres'
-  }
-}
+      var stage = ''
+      var progress = 0
+
+      if (daysDiff < 30) {
+       stage = 'Seedling Stage'
+       progress = 10
+      } else if (daysDiff < 60) {
+       stage = 'Vegetative Stage'
+       progress = 25
+      } else if (daysDiff < 90) {
+       stage = 'Flowering Stage'
+       progress = 50
+      } else if (daysDiff < 120) {
+       stage = 'Fruit Development'
+       progress = 75
+      } else if (daysDiff < 150) {
+       stage = 'Harvest Ready'
+       progress = 90
+      } else {
+       stage = 'Season Complete'
+       progress = 100
+      }
+
+      var stageEl = document.querySelector('.crop-stage, .crop-badge')
+      if (stageEl) stageEl.textContent = stage
+
+      var progressEl = document.querySelector('.crop-progress-fill')
+      if (progressEl) progressEl.style.width = progress + '%'
+
+      var progressLabel = document.querySelector('.crop-progress-label')
+      if (progressLabel) progressLabel.textContent = 'Season Progress — ' + progress + '%'
+    }
+
+    
 
   } catch (e) {
     console.log('loadFarmerData error:', e)
