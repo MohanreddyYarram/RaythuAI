@@ -51,6 +51,7 @@ function showApp() {
   document.getElementById('login-screen').style.display = 'none'
   document.getElementById('app').style.display = 'flex'
   setTimeout(loadFarmerData, 200)
+  setTimeout(loadGreetingAndWeather, 300)
 }
 
 function loadFarmerData() {
@@ -1133,6 +1134,7 @@ async function addShopActivityToTracker(item, price) {
         break
       case 'home':
         if (typeof loadFarmerData === 'function') loadFarmerData()
+        if (typeof loadGreetingAndWeather === 'function') loadGreetingAndWeather()
         break
       case 'detect':
         // Reset upload slots
@@ -1201,3 +1203,108 @@ async function addShopActivityToTracker(item, price) {
     startY = 0
   }, { passive: true })
 })()
+
+/* ══════════════════════════════════════
+   DYNAMIC GREETING + WEATHER
+══════════════════════════════════════ */
+async function loadGreetingAndWeather() {
+  // ── Dynamic Greeting ──
+  var hour = new Date().getHours()
+  var greeting = ''
+  var greetingTelugu = ''
+
+  if (hour < 12) {
+    greeting = 'Good morning'
+    greetingTelugu = 'శుభోదయం'
+  } else if (hour < 17) {
+    greeting = 'Good afternoon'
+    greetingTelugu = 'శుభ మధ్యాహ్నం'
+  } else {
+    greeting = 'Good evening'
+    greetingTelugu = 'శుభ సాయంత్రం'
+  }
+
+  // Update desktop subtext
+  var subEl = document.querySelector('.dh-sub')
+  if (subEl) {
+    subEl.textContent = greeting + ' — here\'s your farm overview'
+  }
+
+  // Update mobile subtext
+  var mobSubEl = document.querySelector('.home-subtext')
+  if (mobSubEl) {
+    mobSubEl.textContent = greeting + ', farmer'
+  }
+
+  // ── Weather from OpenMeteo (free, no API key needed) ──
+  try {
+    // Get farmer district for location
+    var farmerData = localStorage.getItem('rytuai_farmer')
+    var lat = 16.3008  // Guntur default
+    var lon = 80.4428
+
+    // Fetch weather
+    var weatherUrl = 'https://api.open-meteo.com/v1/forecast' +
+      '?latitude=' + lat +
+      '&longitude=' + lon +
+      '&current=temperature_2m,relative_humidity_2m,weathercode' +
+      '&timezone=Asia/Kolkata'
+
+    var response = await fetch(weatherUrl)
+    var data = await response.json()
+
+    if (data && data.current) {
+      var temp = Math.round(data.current.temperature_2m)
+      var humidity = data.current.relative_humidity_2m
+      var code = data.current.weathercode
+
+      // Weather description from code
+      var weatherInfo = getWeatherInfo(code)
+
+      // Farming alert based on humidity
+      var alert = ''
+      if (humidity > 75) {
+        alert = 'High humidity — watch for fungal diseases'
+      } else if (humidity > 60) {
+        alert = 'Moderate humidity — monitor your crop'
+      } else {
+        alert = 'Good weather for farming today'
+      }
+
+      // Update mobile weather
+      var tempEl = document.querySelector('.weather-temp')
+      var descEl = document.querySelector('.weather-desc')
+      if (tempEl) tempEl.textContent = temp + '°C · Guntur'
+      if (descEl) descEl.textContent = alert
+
+      // Update desktop weather
+      var dhTemp = document.querySelector('.dh-temp')
+      var dhAlert = document.querySelector('.dh-weather-alert')
+      var dhLoc = document.querySelector('.dh-loc')
+      if (dhTemp) dhTemp.textContent = temp + '°C'
+      if (dhLoc) dhLoc.textContent = 'Guntur District · ' + humidity + '% humidity'
+      if (dhAlert) dhAlert.textContent = '⚠️ ' + alert
+
+      // Update weather icon
+      var iconEl = document.querySelector('.weather-icon')
+      if (iconEl) iconEl.textContent = weatherInfo.icon
+
+      console.log('Weather loaded:', temp + '°C', humidity + '% humidity')
+    }
+  } catch(err) {
+    console.log('Weather load error:', err.message)
+  }
+}
+
+function getWeatherInfo(code) {
+  if (code === 0) return { icon: '☀️', desc: 'Clear sky' }
+  if (code <= 2) return { icon: '🌤️', desc: 'Partly cloudy' }
+  if (code <= 3) return { icon: '☁️', desc: 'Cloudy' }
+  if (code <= 49) return { icon: '🌫️', desc: 'Foggy' }
+  if (code <= 59) return { icon: '🌧️', desc: 'Drizzle' }
+  if (code <= 69) return { icon: '🌧️', desc: 'Rain' }
+  if (code <= 79) return { icon: '❄️', desc: 'Snow' }
+  if (code <= 84) return { icon: '🌦️', desc: 'Rain showers' }
+  if (code <= 99) return { icon: '⛈️', desc: 'Thunderstorm' }
+  return { icon: '⛅', desc: 'Partly cloudy' }
+}
