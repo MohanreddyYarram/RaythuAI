@@ -1007,3 +1007,86 @@ async function addShopActivityToTracker(item, price) {
     console.log('Auto tracker error:', err)
   }
 }
+
+/* ══════════════════════════════════════
+   PULL TO REFRESH
+══════════════════════════════════════ */
+(function() {
+  var startY = 0
+  var threshold = 80
+  var refreshing = false
+
+  // Find the active screen
+  function getActiveScreen() {
+    return document.querySelector('.screen.active')
+  }
+
+  // Show refresh indicator
+  function showRefreshIndicator() {
+    var existing = document.getElementById('pull-refresh')
+    if (existing) return
+
+    var indicator = document.createElement('div')
+    indicator.id = 'pull-refresh'
+    indicator.style.cssText = [
+      'position:fixed;top:56px;left:50%;',
+      'transform:translateX(-50%);',
+      'background:#1a6e35;color:white;',
+      'padding:8px 20px;border-radius:0 0 20px 20px;',
+      'font-size:13px;font-weight:700;',
+      'font-family:Nunito,sans-serif;',
+      'z-index:9999;',
+      'display:flex;align-items:center;gap:8px;'
+    ].join('')
+    indicator.innerHTML = '<div id="pull-spinner" style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;"></div> Refreshing...'
+    document.body.appendChild(indicator)
+  }
+
+  function hideRefreshIndicator() {
+    var indicator = document.getElementById('pull-refresh')
+    if (indicator) indicator.remove()
+  }
+
+  // Touch start
+  document.addEventListener('touchstart', function(e) {
+    var screen = getActiveScreen()
+    if (!screen) return
+    if (screen.scrollTop === 0) {
+      startY = e.touches[0].clientY
+    } else {
+      startY = 0
+    }
+  }, { passive: true })
+
+  // Touch end
+  document.addEventListener('touchend', function(e) {
+    if (!startY || refreshing) return
+
+    var endY = e.changedTouches[0].clientY
+    var diff = endY - startY
+
+    if (diff > threshold) {
+      refreshing = true
+      showRefreshIndicator()
+
+      // Reload current screen data
+      var screen = getActiveScreen()
+      if (screen) {
+        var screenId = screen.id
+
+        if (screenId === 'screen-tracker') {
+          if (typeof loadActivities === 'function') loadActivities()
+        }
+      }
+
+      // Reload page after short delay
+      setTimeout(function() {
+        hideRefreshIndicator()
+        refreshing = false
+        window.location.reload()
+      }, 1000)
+    }
+
+    startY = 0
+  }, { passive: true })
+})()
