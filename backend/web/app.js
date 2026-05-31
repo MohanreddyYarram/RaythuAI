@@ -79,7 +79,7 @@ function loadFarmerData() {
     // Update crop status with real farmer data
     if (farmer.crop_type) {
       var cropNameEl = document.querySelector('.crop-name')
-    if (cropNameEl) cropNameEl.textContent = farmer.crop_type + ' — Chilli'
+    if (cropNameEl) cropNameEl.textContent = farmer.crop_type
     }// Calculate crop stage based on sowing date
     if (farmer.sowing_date) {
       var sowDate = new Date(farmer.sowing_date)
