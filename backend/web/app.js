@@ -824,33 +824,41 @@ function renderActivities(activities) {
   // Group by date
   var grouped = {}
   activities.forEach(function(a) {
-    var date = a.activity_date
-    if (!grouped[date]) grouped[date] = []
-    grouped[date].push(a)
+    var dateKey = a.date ? a.date.toString().substring(0, 10) : 'Unknown'
+    if (!grouped[dateKey]) grouped[dateKey] = []
+    grouped[dateKey].push(a)
   })
 
-  var html = ''
-  Object.keys(grouped).forEach(function(date) {
-    // Format date nicely
-    var d = new Date(date + 'T00:00:00')
-    var today = new Date().toISOString().split('T')[0]
-    var yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+  var todayStr = new Date().toISOString().substring(0, 10)
+  var yesterdayDate = new Date()
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1)
+  var yesterdayStr = yesterdayDate.toISOString().substring(0, 10)
 
+  var html = ''
+
+  Object.keys(grouped).forEach(function(dateKey) {
     var dateLabel = ''
-    if (date === today) {
+
+    if (dateKey === 'Unknown') {
+      dateLabel = 'Unknown Date'
+    } else if (dateKey === todayStr) {
       dateLabel = 'Today'
-    } else if (date === yesterday) {
+    } else if (dateKey === yesterdayStr) {
       dateLabel = 'Yesterday'
     } else {
-      dateLabel = d.toLocaleDateString('en-IN', {
-        weekday:'short',
-        day: 'numeric', month: 'short', year: 'numeric'
-      })
+      // Format: 31 May 2026
+      var parts = dateKey.split('-')
+      var year = parts[0]
+      var month = parts[1]
+      var day = parts[2]
+      var months = ['Jan','Feb','Mar','Apr','May','Jun',
+                    'Jul','Aug','Sep','Oct','Nov','Dec']
+      dateLabel = parseInt(day) + ' ' + months[parseInt(month) - 1] + ' ' + year
     }
 
     html += '<div class="date-group-header">' + dateLabel + '</div>'
 
-    grouped[date].forEach(function(activity) {
+    grouped[dateKey].forEach(function(activity) {
       var config = typeConfig[activity.type] || typeConfig['other']
       var isShop = activity.source === 'shop'
 
@@ -872,7 +880,6 @@ function renderActivities(activities) {
         html += '<div class="activity-card-desc">' + activity.description + '</div>'
       }
 
-      // Don't show edit/delete for shop purchases
       if (!isShop) {
         html += '<div class="activity-card-footer">' +
           '<button class="activity-action-btn activity-edit-btn" onclick="openEditActivity(' + activity.id + ')">✏️ Edit</button>' +
@@ -886,7 +893,6 @@ function renderActivities(activities) {
 
   listEl.innerHTML = html
 }
-
 // ── ADD ACTIVITY ──
 function openAddActivity() {
   currentEditActivityId = null
