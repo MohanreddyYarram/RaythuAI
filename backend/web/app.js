@@ -1211,88 +1211,101 @@ async function loadGreetingAndWeather() {
   // ── Dynamic Greeting ──
   var hour = new Date().getHours()
   var greeting = ''
-  var greetingTelugu = ''
 
   if (hour < 12) {
     greeting = 'Good morning'
-    greetingTelugu = 'శుభోదయం'
   } else if (hour < 17) {
     greeting = 'Good afternoon'
-    greetingTelugu = 'శుభ మధ్యాహ్నం'
   } else {
     greeting = 'Good evening'
-    greetingTelugu = 'శుభ సాయంత్రం'
   }
 
-  // Update desktop subtext
   var subEl = document.querySelector('.dh-sub')
-  if (subEl) {
-    subEl.textContent = greeting + ' — here\'s your farm overview'
-  }
+  if (subEl) subEl.textContent = greeting + ' — here\'s your farm overview'
 
-  // Update mobile subtext
   var mobSubEl = document.querySelector('.home-subtext')
-  if (mobSubEl) {
-    mobSubEl.textContent = greeting + ', farmer'
+  if (mobSubEl) mobSubEl.textContent = greeting + ', farmer'
+
+  // ── Get real location then weather ──
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      async function(position) {
+        var lat = position.coords.latitude
+        var lon = position.coords.longitude
+
+        // Get city name
+        try {
+          var geoRes = await fetch(
+            'https://nominatim.openstreetmap.org/reverse?lat=' +
+            lat + '&lon=' + lon + '&format=json'
+          )
+          var geoData = await geoRes.json()
+          var city = geoData.address.city ||
+                     geoData.address.town ||
+                     geoData.address.village ||
+                     geoData.address.district ||
+                     'Your Location'
+          await fetchWeather(lat, lon, city)
+        } catch(e) {
+          await fetchWeather(lat, lon, 'Your Location')
+        }
+      },
+      async function(err) {
+        // Location denied — use Guntur default
+        await fetchWeather(16.3008, 80.4428, 'Guntur')
+      },
+      { timeout: 5000 }
+    )
+  } else {
+    await fetchWeather(16.3008, 80.4428, 'Guntur')
   }
+}
 
-  // ── Weather from OpenMeteo (free, no API key needed) ──
+async function fetchWeather(lat, lon, city) {
   try {
-    // Get farmer district for location
-    var farmerData = localStorage.getItem('rytuai_farmer')
-    var lat = 16.3008  // Guntur default
-    var lon = 80.4428
-
-    // Fetch weather
-    var weatherUrl = 'https://api.open-meteo.com/v1/forecast' +
+    var url = 'https://api.open-meteo.com/v1/forecast' +
       '?latitude=' + lat +
       '&longitude=' + lon +
       '&current=temperature_2m,relative_humidity_2m,weathercode' +
       '&timezone=Asia/Kolkata'
 
-    var response = await fetch(weatherUrl)
+    var response = await fetch(url)
     var data = await response.json()
 
     if (data && data.current) {
       var temp = Math.round(data.current.temperature_2m)
       var humidity = data.current.relative_humidity_2m
       var code = data.current.weathercode
-
-      // Weather description from code
       var weatherInfo = getWeatherInfo(code)
 
-      // Farming alert based on humidity
-      var alert = ''
-      if (humidity > 75) {
-        alert = 'High humidity — watch for fungal diseases'
-      } else if (humidity > 60) {
-        alert = 'Moderate humidity — monitor your crop'
-      } else {
-        alert = 'Good weather for farming today'
-      }
+      var alert = humidity > 75
+        ? 'High humidity — watch for fungal diseases'
+        : humidity > 60
+        ? 'Moderate humidity — monitor your crop'
+        : 'Good weather for farming today'
 
-      // Update mobile weather
+      // Mobile
       var tempEl = document.querySelector('.weather-temp')
       var descEl = document.querySelector('.weather-desc')
-      if (tempEl) tempEl.textContent = temp + '°C · Guntur'
+      if (tempEl) tempEl.textContent = temp + '°C · ' + city
       if (descEl) descEl.textContent = alert
 
-      // Update desktop weather
+      // Desktop
       var dhTemp = document.querySelector('.dh-temp')
-      var dhAlert = document.querySelector('.dh-weather-alert')
       var dhLoc = document.querySelector('.dh-loc')
+      var dhAlert = document.querySelector('.dh-weather-alert')
       if (dhTemp) dhTemp.textContent = temp + '°C'
-      if (dhLoc) dhLoc.textContent = 'Guntur District · ' + humidity + '% humidity'
+      if (dhLoc) dhLoc.textContent = city + ' · ' + humidity + '% humidity'
       if (dhAlert) dhAlert.textContent = '⚠️ ' + alert
 
-      // Update weather icon
+      // Icon
       var iconEl = document.querySelector('.weather-icon')
       if (iconEl) iconEl.textContent = weatherInfo.icon
 
-      console.log('Weather loaded:', temp + '°C', humidity + '% humidity')
+      console.log('Weather:', temp + '°C at ' + city)
     }
   } catch(err) {
-    console.log('Weather load error:', err.message)
+    console.log('Weather error:', err.message)
   }
 }
 
