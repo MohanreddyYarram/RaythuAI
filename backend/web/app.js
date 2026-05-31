@@ -1081,6 +1081,26 @@ async function addShopActivityToTracker(item, price) {
   } catch (err) {
     console.log('Auto tracker error:', err)
   }
+  //Added from post method shop JS
+   try{
+            const itemNames = items.map(function(i){
+                return i.name
+            }).join(', ')
+
+            await supabase.from('activities').insert({
+                farmer_id,
+                activity_date: new Date().toISOString().split('T')[0],
+                type:'shop',
+                title:'Shop Order Placed',
+                description : 'Ordered: '+ itemNames,
+                cost: parseFloat(total_amount),
+                source: 'shop'
+            })
+
+        }catch (trackerErr){
+            console.log('Tracker auto-add error:',trackerErr.message)
+        }
+  
 }
 
 /* ══════════════════════════════════════
@@ -1746,6 +1766,9 @@ async function placeOrder() {
     } else {
       showToast(data.message || 'Order failed', 'error')
     }
+     console.log('Cart:', cart)
+     console.log('Store ID:', currentStoreId)
+     console.log('Store Name:', currentStoreName)
   } catch(err) {
     showToast('Cannot connect to server', 'error')
   } finally {
