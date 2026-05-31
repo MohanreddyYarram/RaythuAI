@@ -86,7 +86,7 @@ router.post('/orders',async(req,res)=>{
                 farmer_id: farmer_id,
                 activity_date: new Date().toISOString().split('T')[0],
                 type:'shop',
-                title:'Shop Order -' + currentStoreName,
+                title:'Shop Order -' ,
                 description : 'Ordered: '+ itemNames,
                 cost: parseFloat(total_amount),
                 source: 'shop'
