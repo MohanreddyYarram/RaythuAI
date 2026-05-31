@@ -50,7 +50,7 @@ router.get('/products/:store_id',async(req,res)=>{
 router.post('/orders',async(req,res)=>{
     const{
         farmer_id, farmer_name,farmer_phone,
-        store_id,name,items,total_amount,
+        store_id,items,total_amount,
         delivery_address,notes
     }=req.body
 
@@ -86,7 +86,7 @@ router.post('/orders',async(req,res)=>{
                 farmer_id: farmer_id,
                 date: new Date().toISOString().split('T')[0],
                 type:'shop',
-                title:'Shop Order -'+ name,
+                title:'Shop Order -'+ currentStoreName,
                 description : 'Ordered: '+ itemNames,
                 cost: parseFloat(total_amount),
                 source: 'shop'
