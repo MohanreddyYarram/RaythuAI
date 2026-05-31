@@ -82,10 +82,17 @@ function loadFarmerData() {
     if (cropNameEl) cropNameEl.textContent = farmer.crop_type
     }// Calculate crop stage based on sowing date
     if (farmer.sowing_date) {
-      var sowDate = new Date(farmer.sowing_date)
+      var sowDate = new Date(farmer.sowing_date + 'T00:00:00')
       var today = new Date()
       var daysDiff = Math.floor((today - sowDate) / (1000 * 60 * 60 * 24))
-
+      var sowFarmatted = sowDate.toLocaleDateString('en-IN',{
+        day : 'numeric', month:'short' , year :'2-digit'
+      })
+      var acres = farmer.land_acres || '-'
+      var corpMetal = document.querySelector('.crop-meta')
+      if (cropMetaEl){
+        cropMetaEl.textContent = 'Sowed: ' + sowFormatted + ' . ' + acres + 'acres'
+      }
       var stage = ''
       var progress = 0
 
