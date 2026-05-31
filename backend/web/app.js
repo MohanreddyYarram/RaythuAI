@@ -52,6 +52,10 @@ function showApp() {
   document.getElementById('app').style.display = 'flex'
   setTimeout(loadFarmerData, 200)
   setTimeout(loadGreetingAndWeather, 300)
+
+  //Restore last screen
+  var lastScreen = localStorage.getItem('rytuai_screen') || 'home'
+  switchScreen(lastScreen)
 }
 
 function loadFarmerData() {
@@ -149,7 +153,15 @@ var screenTitles = {
 }
 
 function switchScreen(name) {
+  
+  localStorage.setItem('rytuai_screen',name)
+  document.querySelectorAll('.screen').forEach(function(s){
+    s.classList.remove('active')
+  })
   currentScreen = name
+
+
+  
 
   // Hide all screens
   document.querySelectorAll('.screen').forEach(function(s) {
@@ -1081,25 +1093,6 @@ async function addShopActivityToTracker(item, price) {
   } catch (err) {
     console.log('Auto tracker error:', err)
   }
-  //Added from post method shop JS
-   try{
-            const itemNames = items.map(function(i){
-                return i.name
-            }).join(', ')
-
-            await supabase.from('activities').insert({
-                farmer_id,
-                activity_date: new Date().toISOString().split('T')[0],
-                type:'shop',
-                title:'Shop Order Placed',
-                description : 'Ordered: '+ itemNames,
-                cost: parseFloat(total_amount),
-                source: 'shop'
-            })
-
-        }catch (trackerErr){
-            console.log('Tracker auto-add error:',trackerErr.message)
-        }
   
 }
 
@@ -1652,6 +1645,21 @@ function openCart() {
   var screen = document.getElementById('cart-screen')
   if (!screen) return
 
+  //Pre-fill delivery address from farmer profile
+  var farmerData = localStorage.getItem('rytuai_farmer')
+  if(farmerData){
+    var farmer = JSON.parse(farmerData)
+    var addressEl = document.getElementById('delivery-address')
+    if(addressEl && !addressEl.value){
+      addressEl.value = (farmer.village || '')+
+        (farmer.district ?', ' + farmer.district : '')
+    }
+  }
+
+  //Set store name
+  var storeNameEl = document.getElementById('cart-store-name')
+  if(storeNameEl) storeNameEl.textContent = currentStoreName
+
   renderCartScreen()
   screen.style.display = 'block'
   screen.scrollTop = 0
@@ -1730,6 +1738,14 @@ async function placeOrder() {
   }
 
   var farmer = JSON.parse(farmerData)
+  // Get address and notes
+  var deliveryAddress = document.getElementById('delivery-address')
+  var notes = orderNotes ? orderNotes.value.trim():''
+  if(!address){
+    showToast('Please enter delivery address','error')
+    if(deliveryAddress) deliveryAddress.focus()
+      return
+  }
 
   var placeBtn = document.getElementById('place-order-btn')
   if (placeBtn) { placeBtn.textContent = 'Placing Order...'; placeBtn.disabled = true }
@@ -1748,8 +1764,8 @@ async function placeOrder() {
         store_id: currentStoreId,
         items: cart,
         total_amount: cartTotal(),
-        delivery_address: farmer.village + ', ' + farmer.district,
-        notes: ''
+        delivery_address: address,
+        notes: notes
       })
     })
 
@@ -1758,6 +1774,8 @@ async function placeOrder() {
     if (response.ok) {
       // Clear cart
       cart = []
+      if (deliveryAddress) deliveryAddress.value =''
+      if (orderNotes) orderNotes.value =''
       updateCartBar()
       closeCart()
 
@@ -1766,9 +1784,7 @@ async function placeOrder() {
     } else {
       showToast(data.message || 'Order failed', 'error')
     }
-     console.log('Cart:', cart)
-     console.log('Store ID:', currentStoreId)
-     console.log('Store Name:', currentStoreName)
+     
   } catch(err) {
     showToast('Cannot connect to server', 'error')
   } finally {

@@ -75,19 +75,27 @@ router.post('/orders',async(req,res)=>{
         
         //Auto add to tracker
         try{
-            const itemNames = items.map(function(i){
+
+            var itemsArray = typeof items === 'string' ? JSON.parse(items) : items
+
+            var itemNames = itemsArray.map(function(i){
                 return i.name
             }).join(', ')
 
-            await supabase.from('activities').insert({
-                farmer_id,
+           var {error:trackerError} = await supabase.from('activities').insert({
+                farmer_id: farmer_id,
                 activity_date: new Date().toISOString().split('T')[0],
                 type:'shop',
-                title:'Shop Order Placed',
+                title:'Shop Order -' + currentStoreName,
                 description : 'Ordered: '+ itemNames,
                 cost: parseFloat(total_amount),
                 source: 'shop'
             })
+            if(trackerError){
+                console.log('Tracker insert error: ',trackerError.message)
+            }else{
+                console.log('Tracker auto-add success')
+            }
 
         }catch (trackerErr){
             console.log('Tracker auto-add error:',trackerErr.message)

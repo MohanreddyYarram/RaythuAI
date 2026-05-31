@@ -520,6 +520,23 @@
       📍 Delivering from <span id="cart-store-name" style="color:#1a6e35;"></span>
     </div>
     <div id="cart-items-container"></div>
+
+    <!--Delivary Address-->
+    <div class="form-group" style="margin-top:16px;">
+      <label class="form-label">📍 Delivery Address</label>
+      <textarea id="delivery-address" class="form-input"
+        placeholder="Enter your farm/village address for delivary..."
+        style="height:80px;resize:none;"></textarea>
+    </div>
+
+    <!--Notes-->
+    <div class="form-group">
+      <label class="form-label">📝 Notes (optional)
+      </label>
+      <input type="text", id="order-notes" class="form-input"
+      placeholder="e.g. Call before delivery">
+    </div>
+    <!--Place Order Button-->
     <div style="margin-top:16px;">
       <button id="place-order-btn" onclick="placeOrder()"
         style="width:100%;padding:16px;background:#1a6e35;color:white;
