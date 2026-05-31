@@ -1646,15 +1646,7 @@ function openCart() {
   if (!screen) return
 
   //Pre-fill delivery address from farmer profile
-  var farmerData = localStorage.getItem('rytuai_farmer')
-  if(farmerData){
-    var farmer = JSON.parse(farmerData)
-    var addressEl = document.getElementById('delivery-address')
-    if(addressEl && !addressEl.value){
-      addressEl.value = (farmer.village || '')+
-        (farmer.district ?', ' + farmer.district : '')
-    }
-  }
+  
 
   //Set store name
   var storeNameEl = document.getElementById('cart-store-name')
@@ -1663,6 +1655,7 @@ function openCart() {
   renderCartScreen()
   screen.style.display = 'block'
   screen.scrollTop = 0
+  getLocationForDelivery()
 }
 
 function closeCart() {
@@ -1739,8 +1732,12 @@ async function placeOrder() {
 
   var farmer = JSON.parse(farmerData)
   // Get address and notes
-  var deliveryAddress = document.getElementById('delivery-address')
-  var notes = orderNotes ? orderNotes.value.trim():''
+  var address =''
+  var notes =''
+  var deliveryAddressEl = document.getElementById('delivery-address')
+  var orderNotesEl = document.getElementById('order-notes')
+  if(deliveryAddressEl) address = deliveryAddressEl.value.trim()
+  if(orderNotesEl) notes = orderNotesEl.value.trim()
   if(!address){
     showToast('Please enter delivery address','error')
     if(deliveryAddress) deliveryAddress.focus()
@@ -1811,4 +1808,74 @@ function closeOrderSuccess() {
 // ── ADD FROM SHOP TO TRACKER (called from shop buttons) ──
 async function addToTrackerFromShop(name, price) {
   addToCart(0, name, price)
+}
+
+//Function to get geoLocation
+function getLocationForDelivery(){
+  var addressEl = document.getElementById('delivery-address')
+  if(!addressEl) return
+
+  addressEl.placeholder = '📍 Detecting your location...'
+  addressEl.disabled = true
+
+  if(!navigator.geolocation){
+    addressEl.disabled = false
+    addressEl.placeholder = 'Enter your farm/village address'
+    return
+  }
+  navigator.geolocation.getCurrentPosition(
+    async function(position){
+      var lat = position.coords.latitude
+      var lon = position.coords.longitude
+
+      try{
+        var res = await fetch(
+          'https://nominatim.openstreetmap.org/reverse?lat=' +
+          lat + '&lon=' + lon + '&format=json'
+        )
+        var data = await res.json()
+        var addr = data.address
+
+        //Build address string
+        var parts = []
+        if(addr.village || addr.town || addr.city){
+          parts.push(addr.village || addr.town || addr.city)
+        }
+        if(addr.county || addr.state_district){
+          parts.push(addr.county || addr.state_distric)
+        }
+        if (addr.state) parts.push(addr.state)
+        
+        var fullAddress = parts.join(', ')
+
+        addressEl.value = fullAddress
+        addressEl.disabled = false
+        addressEl.placeholder = 'Enter your farm/village address'
+        showToast('Location detected!', 'sucess')
+      }catch(e){
+        addressEl.disabled = false
+        addressEl.placeOrder = 'Enter your farm/village address'
+
+        fillAddressFromProfile()
+      }
+    },
+    function(err){
+      addressEl.disabled = false
+      addressEl.placeholder = 'Enter your farm/village address'
+
+      fillAddressFromProfile()
+    },
+    { timeout: 8000}
+  )
+
+}
+function fillAddressFromProfile(){
+  var farmerData = localStorage.getItem('rytuai_farmer')
+  if (!farmerData) return
+  var farmer = JSON.parse(farmerData)
+  var addressEl = document.getElementById('delivery-address')
+  if (addressEl && !addressEl.value){
+    addressEl.value = (farmer.village || '')+
+    (farmer.district?', ' + farmer.district:'')
+  }
 }
