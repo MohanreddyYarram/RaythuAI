@@ -1740,7 +1740,7 @@ async function placeOrder() {
   if(orderNotesEl) notes = orderNotesEl.value.trim()
   if(!address){
     showToast('Please enter delivery address','error')
-    if(deliveryAddress) deliveryAddress.focus()
+    if(deliveryAddressEl) deliveryAddressEl.focus()
       return
   }
 
@@ -1771,8 +1771,8 @@ async function placeOrder() {
     if (response.ok) {
       // Clear cart
       cart = []
-      if (deliveryAddress) deliveryAddress.value =''
-      if (orderNotes) orderNotes.value =''
+      if (deliveryAddressEl) deliveryAddressEl.value =''
+      if (orderNotesEl) orderNotesEl.value =''
       updateCartBar()
       closeCart()
 
