@@ -92,7 +92,7 @@ router.post('/orders',async(req,res)=>{
 
            var {error:trackerError} = await supabase.from('activities').insert({
                 farmer_id: farmer_id,
-                date: new Date().toISOString().split('T')[0],
+                date: date || new Date().toISOString().split('T')[0],
                 type:'shop',
                 title:'Ordered from ' +storeName,
                 description : 'Ordered: '+ itemNames,
@@ -130,7 +130,7 @@ router.get('/orders/:farmer_id',async(req,res)=>{
             .from('orders')
             .select('*,stores(name,phone,address)')
             .eq('farmer_id', farmer_id)
-            .order('created_at',{ascending:false})
+            .order('date',{ascending:false})
 
         if(error) return res.status(400).json({message:error.message})
 
