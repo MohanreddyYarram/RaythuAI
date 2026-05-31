@@ -51,7 +51,7 @@ router.post('/orders',async(req,res)=>{
     const{
         farmer_id, farmer_name,farmer_phone,
         store_id,items,total_amount,
-        delivery_address,notes,currentStoreName
+        delivery_address,notes
     }=req.body
 
     if(!farmer_id || !store_id || !items || !total_amount){
@@ -82,11 +82,19 @@ router.post('/orders',async(req,res)=>{
                 return i.name
             }).join(', ')
 
+            var {data:storeData} = await supabase
+                .from('stores')
+                .select('name')
+                .eq('id',store_id)
+                .single()
+
+            var storeName = storeData ? storeData.name:'Rytu Shop'
+
            var {error:trackerError} = await supabase.from('activities').insert({
                 farmer_id: farmer_id,
                 date: new Date().toISOString().split('T')[0],
                 type:'shop',
-                title:'Shop Order -'+ currentStoreName,
+                title:'Ordered from ' +storeName,
                 description : 'Ordered: '+ itemNames,
                 cost: parseFloat(total_amount),
                 source: 'shop'

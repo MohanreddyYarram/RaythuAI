@@ -1655,7 +1655,7 @@ function openCart() {
   renderCartScreen()
   screen.style.display = 'block'
   screen.scrollTop = 0
-  getLocationForDelivery()
+  fillAddressFromProfile()
 }
 
 function closeCart() {
@@ -1815,13 +1815,15 @@ async function addToTrackerFromShop(name, price) {
 function getLocationForDelivery(){
   var addressEl = document.getElementById('delivery-address')
   if(!addressEl) return
-
+  
+  var originalValue = addressEl.value
   addressEl.placeholder = '📍 Detecting your location...'
   addressEl.disabled = true
 
   if(!navigator.geolocation){
+    addressEl.value = originalValue
     addressEl.disabled = false
-    addressEl.placeholder = 'Enter your farm/village address'
+    showToast('Location not supported on this device','error')
     return
   }
   navigator.geolocation.getCurrentPosition(
@@ -1851,20 +1853,19 @@ function getLocationForDelivery(){
 
         addressEl.value = fullAddress
         addressEl.disabled = false
-        addressEl.placeholder = 'Enter your farm/village address'
-        showToast('Location detected!', 'sucess')
+        
+        showToast('Current Location detected!', 'sucess')
       }catch(e){
+        addressEl.value = originalValue
         addressEl.disabled = false
-        addressEl.placeOrder = 'Enter your farm/village address'
-
-        fillAddressFromProfile()
+        showToast('Could not detect location','error')
       }
     },
     function(err){
-      addressEl.disabled = false
-      addressEl.placeholder = 'Enter your farm/village address'
 
-      fillAddressFromProfile()
+      addressEl.value = originalValue
+        addressEl.disabled = false
+        showToast('Location acsess denied','error')
     },
     { timeout: 8000}
   )
@@ -1875,8 +1876,12 @@ function fillAddressFromProfile(){
   if (!farmerData) return
   var farmer = JSON.parse(farmerData)
   var addressEl = document.getElementById('delivery-address')
-  if (addressEl && !addressEl.value){
-    addressEl.value = (farmer.village || '')+
-    (farmer.district?', ' + farmer.district:'')
+  if (addressEl){
+    var parts = []
+    if (farmer.village) parts.push(farmer.village)
+    if(farmer.district) parts.push(farmer.district)
+    if (farmer.name) parts.push('('+farmer.name+ ')')
+    addressEl.value = parts.join(', ')
+    
   }
 }
