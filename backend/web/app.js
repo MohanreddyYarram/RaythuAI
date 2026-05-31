@@ -1783,7 +1783,8 @@ async function placeOrder() {
     }
      
   } catch(err) {
-    showToast('Cannot connect to server', 'error')
+    console.log('Full error: ',err)
+    showToast('Cannot connect to server',+ err.message, 'error')
   } finally {
     if (placeBtn) { placeBtn.textContent = 'Place Order'; placeBtn.disabled = false }
   }
