@@ -824,7 +824,7 @@ function renderActivities(activities) {
   // Group by date
   var grouped = {}
   activities.forEach(function(a) {
-    var date = a.date
+    var date = a.activity_date
     if (!grouped[date]) grouped[date] = []
     grouped[date].push(a)
   })
@@ -843,6 +843,7 @@ function renderActivities(activities) {
       dateLabel = 'Yesterday'
     } else {
       dateLabel = d.toLocaleDateString('en-IN', {
+        weekday:'short',
         day: 'numeric', month: 'short', year: 'numeric'
       })
     }
