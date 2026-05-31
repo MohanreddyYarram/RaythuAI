@@ -38,7 +38,7 @@ const farmersRoute = require('./routes/farmers')
 const authRoute = require('./routes/auth')
 const detectionRoute = require('./routes/detection')
 const activitiesRoute = require('./routes/activities')
-const shopRoute = require('../backend/routes/shop')
+const shopRoute = require('./backend/routes/shop')
 
 //Detect limit for detect route
 const detectLimiter = rateLimit({
