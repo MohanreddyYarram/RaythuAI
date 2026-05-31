@@ -51,7 +51,7 @@ router.post('/orders',async(req,res)=>{
     const{
         farmer_id, farmer_name,farmer_phone,
         store_id,items,total_amount,
-        delivery_address,notes
+        delivery_address,notes,currentStoreName
     }=req.body
 
     if(!farmer_id || !store_id || !items || !total_amount){
