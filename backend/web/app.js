@@ -62,13 +62,10 @@ function loadFarmerData() {
     const farmer = JSON.parse(farmerData)
     if (!farmer || !farmer.name) return
 
-    const greeting = 'నమస్కారం, ' + farmer.name + ' గారు 🙏'
-
-    // Update every possible greeting element
-    var greetEls = document.querySelectorAll(
-      '#farmer-greeting, #farmer-greeting-desktop'
-    )
-    greetEls.forEach(function(el) { el.textContent = greeting })
+    // ── Greeting ──
+    var greeting = 'నమస్కారం, ' + farmer.name + ' గారు 🙏'
+    document.querySelectorAll('#farmer-greeting, #farmer-greeting-desktop')
+      .forEach(function(el) { el.textContent = greeting })
 
     var topEl = document.getElementById('topbar-farmer-name')
     if (topEl) topEl.textContent = farmer.name
@@ -76,44 +73,48 @@ function loadFarmerData() {
     var sbEl = document.getElementById('sidebar-farmer-name')
     if (sbEl) sbEl.textContent = farmer.name
 
-    // Update crop status with real farmer data
-    if (farmer.crop_type) {
-      var cropNameEl = document.querySelector('.crop-name')
-    if (cropNameEl) cropNameEl.textContent = farmer.crop_type
-    }// Calculate crop stage based on sowing date
-    if (farmer.sowing_date) {
-      var sowDate = new Date(farmer.sowing_date + 'T00:00:00')
-      var today = new Date()
-      var daysDiff = Math.floor((today - sowDate) / (1000 * 60 * 60 * 24))
-      var sowFarmatted = sowDate.toLocaleDateString('en-IN',{
-        day : 'numeric', month:'short' , year :'2-digit'
-      })
-      var acres = farmer.land_acres || '-'
-      var corpMetal = document.querySelector('.crop-meta')
-      if (cropMetaEl){
-        cropMetaEl.textContent = 'Sowed: ' + sowFormatted + ' . ' + acres + 'acres'
+    // ── Crop Name ──
+    var cropNameEl = document.querySelector('.crop-name')
+    if (cropNameEl && farmer.crop_type) {
+      cropNameEl.textContent = farmer.crop_type
+    }
+
+    // ── Crop Meta (sowing date + acres) ──
+    var cropMetaEl = document.querySelector('.crop-meta')
+    if (cropMetaEl) {
+      var acres = farmer.land_acres || '—'
+      if (farmer.sowing_date) {
+        var sowDate = new Date(farmer.sowing_date + 'T00:00:00')
+        var sowFormatted = sowDate.toLocaleDateString('en-IN', {
+          day: 'numeric', month: 'short', year: '2-digit'
+        })
+        cropMetaEl.textContent = 'Sowed: ' + sowFormatted + ' · ' + acres + ' acres'
+      } else {
+        cropMetaEl.textContent = acres + ' acres'
       }
+    }
+
+    // ── Crop Stage + Progress ──
+    if (farmer.sowing_date) {
+      var sowDate2 = new Date(farmer.sowing_date + 'T00:00:00')
+      var today = new Date()
+      var daysDiff = Math.floor((today - sowDate2) / (1000 * 60 * 60 * 24))
+
       var stage = ''
       var progress = 0
 
       if (daysDiff < 30) {
-       stage = 'Seedling Stage'
-       progress = 10
+        stage = 'Seedling Stage'; progress = 10
       } else if (daysDiff < 60) {
-       stage = 'Vegetative Stage'
-       progress = 25
+        stage = 'Vegetative Stage'; progress = 25
       } else if (daysDiff < 90) {
-       stage = 'Flowering Stage'
-       progress = 50
+        stage = 'Flowering Stage'; progress = 50
       } else if (daysDiff < 120) {
-       stage = 'Fruit Development'
-       progress = 75
+        stage = 'Fruit Development'; progress = 75
       } else if (daysDiff < 150) {
-       stage = 'Harvest Ready'
-       progress = 90
+        stage = 'Harvest Ready'; progress = 90
       } else {
-       stage = 'Season Complete'
-       progress = 100
+        stage = 'Season Complete'; progress = 100
       }
 
       var stageEl = document.querySelector('.crop-stage, .crop-badge')
@@ -123,12 +124,12 @@ function loadFarmerData() {
       if (progressEl) progressEl.style.width = progress + '%'
 
       var progressLabel = document.querySelector('.crop-progress-label')
-      if (progressLabel) progressLabel.textContent = 'Season Progress — ' + progress + '%'
+      if (progressLabel) {
+        progressLabel.textContent = 'Season Progress — ' + progress + '%'
+      }
     }
 
-    
-
-  } catch (e) {
+  } catch(e) {
     console.log('loadFarmerData error:', e)
   }
 }
