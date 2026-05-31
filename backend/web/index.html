@@ -132,8 +132,8 @@
           <div class="home-weather">
             <span class="weather-icon">⛅</span>
             <div>
-              <div class="weather-temp">32°C · Guntur</div>
-              <div class="weather-desc">High humidity — watch for fungal diseases</div>
+              <div class="weather-temp">--°C</div>
+              <div class="weather-desc">Loading weather...</div>
             </div>
           </div>
         </div>
@@ -145,13 +145,13 @@
           </div>
           <div class="dh-weather">
             <div class="dh-weather-main">
-              <span style="font-size:36px;">⛅</span>
+              <span style="font-size:36px;" class="weather-icon">⛅</span>
               <div>
-                <div class="dh-temp">32°C</div>
-                <div class="dh-loc">Guntur District</div>
+                <div class="dh-temp">--°C</div>
+                <div class="dh-loc">Loading...</div>
               </div>
             </div>
-            <div class="dh-weather-alert">⚠️ High humidity — watch for fungal diseases</div>
+            <div class="dh-weather-alert">Loading weather...</div>
           </div>
         </div>
 
@@ -205,13 +205,13 @@
               <div class="section-label">🌶️ My Crop Status</div>
               <div class="crop-card">
                 <div class="crop-top">
-                  <div class="crop-name">---</div>
-                  <div class="crop-badge">---</div>
+                  <div class="crop-name">—</div>
+                  <div class="crop-badge">—</div>
                 </div>
                 <div class="crop-meta">Loading...</div>
                 <div class="crop-progress-label">Season Progress — 0%</div>
                 <div class="crop-progress-bar">
-                  <div class="crop-progress-fill" style="width:45%"></div>
+                  <div class="crop-progress-fill" style="width:0%"></div>
                 </div>
               </div>
             </div>
@@ -219,29 +219,29 @@
         </div>
 
         <nav class="bottom-nav mobile-only">
-  <div class="nav-item" onclick="switchScreen('home')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-    <span>Home</span>
-  </div>
-  <div class="nav-item" onclick="switchScreen('roadmap')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
-    <span>Roadmap</span>
-  </div>
-  <div class="nav-item nav-center" onclick="switchScreen('detect')">
-    <div class="nav-scan-btn">
-      <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-    </div>
-    <span>Detect</span>
-  </div>
-  <div class="nav-item" onclick="switchScreen('tracker')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-    <span>Tracker</span>
-  </div>
-  <div class="nav-item" onclick="switchScreen('shop')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96C5 16.1 6.1 17 7.5 17H19v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63H15c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0019.5 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
-    <span>Shop</span>
-  </div>
-</nav>
+          <div class="nav-item" onclick="switchScreen('home')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span>Home</span>
+          </div>
+          <div class="nav-item" onclick="switchScreen('roadmap')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+            <span>Roadmap</span>
+          </div>
+          <div class="nav-item nav-center" onclick="switchScreen('detect')">
+            <div class="nav-scan-btn">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            </div>
+            <span>Detect</span>
+          </div>
+          <div class="nav-item" onclick="switchScreen('tracker')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            <span>Tracker</span>
+          </div>
+          <div class="nav-item" onclick="switchScreen('shop')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96C5 16.1 6.1 17 7.5 17H19v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63H15c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0019.5 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+            <span>Shop</span>
+          </div>
+        </nav>
       </div>
 
       <!-- ══ DETECT SCREEN ══ -->
@@ -281,29 +281,12 @@
           </button>
         </div>
         <nav class="bottom-nav mobile-only">
-  <div class="nav-item" onclick="switchScreen('home')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-    <span>Home</span>
-  </div>
-  <div class="nav-item" onclick="switchScreen('roadmap')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
-    <span>Roadmap</span>
-  </div>
-  <div class="nav-item nav-center" onclick="switchScreen('detect')">
-    <div class="nav-scan-btn">
-      <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-    </div>
-    <span>Detect</span>
-  </div>
-  <div class="nav-item" onclick="switchScreen('tracker')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-    <span>Tracker</span>
-  </div>
-  <div class="nav-item" onclick="switchScreen('shop')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96C5 16.1 6.1 17 7.5 17H19v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63H15c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0019.5 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
-    <span>Shop</span>
-  </div>
-</nav>
+          <div class="nav-item" onclick="switchScreen('home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
+          <div class="nav-item" onclick="switchScreen('roadmap')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg><span>Roadmap</span></div>
+          <div class="nav-item nav-center" onclick="switchScreen('detect')"><div class="nav-scan-btn"><svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></div><span>Detect</span></div>
+          <div class="nav-item" onclick="switchScreen('tracker')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg><span>Tracker</span></div>
+          <div class="nav-item" onclick="switchScreen('shop')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96C5 16.1 6.1 17 7.5 17H19v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63H15c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0019.5 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg><span>Shop</span></div>
+        </nav>
       </div>
 
       <!-- ══ RESULT SCREEN ══ -->
@@ -357,136 +340,60 @@
           </div>
         </div>
         <nav class="bottom-nav mobile-only">
-  <div class="nav-item" onclick="switchScreen('home')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-    <span>Home</span>
-  </div>
-  <div class="nav-item" onclick="switchScreen('roadmap')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
-    <span>Roadmap</span>
-  </div>
-  <div class="nav-item nav-center" onclick="switchScreen('detect')">
-    <div class="nav-scan-btn">
-      <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-    </div>
-    <span>Detect</span>
-  </div>
-  <div class="nav-item" onclick="switchScreen('tracker')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-    <span>Tracker</span>
-  </div>
-  <div class="nav-item" onclick="switchScreen('shop')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96C5 16.1 6.1 17 7.5 17H19v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63H15c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0019.5 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
-    <span>Shop</span>
-  </div>
-</nav>
+          <div class="nav-item" onclick="switchScreen('home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
+          <div class="nav-item" onclick="switchScreen('roadmap')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg><span>Roadmap</span></div>
+          <div class="nav-item nav-center" onclick="switchScreen('detect')"><div class="nav-scan-btn"><svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></div><span>Detect</span></div>
+          <div class="nav-item" onclick="switchScreen('tracker')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg><span>Tracker</span></div>
+          <div class="nav-item" onclick="switchScreen('shop')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96C5 16.1 6.1 17 7.5 17H19v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63H15c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0019.5 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg><span>Shop</span></div>
+        </nav>
       </div>
 
       <!-- ══ SHOP SCREEN ══ -->
       <div class="screen" id="screen-shop">
         <div class="shop-hero">
           <div class="shop-title">🏪 Rytu Shop</div>
-          <div class="shop-sub">Direct prices · No middlemen · Fast delivery</div>
+          <div class="shop-sub">Direct from franchise stores · No middlemen</div>
           <div class="shop-badges">
-            <span class="shop-badge">📍 2.3 km away</span>
-            <span class="shop-badge">🚚 4hr delivery</span>
-            <span class="shop-badge">💰 Up to 27% cheaper</span>
+            <span class="shop-badge">🚚 Fast delivery</span>
+            <span class="shop-badge">💰 Best prices</span>
           </div>
         </div>
-        <div class="shop-body">
-          <div class="search-box">🔍 &nbsp;Search pesticides, fertilizers, seeds...</div>
-          <div class="category-row">
-            <div class="cat active">All</div>
-            <div class="cat">Insecticides</div>
-            <div class="cat">Fungicides</div>
-            <div class="cat">Fertilizers</div>
-            <div class="cat">Seeds</div>
-          </div>
-          <div class="section-label">🎯 Recommended for Your Crop</div>
-          <div class="product-list">
-            <div class="product-item">
-              <div class="product-icon">🧴</div>
-              <div class="product-info">
-                <div class="product-name">Spinosad 45% SC</div>
-                <div class="product-brand">Coragen · 100ml</div>
-                <div class="product-prices">
-                  <span class="product-price">₹320</span>
-                  <span class="product-mrp">₹420</span>
-                  <span class="product-disc">24% OFF</span>
-                </div>
-              </div>
-              <button class="add-btn" onclick="addToTrackerFromShop('Spinosad 45% SC', 320)">Add</button>
-            </div>
-            <div class="product-item">
-              <div class="product-icon">🧪</div>
-              <div class="product-info">
-                <div class="product-name">Imidacloprid 17.8%</div>
-                <div class="product-brand">Confidor · 250ml</div>
-                <div class="product-prices">
-                  <span class="product-price">₹185</span>
-                  <span class="product-mrp">₹240</span>
-                  <span class="product-disc">23% OFF</span>
-                </div>
-              </div>
-              <button class="add-btn" onclick="addToTrackerFromShop('Imidacloprid 17.8%', 185)">Add</button>
-            </div>
-            <div class="product-item">
-              <div class="product-icon">🌿</div>
-              <div class="product-info">
-                <div class="product-name">Neem Oil 10000PPM</div>
-                <div class="product-brand">Organic · 500ml</div>
-                <div class="product-prices">
-                  <span class="product-price">₹95</span>
-                  <span class="product-mrp">₹130</span>
-                  <span class="product-disc">27% OFF</span>
-                </div>
-              </div>
-              <button class="add-btn" onclick="addToTrackerFromShop('Neem Oil 10000PPM', 95)">Add</button>
-            </div>
-            <div class="product-item">
-              <div class="product-icon">🪣</div>
-              <div class="product-info">
-                <div class="product-name">NPK 19:19:19</div>
-                <div class="product-brand">Iffco · 1kg</div>
-                <div class="product-prices">
-                  <span class="product-price">₹220</span>
-                  <span class="product-mrp">₹290</span>
-                  <span class="product-disc">24% OFF</span>
-                </div>
-              </div>
-              <button class="add-btn" onclick="addToTrackerFromShop('NPK 19:19:19', 220)">Add</button>
-            </div>
-          </div>
-          <div class="store-card">
-            <div class="store-name">📍 Nearest Rytu Franchise Store</div>
-            <div class="store-addr">Rytu AgriCenter — Narasaraopet Road, Guntur</div>
-            <div class="store-info">2.3 km away · Open 7AM–8PM · ☎️ 98765 43210</div>
+
+        <!-- Dynamic content loads here -->
+        <div id="shop-body-content" style="padding-bottom:80px;">
+          <div style="text-align:center;padding:40px;color:#888;">
+            <div style="font-size:32px;">🏪</div>
+            <div style="font-size:13px;font-weight:700;margin-top:8px;">Loading stores...</div>
           </div>
         </div>
+
+        <!-- Cart Bar -->
+        <div id="cart-bar" style="
+          display:none;position:fixed;
+          bottom:70px;left:16px;right:16px;
+          background:#1a6e35;color:white;
+          border-radius:14px;padding:14px 18px;
+          z-index:800;align-items:center;
+          justify-content:space-between;
+          box-shadow:0 4px 20px rgba(26,110,53,0.4);
+          cursor:pointer;" onclick="openCart()">
+          <div>
+            <div id="cart-count" style="font-size:14px;font-weight:800;">0 items</div>
+            <div style="font-size:11px;opacity:0.8;">Tap to view cart</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div id="cart-total" style="font-size:18px;font-weight:900;">₹0</div>
+            <div style="background:white;color:#1a6e35;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:800;">View Cart →</div>
+          </div>
+        </div>
+
         <nav class="bottom-nav mobile-only">
-  <div class="nav-item" onclick="switchScreen('home')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-    <span>Home</span>
-  </div>
-  <div class="nav-item" onclick="switchScreen('roadmap')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
-    <span>Roadmap</span>
-  </div>
-  <div class="nav-item nav-center" onclick="switchScreen('detect')">
-    <div class="nav-scan-btn">
-      <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-    </div>
-    <span>Detect</span>
-  </div>
-  <div class="nav-item" onclick="switchScreen('tracker')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-    <span>Tracker</span>
-  </div>
-  <div class="nav-item" onclick="switchScreen('shop')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96C5 16.1 6.1 17 7.5 17H19v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63H15c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0019.5 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
-    <span>Shop</span>
-  </div>
-</nav>
+          <div class="nav-item" onclick="switchScreen('home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
+          <div class="nav-item" onclick="switchScreen('roadmap')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg><span>Roadmap</span></div>
+          <div class="nav-item nav-center" onclick="switchScreen('detect')"><div class="nav-scan-btn"><svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></div><span>Detect</span></div>
+          <div class="nav-item" onclick="switchScreen('tracker')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg><span>Tracker</span></div>
+          <div class="nav-item active" onclick="switchScreen('shop')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96C5 16.1 6.1 17 7.5 17H19v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63H15c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0019.5 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg><span>Shop</span></div>
+        </nav>
       </div>
 
       <!-- ══ ROADMAP SCREEN ══ -->
@@ -551,29 +458,12 @@
           </div>
         </div>
         <nav class="bottom-nav mobile-only">
-  <div class="nav-item" onclick="switchScreen('home')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-    <span>Home</span>
-  </div>
-  <div class="nav-item" onclick="switchScreen('roadmap')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
-    <span>Roadmap</span>
-  </div>
-  <div class="nav-item nav-center" onclick="switchScreen('detect')">
-    <div class="nav-scan-btn">
-      <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-    </div>
-    <span>Detect</span>
-  </div>
-  <div class="nav-item" onclick="switchScreen('tracker')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-    <span>Tracker</span>
-  </div>
-  <div class="nav-item" onclick="switchScreen('shop')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96C5 16.1 6.1 17 7.5 17H19v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63H15c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0019.5 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
-    <span>Shop</span>
-  </div>
-</nav>
+          <div class="nav-item" onclick="switchScreen('home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
+          <div class="nav-item active" onclick="switchScreen('roadmap')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg><span>Roadmap</span></div>
+          <div class="nav-item nav-center" onclick="switchScreen('detect')"><div class="nav-scan-btn"><svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></div><span>Detect</span></div>
+          <div class="nav-item" onclick="switchScreen('tracker')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg><span>Tracker</span></div>
+          <div class="nav-item" onclick="switchScreen('shop')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96C5 16.1 6.1 17 7.5 17H19v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63H15c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0019.5 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg><span>Shop</span></div>
+        </nav>
       </div>
 
       <!-- ══ TRACKER SCREEN ══ -->
@@ -600,38 +490,78 @@
           </div>
         </div>
         <nav class="bottom-nav mobile-only">
-  <div class="nav-item" onclick="switchScreen('home')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-    <span>Home</span>
-  </div>
-  <div class="nav-item" onclick="switchScreen('roadmap')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
-    <span>Roadmap</span>
-  </div>
-  <div class="nav-item nav-center" onclick="switchScreen('detect')">
-    <div class="nav-scan-btn">
-      <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-    </div>
-    <span>Detect</span>
-  </div>
-  <div class="nav-item" onclick="switchScreen('tracker')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-    <span>Tracker</span>
-  </div>
-  <div class="nav-item" onclick="switchScreen('shop')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96C5 16.1 6.1 17 7.5 17H19v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63H15c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0019.5 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
-    <span>Shop</span>
-  </div>
-</nav>
+          <div class="nav-item" onclick="switchScreen('home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
+          <div class="nav-item" onclick="switchScreen('roadmap')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg><span>Roadmap</span></div>
+          <div class="nav-item nav-center" onclick="switchScreen('detect')"><div class="nav-scan-btn"><svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></div><span>Detect</span></div>
+          <div class="nav-item active" onclick="switchScreen('tracker')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg><span>Tracker</span></div>
+          <div class="nav-item" onclick="switchScreen('shop')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96C5 16.1 6.1 17 7.5 17H19v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63H15c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0019.5 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg><span>Shop</span></div>
+        </nav>
       </div>
 
     </div><!-- end screens-container -->
   </div><!-- end app-body -->
 </div><!-- end app -->
 
-<!-- ═══════════════════════════════════════════ -->
-<!-- ALL FULLSCREEN OVERLAYS — OUTSIDE APP DIV  -->
-<!-- ═══════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════ -->
+<!-- ALL OVERLAYS OUTSIDE APP — CLICKS WORK!   -->
+<!-- ══════════════════════════════════════════ -->
+
+<!-- CART SCREEN -->
+<div id="cart-screen" class="fullscreen" style="display:none;">
+  <div class="fs-header">
+    <button class="fs-back" onclick="closeCart()">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="20"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    </button>
+    <div class="fs-title">My Cart</div>
+    <div style="width:40px;"></div>
+  </div>
+  <div class="fs-body">
+    <div style="font-size:13px;font-weight:700;color:#888;margin-bottom:12px;">
+      📍 Delivering from <span id="cart-store-name" style="color:#1a6e35;"></span>
+    </div>
+    <div id="cart-items-container"></div>
+    <div style="margin-top:16px;">
+      <button id="place-order-btn" onclick="placeOrder()"
+        style="width:100%;padding:16px;background:#1a6e35;color:white;
+        border:none;border-radius:14px;font-size:16px;font-weight:800;
+        font-family:'Nunito',sans-serif;cursor:pointer;">
+        🛒 Place Order
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ORDER SUCCESS SCREEN -->
+<div id="order-success-screen" class="fullscreen" style="display:none;background:#f0f7f2;">
+  <div style="display:flex;flex-direction:column;align-items:center;
+    justify-content:center;height:100%;padding:32px;text-align:center;">
+    <div style="font-size:72px;margin-bottom:16px;">🎉</div>
+    <div style="font-size:24px;font-weight:900;color:#1a6e35;margin-bottom:8px;">Order Placed!</div>
+    <div style="font-size:14px;color:#555;margin-bottom:6px;">
+      Your order <strong id="order-id">#—</strong> has been placed successfully
+    </div>
+    <div style="font-size:13px;color:#888;margin-bottom:32px;">
+      The store will contact you on your registered number
+    </div>
+    <div style="background:white;border-radius:16px;padding:20px;
+      width:100%;max-width:320px;margin-bottom:24px;border:1.5px solid #c8ddc8;">
+      <div style="font-size:13px;font-weight:800;color:#1a6e35;margin-bottom:8px;">📋 What happens next?</div>
+      <div style="font-size:12px;color:#555;line-height:1.8;text-align:left;">
+        1. Store confirms your order<br>
+        2. They call you within 1 hour<br>
+        3. Delivery to your field address<br>
+        4. Pay on delivery
+      </div>
+    </div>
+    <button onclick="closeOrderSuccess()"
+      style="width:100%;max-width:320px;padding:16px;
+      background:#1a6e35;color:white;border:none;
+      border-radius:14px;font-size:15px;font-weight:800;
+      font-family:'Nunito',sans-serif;cursor:pointer;">
+      Back to Home
+    </button>
+  </div>
+</div>
 
 <!-- ACTIVITY ADD/EDIT SCREEN -->
 <div id="activity-screen" class="fullscreen" style="display:none;">

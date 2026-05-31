@@ -1329,3 +1329,447 @@ function getWeatherInfo(code) {
   if (code <= 99) return { icon: '⛈️', desc: 'Thunderstorm' }
   return { icon: '⛅', desc: 'Partly cloudy' }
 }
+
+/* ══════════════════════════════════════
+   RYTUAI SHOP — FRONTEND JS
+══════════════════════════════════════ */
+
+// ── SHOP STATE ──
+var cart = []
+var currentStoreId = null
+var currentStoreName = ''
+var allProducts = []
+
+// Load shop when screen opens
+var _origSwitchScreen = switchScreen
+switchScreen = function(name) {
+  _origSwitchScreen(name)
+  if (name === 'shop') loadStores()
+}
+
+// ── LOAD STORES ──
+async function loadStores() {
+  var shopBody = document.getElementById('shop-body-content')
+  if (!shopBody) return
+
+  var farmerData = localStorage.getItem('rytuai_farmer')
+  var district = ''
+  if (farmerData) {
+    try {
+      var farmer = JSON.parse(farmerData)
+      district = farmer.district || ''
+    } catch(e) {}
+  }
+
+  shopBody.innerHTML = '<div style="text-align:center;padding:40px;color:#888;"><div style="font-size:32px;">⏳</div><div style="font-size:13px;font-weight:700;margin-top:8px;">Loading stores...</div></div>'
+
+  try {
+    var url = API + '/shop/stores'
+    if (district) url += '?district=' + encodeURIComponent(district)
+
+    var response = await fetch(url, {
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
+    })
+    var data = await response.json()
+
+    if (response.ok && data.stores && data.stores.length > 0) {
+      renderStores(data.stores)
+    } else {
+      renderStores([])
+    }
+  } catch(err) {
+    shopBody.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;font-weight:700;">Cannot connect to server</div>'
+  }
+}
+
+function renderStores(stores) {
+  var shopBody = document.getElementById('shop-body-content')
+  if (!shopBody) return
+
+  if (stores.length === 0) {
+    shopBody.innerHTML = '<div style="text-align:center;padding:48px 24px;">' +
+      '<div style="font-size:48px;margin-bottom:12px;">🏪</div>' +
+      '<div style="font-size:16px;font-weight:800;color:#1a2e1e;">No stores available</div>' +
+      '<div style="font-size:13px;color:#888;margin-top:6px;">Stores coming soon in your area</div>' +
+      '</div>'
+    return
+  }
+
+  var html = '<div class="section-label">🏪 Stores Near You</div>'
+
+  stores.forEach(function(store) {
+    html += '<div class="store-card-big" onclick="openStore(' + store.id + ', \'' + store.name.replace(/'/g, '') + '\')">' +
+      '<div class="store-card-top">' +
+      '<div class="store-icon">🏪</div>' +
+      '<div class="store-card-info">' +
+      '<div class="store-card-name">' + store.name + '</div>' +
+      '<div class="store-card-addr">' + (store.address || '') + '</div>' +
+      '<div class="store-card-meta">' +
+      '<span class="store-tag">📍 ' + (store.district || '') + '</span>' +
+      '<span class="store-tag">🕐 ' + store.open_time + '–' + store.close_time + '</span>' +
+      '<span class="store-tag">🚚 ' + store.delivery_radius_km + 'km radius</span>' +
+      '</div>' +
+      '</div>' +
+      '<div style="font-size:20px;color:#1a6e35;">›</div>' +
+      '</div>' +
+      '</div>'
+  })
+
+  shopBody.innerHTML = html
+}
+
+// ── OPEN STORE ──
+async function openStore(storeId, storeName) {
+  currentStoreId = storeId
+  currentStoreName = storeName
+
+  var shopBody = document.getElementById('shop-body-content')
+  if (!shopBody) return
+
+  shopBody.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:16px;">' +
+    '<button onclick="loadStores()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#1a6e35;">←</button>' +
+    '<div style="font-size:15px;font-weight:800;">' + storeName + '</div>' +
+    '</div>' +
+    '<div style="text-align:center;padding:40px;color:#888;"><div style="font-size:32px;">⏳</div><div style="font-size:13px;font-weight:700;margin-top:8px;">Loading products...</div></div>'
+
+  try {
+    var response = await fetch(API + '/shop/products/' + storeId, {
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
+    })
+    var data = await response.json()
+
+    if (response.ok) {
+      allProducts = data.products || []
+      renderProducts(allProducts, storeId, storeName)
+    }
+  } catch(err) {
+    showToast('Cannot load products', 'error')
+  }
+}
+
+function renderProducts(products, storeId, storeName) {
+  var shopBody = document.getElementById('shop-body-content')
+  if (!shopBody) return
+
+  // Get unique categories
+  var categories = ['All']
+  products.forEach(function(p) {
+    if (p.category && categories.indexOf(p.category) === -1) {
+      categories.push(p.category)
+    }
+  })
+
+  var html = '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px 8px;">' +
+    '<button onclick="loadStores()" style="background:#f0f7f2;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;color:#1a6e35;">← Back</button>' +
+    '<div style="font-size:15px;font-weight:800;flex:1;">' + storeName + '</div>' +
+    '</div>'
+
+  // Category filter
+  html += '<div class="category-row" style="padding:0 16px 8px;">'
+  categories.forEach(function(cat) {
+    html += '<div class="cat' + (cat === 'All' ? ' active' : '') + '" onclick="filterProducts(\'' + cat + '\')" id="cat-' + cat.replace(/\s/g,'-') + '">' + cat + '</div>'
+  })
+  html += '</div>'
+
+  html += '<div id="product-list-container" style="padding:0 16px 16px;">'
+  html += renderProductList(products)
+  html += '</div>'
+
+  shopBody.innerHTML = html
+  updateCartBar()
+}
+
+function renderProductList(products) {
+  if (products.length === 0) {
+    return '<div style="text-align:center;padding:40px;color:#888;font-weight:700;">No products in this category</div>'
+  }
+
+  var html = ''
+  products.forEach(function(p) {
+    var disc = p.mrp ? Math.round((1 - p.price / p.mrp) * 100) : 0
+    var inCart = cart.find(function(c) { return c.id === p.id })
+    var qty = inCart ? inCart.qty : 0
+
+    html += '<div class="product-item" id="product-' + p.id + '">' +
+      '<div class="product-icon">' + getCategoryIcon(p.category) + '</div>' +
+      '<div class="product-info">' +
+      '<div class="product-name">' + p.name + '</div>' +
+      '<div class="product-brand">' + (p.brand || '') + ' · ' + (p.unit || '') + '</div>' +
+      '<div class="product-prices">' +
+      '<span class="product-price">₹' + p.price + '</span>' +
+      (p.mrp ? '<span class="product-mrp">₹' + p.mrp + '</span>' : '') +
+      (disc > 0 ? '<span class="product-disc">' + disc + '% OFF</span>' : '') +
+      '</div>' +
+      '</div>' +
+      '<div id="qty-ctrl-' + p.id + '">' +
+      (qty === 0
+        ? '<button class="add-btn" onclick="addToCart(' + p.id + ', \'' + p.name.replace(/'/g,'') + '\', ' + p.price + ')">Add</button>'
+        : '<div class="qty-ctrl">' +
+          '<button onclick="decreaseQty(' + p.id + ')">−</button>' +
+          '<span>' + qty + '</span>' +
+          '<button onclick="increaseQty(' + p.id + ', \'' + p.name.replace(/'/g,'') + '\', ' + p.price + ')">+</button>' +
+          '</div>'
+      ) +
+      '</div>' +
+      '</div>'
+  })
+  return html
+}
+
+function getCategoryIcon(category) {
+  var icons = {
+    'Insecticide': '🧴',
+    'Fungicide': '🧪',
+    'Fertilizer': '🪣',
+    'Bio-pesticide': '🌿',
+    'Seeds': '🌱',
+    'Equipment': '🔧'
+  }
+  return icons[category] || '📦'
+}
+
+function filterProducts(category) {
+  // Update active tab
+  document.querySelectorAll('.cat').forEach(function(c) {
+    c.classList.remove('active')
+  })
+  var catEl = document.getElementById('cat-' + category.replace(/\s/g,'-'))
+  if (catEl) catEl.classList.add('active')
+
+  var filtered = category === 'All'
+    ? allProducts
+    : allProducts.filter(function(p) { return p.category === category })
+
+  var container = document.getElementById('product-list-container')
+  if (container) container.innerHTML = renderProductList(filtered)
+}
+
+// ── CART ──
+function addToCart(id, name, price) {
+  var existing = cart.find(function(c) { return c.id === id })
+  if (existing) {
+    existing.qty++
+  } else {
+    cart.push({ id: id, name: name, price: price, qty: 1 })
+  }
+  updateQtyCtrl(id)
+  updateCartBar()
+  showToast(name + ' added to cart', 'success')
+}
+
+function increaseQty(id, name, price) {
+  var existing = cart.find(function(c) { return c.id === id })
+  if (existing) {
+    existing.qty++
+  } else {
+    cart.push({ id: id, name: name, price: price, qty: 1 })
+  }
+  updateQtyCtrl(id)
+  updateCartBar()
+}
+
+function decreaseQty(id) {
+  var existing = cart.find(function(c) { return c.id === id })
+  if (!existing) return
+  existing.qty--
+  if (existing.qty <= 0) {
+    cart = cart.filter(function(c) { return c.id !== id })
+  }
+  updateQtyCtrl(id)
+  updateCartBar()
+}
+
+function updateQtyCtrl(id) {
+  var ctrl = document.getElementById('qty-ctrl-' + id)
+  if (!ctrl) return
+  var item = cart.find(function(c) { return c.id === id })
+  var qty = item ? item.qty : 0
+  var product = allProducts.find(function(p) { return p.id === id })
+  var name = product ? product.name.replace(/'/g,'') : ''
+  var price = product ? product.price : 0
+
+  if (qty === 0) {
+    ctrl.innerHTML = '<button class="add-btn" onclick="addToCart(' + id + ', \'' + name + '\', ' + price + ')">Add</button>'
+  } else {
+    ctrl.innerHTML = '<div class="qty-ctrl">' +
+      '<button onclick="decreaseQty(' + id + ')">−</button>' +
+      '<span>' + qty + '</span>' +
+      '<button onclick="increaseQty(' + id + ', \'' + name + '\', ' + price + ')">+</button>' +
+      '</div>'
+  }
+}
+
+function cartTotal() {
+  return cart.reduce(function(sum, item) {
+    return sum + (item.price * item.qty)
+  }, 0)
+}
+
+function cartCount() {
+  return cart.reduce(function(sum, item) {
+    return sum + item.qty
+  }, 0)
+}
+
+function updateCartBar() {
+  var bar = document.getElementById('cart-bar')
+  if (!bar) return
+
+  if (cart.length === 0) {
+    bar.style.display = 'none'
+    return
+  }
+
+  bar.style.display = 'flex'
+  var countEl = document.getElementById('cart-count')
+  var totalEl = document.getElementById('cart-total')
+  if (countEl) countEl.textContent = cartCount() + ' item' + (cartCount() > 1 ? 's' : '')
+  if (totalEl) totalEl.textContent = '₹' + cartTotal()
+}
+
+// ── CART SCREEN ──
+function openCart() {
+  var screen = document.getElementById('cart-screen')
+  if (!screen) return
+
+  renderCartScreen()
+  screen.style.display = 'block'
+  screen.scrollTop = 0
+}
+
+function closeCart() {
+  var screen = document.getElementById('cart-screen')
+  if (screen) screen.style.display = 'none'
+}
+
+function renderCartScreen() {
+  var container = document.getElementById('cart-items-container')
+  if (!container) return
+
+  if (cart.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:48px 24px;">' +
+      '<div style="font-size:48px;margin-bottom:12px;">🛒</div>' +
+      '<div style="font-size:16px;font-weight:800;">Cart is empty</div>' +
+      '</div>'
+    return
+  }
+
+  var html = ''
+  cart.forEach(function(item) {
+    html += '<div style="display:flex;align-items:center;gap:12px;padding:14px;background:white;border-radius:12px;margin-bottom:10px;border:1.5px solid #e8e0d0;">' +
+      '<div style="flex:1;">' +
+      '<div style="font-size:14px;font-weight:800;">' + item.name + '</div>' +
+      '<div style="font-size:12px;color:#888;margin-top:2px;">₹' + item.price + ' each</div>' +
+      '</div>' +
+      '<div class="qty-ctrl">' +
+      '<button onclick="cartDecrease(' + item.id + ')">−</button>' +
+      '<span>' + item.qty + '</span>' +
+      '<button onclick="cartIncrease(' + item.id + ')">+</button>' +
+      '</div>' +
+      '<div style="font-size:15px;font-weight:900;color:#1a6e35;min-width:60px;text-align:right;">₹' + (item.price * item.qty) + '</div>' +
+      '</div>'
+  })
+
+  // Total
+  html += '<div style="background:#1a6e35;border-radius:12px;padding:16px;margin-top:8px;">' +
+    '<div style="display:flex;justify-content:space-between;color:white;">' +
+    '<div style="font-size:14px;font-weight:700;">Total Amount</div>' +
+    '<div style="font-size:18px;font-weight:900;">₹' + cartTotal() + '</div>' +
+    '</div>' +
+    '</div>'
+
+  container.innerHTML = html
+}
+
+function cartDecrease(id) {
+  decreaseQty(id)
+  renderCartScreen()
+  updateCartBar()
+}
+
+function cartIncrease(id) {
+  var item = cart.find(function(c) { return c.id === id })
+  if (item) {
+    item.qty++
+    renderCartScreen()
+    updateCartBar()
+  }
+}
+
+// ── PLACE ORDER ──
+async function placeOrder() {
+  if (cart.length === 0) {
+    showToast('Cart is empty', 'error')
+    return
+  }
+
+  var farmerData = localStorage.getItem('rytuai_farmer')
+  if (!farmerData) {
+    showToast('Please login again', 'error')
+    return
+  }
+
+  var farmer = JSON.parse(farmerData)
+
+  var placeBtn = document.getElementById('place-order-btn')
+  if (placeBtn) { placeBtn.textContent = 'Placing Order...'; placeBtn.disabled = true }
+
+  try {
+    var response = await fetch(API + '/shop/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token')
+      },
+      body: JSON.stringify({
+        farmer_id: farmer.phone,
+        farmer_name: farmer.name,
+        farmer_phone: farmer.phone,
+        store_id: currentStoreId,
+        items: cart,
+        total_amount: cartTotal(),
+        delivery_address: farmer.village + ', ' + farmer.district,
+        notes: ''
+      })
+    })
+
+    var data = await response.json()
+
+    if (response.ok) {
+      // Clear cart
+      cart = []
+      updateCartBar()
+      closeCart()
+
+      // Show success
+      showOrderSuccess(data.order)
+    } else {
+      showToast(data.message || 'Order failed', 'error')
+    }
+  } catch(err) {
+    showToast('Cannot connect to server', 'error')
+  } finally {
+    if (placeBtn) { placeBtn.textContent = 'Place Order'; placeBtn.disabled = false }
+  }
+}
+
+function showOrderSuccess(order) {
+  var screen = document.getElementById('order-success-screen')
+  if (!screen) return
+
+  var idEl = document.getElementById('order-id')
+  if (idEl) idEl.textContent = '#' + (order ? order.id : '—')
+
+  screen.style.display = 'block'
+}
+
+function closeOrderSuccess() {
+  var screen = document.getElementById('order-success-screen')
+  if (screen) screen.style.display = 'none'
+  switchScreen('home')
+}
+
+// ── ADD FROM SHOP TO TRACKER (called from shop buttons) ──
+async function addToTrackerFromShop(name, price) {
+  addToCart(0, name, price)
+}
