@@ -97,7 +97,7 @@ router.get('/orders/:farmer_id',async(req,res)=>{
             .from('orders')
             .select('*,stores(name,phone,address)')
             .eq('farmer_id', farmer_id)
-            .order('date',{ascending:false})
+            .order('created_at',{ascending:false})
 
         if(error) return res.status(400).json({message:error.message})
 
