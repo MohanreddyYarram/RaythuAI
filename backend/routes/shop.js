@@ -2,7 +2,7 @@
 const express = require('express')
 const router = express.Router()
 const supabase = require('../services/supabase')
-const { captureOwnerStack } = require('react')
+
 
 //GET all active stores
 router.get('/stores',async(req,res)=>{
@@ -271,6 +271,4 @@ router.delete('/products/:id',async(req,res)=>{
     }
 
 })
-
-
 module.exports = router
