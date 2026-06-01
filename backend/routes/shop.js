@@ -141,14 +141,14 @@ router.get('/orders/:farmer_id',async(req,res)=>{
     }
 })
 
-// HOP OWNER ROUTES
+// sHOP OWNER ROUTES
 
 router.get('/owner/:phone',async(req,res)=>{
     const{phone} = req.params
 
     try{
         const {data,error} = await supabase
-            .from(-shop_owners)
+            .from('shop_owners')
             .select('*,stores(*)')
             .eq('phone',phone)
             .eq('is_active',true)
