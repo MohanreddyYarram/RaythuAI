@@ -23,7 +23,7 @@ router.post('/send-otp',async(req,res)=>{
     try{
         await supabase.from('otp_store').delete().eq('phone',phone)
 
-        const {error:insertError} = await supabase.from('otp_stor').insert({
+        const {error:insertError} = await supabase.from('otp_store').insert({
             phone:phone,
             otp:otp,
             expiry : new Date(Date.now()+5*60*1000).toISOString()
