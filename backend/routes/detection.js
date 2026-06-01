@@ -16,7 +16,7 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
         message:'Please login to use disease detection'
     })
    }
-   const token = authHeader.split('')[1]
+   const token = authHeader.split(' ')[1]
    try{
     jwt.verify(token,process.env.JWT_SECRET)
    }catch(err){
