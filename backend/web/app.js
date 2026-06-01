@@ -1993,26 +1993,44 @@ async function loadFeedWeather() {
     var cityName = 'Guntur'
 
     // Try GPS
+    var locationDetected = false
     if (navigator.geolocation) {
       await new Promise(function(resolve) {
         navigator.geolocation.getCurrentPosition(
           async function(pos) {
-            lat = pos.coords.latitude
-            lon = pos.coords.longitude
-            try {
+            try{
+              lat = pos.coords.latitude
+              lon = pos.coords.longitude
+              locationDetected = true
+            
               var geoRes = await fetch(
                 'https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json'
               )
               var geoData = await geoRes.json()
-              cityName = geoData.address.city || geoData.address.town ||
-                         geoData.address.village || geoData.address.district || 'Your Location'
-            } catch(e) {}
+              var addr = geoData.address
+              cityName = addr.village|| addr.town ||addr.city||
+                         addr.county || addr.state_district || 'Your Location'
+              console.log('Feed GPS location',cityName, lat, lon)
+            } catch(e) {
+              console.log('Reverse geocode error:',e.message)
+            }
             resolve()
           },
-          function() { resolve() },
-          { timeout: 3000 }
+          function(err){
+            console.log('GPS error: ',err.code, err.message)
+
+           resolve() 
+          },
+          { timeout: 10000,
+            maximumAge:300000,
+            enableHighAccuracy:false 
+
+          }
         )
       })
+    }
+    if(!locationDetected){
+      console.log('Using default Guntur location')
     }
 
     // Fetch weather + forecast
