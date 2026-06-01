@@ -166,7 +166,7 @@ router.get('/owner/:phone',async(req,res)=>{
 })
 
 //Getting all orders from stores
-route.get('/orders/store/:store_id',async(req,res)=>{
+router.get('/orders/store/:store_id',async(req,res)=>{
     const{store_id} = req.params
 
     try{
