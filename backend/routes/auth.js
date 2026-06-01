@@ -1,161 +1,123 @@
 
-// Helps the farmers for login
-
-const express = require('express')
+const express = require ('express')
 const router = express.Router()
 const jwt = require('jsonwebtoken')
-const axios = require('axios')
 const supabase = require('../services/supabase')
+const {sendOTPSms} = require('../services/sms')
 
-//Store OTP temporarily in memeory
-//const otpStore = {}
+const JWT_SECRET = process.env.JWT_SECRET || 'rytuai2024secret'
 
-// POST/auth/send-otp
-// Farmer enters phone number receive otp
+//Send otp
 router.post('/send-otp',async(req,res)=>{
- // Get phone number from request
-    const { phone } = req.body
+    const{phone} = req.body
 
-    if(!phone){
-         return res.status(400).json({
-                message:'Phone number required'
-            })
+    if(!phone || phone.length !== 10){
+        return res.status(400).json({message:'Valid 10-digit phone number required'})
     }
-        //Generates a random 6-digit otp
-    const otp = Math.floor(100000+Math.random()*900000).toString()
 
-        //Save OTP with phone number and expires in 5 minutes
-    
+    //Generate OTP
+    const otp = Math.floor(100000 +Math.random()*900000).toString()
+    console.log('OTP for',phone,':',otp)
 
-     await supabase
-        .from('otp_store')
-        .delete()
-        .eq('phone',phone)
-    
+    //Save Otp to database
+    try{
+        await supabase.from('otp_store').delete().eq('phone',phone)
 
-        const{error:insertError} = await supabase
-            .from('otp_store')
-            .insert({
-                phone:phone,
-                otp:otp,
-                expiry:new Date(
-                    Date.now() + 5*60*1000
-                ).toISOString()
-                
-            })
+        const {error:insertError} = await supabase.from('otp_stor').insert({
+            phone:phone,
+            otp:otp,
+            expiry : new Date(Date.now()+5*60*1000).toISOString()
+        })
         if(insertError){
-            console.log('OTP insert Error: ',insertError.message)
-
-        }else{
-            console.log(`OTP saved for ${phone} : ${otp}`)
+            console.log('OTP insert error :',insertError.message)
         }
-    
-    console.log(`OTP for ${phone} : ${otp}`)
-    // Send SMS
-    
-    try{
-        //Send OTP via Fast2SMS
-        await axios({
-            method :'post',
-            url:'https://www.fast2sms.com/dev/bulkV2',
-            headers:{
-                authorization:process.env.FAST2SMS_KEY
-            },
-            data:{
-                variables_values:otp,
-                route:'otp',
-                numbers:phone
-            }
-
-
-        })
-    }catch(smsErr){
-        console.log('SMS failed: ',smsErr.message)
+    }catch(dbErr){
+        console.log('OTP DB error: ',dbErr.message)
     }
 
-        res.status(200).json({
-            message:'OTP sent sucessfully',
-            phone:phone
-        })
+    //Semd SMS
 
+    const smsResult = await sendOTPSms(phone,otp)
+
+    if(smsResult.sucess){
+        console.log('SMS sent successfully to:',phone)
+    }else{
+        console.log('SMS failed:',smsResult.message,'--OTP is:',otp)
+    }
+
+    return res.status(200).json({
+        message:'OTP sent successfully',
+        phone:phone,
+
+        //Remove in prod
+        ...(process.env.NODE_ENV !=='production' && {debug_otp:otp})
+    })
 })
 
-//Farmer enters OTP
 
-router.post('/verify-otp',async(req,res)=>{
-    try{
-        const {phone,otp} = req.body
-        if(!phone || !otp){
-            return res.status(400).json({
-                message:'Phone and otp are required'
-            })
-        }
-          // Get OTP from Supabase database
-            const { data: stored, error: fetchError } = await supabase
-             .from('otp_store')
-             .select('*')
-             .eq('phone', phone)
-             .single()
+// ── VERIFY OTP ──
+router.post('/verify-otp', async (req, res) => {
+  const { phone, otp } = req.body
  
-       if (!stored || fetchError) {
-          return res.status(400).json({
-              message: 'OTP not found. Please request a new one'
-           })
+  if (!phone || !otp) {
+    return res.status(400).json({ message: 'Phone and OTP required' })
+  }
+ 
+  try {
+    // Get OTP from database
+    const { data, error } = await supabase
+      .from('otp_store')
+      .select('*')
+      .eq('phone', phone)
+      .single()
+ 
+    if (error || !data) {
+      return res.status(400).json({ message: 'OTP not found. Please request a new OTP.' })
     }
  
-           // Check if OTP expired
-        if (new Date() > new Date(stored.expiry)) {
-          await supabase.from('otp_store').delete().eq('phone', phone)
-         return res.status(400).json({
-            message: 'OTP has expired. Please request a new one'
-        })
+    // Check expiry
+    if (new Date() > new Date(data.expiry)) {
+      await supabase.from('otp_store').delete().eq('phone', phone)
+      return res.status(400).json({ message: 'OTP expired. Please request a new OTP.' })
     }
  
-            // Check if OTP matches
-           if (stored.otp !== otp) {
-            return res.status(400).json({
-             message: 'Invalid OTP. Please try again'
-               })
+    // Check OTP
+    if (data.otp !== otp) {
+      return res.status(400).json({ message: 'Invalid OTP. Please try again.' })
     }
  
-          // Delete OTP after successful verify
-        await supabase
-         .from('otp_store')
-         .delete()
-         .eq('phone', phone)
+    // OTP correct — delete it
+    await supabase.from('otp_store').delete().eq('phone', phone)
  
-
-        //Check if farmer exists in database
-
-        const {data:farmer} = await supabase
-            .from('farmers')
-            .select('*')
-            .eq('phone',phone)
-            .single()
-
-        //Create JWT token
-        const token = jwt.sign(
-            {
-                phone : phone,
-                farmerId :farmer?farmer.id:null
-            },
-            process.env.JWT_SECRET,
-            {expiresIn:'7d'}
-        )
-        res.status(200).json({
-            message:'Login Sucessful',
-            token:token,
-            farmer :farmer||null,
-            isNewFarmer:!farmer
-        })
-
-
-    }catch(err){
-        res.status(500).json({
-            message:'Server error',
-            error:err.message
-        })
-    }
+    // Generate JWT
+    const token = jwt.sign(
+      { phone: phone },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    )
+ 
+    // Check if farmer exists
+    const { data: farmer } = await supabase
+      .from('farmers')
+      .select('*')
+      .eq('phone', phone)
+      .single()
+ 
+    return res.status(200).json({
+      message: 'OTP verified successfully',
+      token: token,
+      farmer: farmer || null
+    })
+ 
+  } catch (err) {
+    console.log('Verify OTP error:', err.message)
+    return res.status(500).json({ message: 'Server error' })
+  }
 })
-
+ 
+// ── PING (keep server alive) ──
+router.get('/ping', (req, res) => {
+  res.status(200).json({ status: 'alive', time: new Date().toISOString() })
+})
+ 
 module.exports = router
