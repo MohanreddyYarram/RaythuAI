@@ -93,7 +93,7 @@ router.post('/orders',async(req,res)=>{
 
            var {error:trackerError} = await supabase.from('activities').insert({
                 farmer_id: farmer_id,
-                date: date || new Date().toISOString().split('T')[0],
+                date: new Date().toISOString().split('T')[0],
                 type:'shop',
                 title:'Ordered from ' +storeName,
                 description : 'Ordered: '+ itemNames,
