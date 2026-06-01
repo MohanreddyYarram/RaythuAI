@@ -148,7 +148,7 @@ var screenTitles = {
   detect: 'Detect Disease',
   result: 'AI Result',
   shop: 'Rytu Shop',
-  roadmap: 'Crop Roadmap',
+  feed: 'Feed',
   tracker: 'Farm Tracker'
 }
 
@@ -198,7 +198,11 @@ function switchScreen(name) {
   })
   if (name === 'tracker') {
          if (typeof loadActivities === 'function') loadActivities()
-    }
+  }
+
+  if (name === 'feed') {
+      if (typeof loadFeed === 'function') loadFeed()
+  }
 
 
 }
@@ -1891,4 +1895,311 @@ function fillAddressFromProfile(){
     addressEl.value = parts.join(', ')
     
   }
+}
+/* ══════════════════════════════════════
+   FEED SCREEN — Complete JS
+   Paste at bottom of web/app.js
+══════════════════════════════════════ */
+
+// ── Market prices (Agmarknet format) ──
+var CROP_PRICES = [
+  { crop: 'Chilli', icon: '🌶️', unit: 'per quintal', market: 'Guntur APMC' },
+  { crop: 'Paddy', icon: '🌾', unit: 'per quintal', market: 'Nellore APMC' },
+  { crop: 'Cotton', icon: '🌿', unit: 'per quintal', market: 'Kurnool APMC' },
+  { crop: 'Groundnut', icon: '🥜', unit: 'per quintal', market: 'Anantapur APMC' },
+  { crop: 'Maize', icon: '🌽', unit: 'per quintal', market: 'Nizamabad APMC' },
+  { crop: 'Tomato', icon: '🍅', unit: 'per quintal', market: 'Madanapalle APMC' }
+]
+
+// ── Farming tips based on season ──
+var FARMING_TIPS = [
+  {
+    icon: '💧',
+    title: 'Irrigation Tip',
+    desc: 'Water your chilli crop early morning or late evening. Avoid midday irrigation to reduce evaporation loss by 30%.'
+  },
+  {
+    icon: '🐛',
+    title: 'Thrips Alert',
+    desc: 'Thrips population increases in dry weather. Spray Spinosad 45% SC at 0.3ml/litre water. Repeat after 7 days.'
+  },
+  {
+    icon: '🌱',
+    title: 'Fertilizer Schedule',
+    desc: 'Apply DAP 50kg/acre at flowering stage. Foliar spray of 00:52:34 fertilizer improves fruit set significantly.'
+  },
+  {
+    icon: '☀️',
+    title: 'Sunlight Management',
+    desc: 'Chilli needs 6-8 hours of direct sunlight. Ensure proper spacing (60cm x 45cm) for maximum sun exposure.'
+  },
+  {
+    icon: '🔬',
+    title: 'Disease Prevention',
+    desc: 'Spray Mancozeb 75% WP at 2.5g/litre water to prevent Anthracnose disease. Spray after every rain.'
+  },
+  {
+    icon: '📅',
+    title: 'Harvest Timing',
+    desc: 'Harvest chilli when 60-70% fruits turn red. Early morning harvest maintains color and quality better.'
+  }
+]
+
+// ── Government schemes ──
+var GOVT_SCHEMES = [
+  {
+    title: 'PM-KISAN Samman Nidhi',
+    desc: '₹6,000 per year direct benefit transfer to farmer families in 3 installments of ₹2,000 each.',
+    link: 'https://pmkisan.gov.in'
+  },
+  {
+    title: 'AP Rythu Bharosa',
+    desc: 'Andhra Pradesh government provides ₹13,500 per year to each farmer family for farming inputs.',
+    link: 'https://apagrisnet.gov.in'
+  },
+  {
+    title: 'Fasal Bima Yojana',
+    desc: 'Crop insurance scheme. Get compensation for crop loss due to natural calamities, pests or diseases.',
+    link: 'https://pmfby.gov.in'
+  },
+  {
+    title: 'Kisan Credit Card',
+    desc: 'Get credit up to ₹3 lakhs at 4% interest rate for farming needs. Apply at any bank branch.',
+    link: 'https://www.nabard.org'
+  }
+]
+
+// ── Load Feed ──
+async function loadFeed() {
+  await Promise.all([
+    loadFeedWeather(),
+    loadFeedPrices(),
+    loadFeedTips(),
+    loadFeedNews(),
+    loadFeedSchemes()
+  ])
+}
+
+// ── Weather for Feed ──
+async function loadFeedWeather() {
+  var weatherDiv = document.getElementById('feed-weather-today')
+  var forecastDiv = document.getElementById('feed-weather-forecast')
+  if (!weatherDiv) return
+
+  try {
+    // Get location
+    var lat = 16.3008
+    var lon = 80.4428
+    var cityName = 'Guntur'
+
+    // Try GPS
+    if (navigator.geolocation) {
+      await new Promise(function(resolve) {
+        navigator.geolocation.getCurrentPosition(
+          async function(pos) {
+            lat = pos.coords.latitude
+            lon = pos.coords.longitude
+            try {
+              var geoRes = await fetch(
+                'https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json'
+              )
+              var geoData = await geoRes.json()
+              cityName = geoData.address.city || geoData.address.town ||
+                         geoData.address.village || geoData.address.district || 'Your Location'
+            } catch(e) {}
+            resolve()
+          },
+          function() { resolve() },
+          { timeout: 3000 }
+        )
+      })
+    }
+
+    // Fetch weather + forecast
+    var url = 'https://api.open-meteo.com/v1/forecast' +
+      '?latitude=' + lat +
+      '&longitude=' + lon +
+      '&current=temperature_2m,relative_humidity_2m,weathercode,windspeed_10m,precipitation' +
+      '&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum' +
+      '&timezone=Asia/Kolkata' +
+      '&forecast_days=7'
+
+    var res = await fetch(url)
+    var data = await res.json()
+
+    if (data && data.current) {
+      var c = data.current
+      var temp = Math.round(c.temperature_2m)
+      var humidity = c.relative_humidity_2m
+      var wind = Math.round(c.windspeed_10m)
+      var rain = c.precipitation || 0
+      var wInfo = getWeatherInfo(c.weathercode)
+
+      // Farming alert
+      var alertHtml = ''
+      if (humidity > 80) {
+        alertHtml = '<div class="wtc-alert">⚠️ Very high humidity — High risk of fungal diseases. Spray fungicide today.</div>'
+      } else if (humidity > 65) {
+        alertHtml = '<div class="wtc-alert">⚠️ Moderate humidity — Monitor crop for disease symptoms.</div>'
+      } else if (rain > 5) {
+        alertHtml = '<div class="wtc-alert">🌧️ Rain expected — Avoid pesticide spray today. Wait 24 hours after rain.</div>'
+      }
+
+      weatherDiv.innerHTML =
+        '<div class="wtc-top">' +
+        '<div>' +
+        '<div class="wtc-temp">' + temp + '°C</div>' +
+        '<div class="wtc-desc">' + wInfo.desc + '</div>' +
+        '<div class="wtc-location">📍 ' + cityName + '</div>' +
+        '</div>' +
+        '<div class="wtc-icon">' + wInfo.icon + '</div>' +
+        '</div>' +
+        '<div class="wtc-details">' +
+        '<div class="wtc-detail">💧 ' + humidity + '% humidity</div>' +
+        '<div class="wtc-detail">💨 ' + wind + ' km/h wind</div>' +
+        '<div class="wtc-detail">🌧️ ' + rain + 'mm rain</div>' +
+        '</div>' +
+        alertHtml
+
+      // 7-day forecast
+      if (data.daily) {
+        var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+        var forecastHtml = ''
+        for (var i = 0; i < 7; i++) {
+          var d = new Date(data.daily.time[i] + 'T00:00:00')
+          var dayName = i === 0 ? 'Today' : days[d.getDay()]
+          var maxT = Math.round(data.daily.temperature_2m_max[i])
+          var minT = Math.round(data.daily.temperature_2m_min[i])
+          var rainSum = data.daily.precipitation_sum[i] || 0
+          var dInfo = getWeatherInfo(data.daily.weathercode[i])
+
+          forecastHtml +=
+            '<div class="forecast-day">' +
+            '<div class="fc-day">' + dayName + '</div>' +
+            '<div class="fc-icon">' + dInfo.icon + '</div>' +
+            '<div class="fc-temp">' + maxT + '°/' + minT + '°</div>' +
+            (rainSum > 0 ? '<div class="fc-rain">🌧 ' + rainSum + 'mm</div>' : '') +
+            '</div>'
+        }
+        if (forecastDiv) forecastDiv.innerHTML = forecastHtml
+      }
+    }
+  } catch(e) {
+    weatherDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">Weather unavailable</div>'
+    console.log('Feed weather error:', e.message)
+  }
+}
+
+// ── Market Prices ──
+async function loadFeedPrices() {
+  var pricesDiv = document.getElementById('feed-prices')
+  if (!pricesDiv) return
+
+  // Static prices for now — in future connect to Agmarknet API
+  // These are approximate current Guntur market prices
+  var prices = [
+    { crop: 'Chilli (Teja)', icon: '🌶️', price: 18500, change: +500, unit: 'per quintal', market: 'Guntur APMC' },
+    { crop: 'Paddy (Sona)', icon: '🌾', price: 2200, change: -50, unit: 'per quintal', market: 'Nellore APMC' },
+    { crop: 'Cotton', icon: '🌿', price: 6800, change: +200, unit: 'per quintal', market: 'Kurnool APMC' },
+    { crop: 'Groundnut', icon: '🥜', price: 5200, change: 0, unit: 'per quintal', market: 'Anantapur APMC' },
+    { crop: 'Maize', icon: '🌽', price: 1850, change: -30, unit: 'per quintal', market: 'Nizamabad APMC' },
+    { crop: 'Tomato', icon: '🍅', price: 1200, change: +300, unit: 'per quintal', market: 'Madanapalle APMC' }
+  ]
+
+  var html = prices.map(function(p) {
+    var changeClass = p.change > 0 ? 'price-up' : p.change < 0 ? 'price-down' : 'price-same'
+    var changeText = p.change > 0 ? '▲ ₹' + p.change : p.change < 0 ? '▼ ₹' + Math.abs(p.change) : '— No change'
+    var changeLabel = p.change > 0 ? 'Up from yesterday' : p.change < 0 ? 'Down from yesterday' : 'Same as yesterday'
+
+    return '<div class="price-card">' +
+      '<div class="price-crop">' + p.icon + ' ' + p.crop + '</div>' +
+      '<div class="price-value">₹' + p.price.toLocaleString('en-IN') + '</div>' +
+      '<div class="price-unit">' + p.unit + '</div>' +
+      '<div class="price-change ' + changeClass + '">' + changeText + ' · ' + changeLabel + '</div>' +
+      '<div class="price-market">📍 ' + p.market + '</div>' +
+      '</div>'
+  }).join('')
+
+  pricesDiv.innerHTML = html
+}
+
+// ── Farming Tips ──
+function loadFeedTips() {
+  var tipsDiv = document.getElementById('feed-tips')
+  if (!tipsDiv) return
+
+  // Show 3 random tips
+  var shuffled = FARMING_TIPS.sort(function() { return Math.random() - 0.5 }).slice(0, 3)
+
+  tipsDiv.innerHTML = shuffled.map(function(tip) {
+    return '<div class="tip-card">' +
+      '<div class="tip-icon">' + tip.icon + '</div>' +
+      '<div>' +
+      '<div class="tip-title">' + tip.title + '</div>' +
+      '<div class="tip-desc">' + tip.desc + '</div>' +
+      '</div>' +
+      '</div>'
+  }).join('')
+}
+
+// ── Agriculture News ──
+async function loadFeedNews() {
+  var newsDiv = document.getElementById('feed-news')
+  if (!newsDiv) return
+
+  // Static curated news for now
+  // In future — connect to NewsAPI with agriculture filter
+  var news = [
+    {
+      source: 'The Hindu Agriculture',
+      title: 'Chilli prices surge in Guntur market — farmers benefit from higher demand',
+      desc: 'Guntur chilli prices rose by 15% this week due to increased export demand from China and South East Asia.',
+      time: '2 hours ago',
+      url: 'https://www.thehindu.com'
+    },
+    {
+      source: 'Deccan Chronicle',
+      title: 'AP government announces ₹500 crore package for drought-affected farmers',
+      desc: 'The Andhra Pradesh government has announced financial assistance for farmers in 8 districts affected by drought conditions.',
+      time: '5 hours ago',
+      url: 'https://www.deccanchronicle.com'
+    },
+    {
+      source: 'Krishi Jagran',
+      title: 'New pest-resistant chilli variety developed by ICAR — 40% higher yield',
+      desc: 'ICAR has developed a new thrips-resistant chilli variety suitable for Andhra Pradesh conditions with 40% higher yield.',
+      time: '1 day ago',
+      url: 'https://krishijagran.com'
+    },
+    {
+      source: 'Financial Express',
+      title: 'Monsoon forecast: Normal rainfall predicted for Andhra Pradesh this Kharif',
+      desc: 'IMD predicts normal monsoon for AP this season. Good news for chilli and paddy farmers planning Kharif sowing.',
+      time: '1 day ago',
+      url: 'https://www.financialexpress.com'
+    }
+  ]
+
+  newsDiv.innerHTML = news.map(function(n) {
+    return '<div class="news-card" onclick="window.open(\'' + n.url + '\', \'_blank\')">' +
+      '<div class="news-source">' + n.source + '</div>' +
+      '<div class="news-title">' + n.title + '</div>' +
+      '<div class="news-desc">' + n.desc + '</div>' +
+      '<div class="news-time">🕐 ' + n.time + '</div>' +
+      '</div>'
+  }).join('')
+}
+
+// ── Government Schemes ──
+function loadFeedSchemes() {
+  var schemesDiv = document.getElementById('feed-schemes')
+  if (!schemesDiv) return
+
+  schemesDiv.innerHTML = GOVT_SCHEMES.map(function(s) {
+    return '<div class="scheme-card">' +
+      '<div class="scheme-title">' + s.title + '</div>' +
+      '<div class="scheme-desc">' + s.desc + '</div>' +
+      '<button class="scheme-btn" onclick="window.open(\'' + s.link + '\', \'_blank\')">Learn More →</button>' +
+      '</div>'
+  }).join('')
 }

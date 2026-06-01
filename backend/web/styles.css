@@ -1810,3 +1810,278 @@ html, body {
   font-weight: 800;
   color: var(--green);
 }
+/* ═══════════════════════════════════════
+   FEED SCREEN STYLES
+   Paste at bottom of styles.css
+═══════════════════════════════════════ */
+
+.feed-hero {
+  background: linear-gradient(135deg, var(--green-dark), var(--green-mid));
+  padding: 20px 16px;
+  color: white;
+  flex-shrink: 0;
+}
+.feed-title { font-size: 22px; font-weight: 900; }
+.feed-sub { font-size: 12px; opacity: 0.75; margin-top: 4px; }
+
+.feed-section {
+  padding: 16px 16px 0;
+}
+
+.feed-section-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--green-light);
+}
+
+/* ── Weather Today Card ── */
+.weather-today-card {
+  background: linear-gradient(135deg, #1a4a2e, #2d7a4f);
+  border-radius: var(--radius);
+  padding: 16px;
+  color: white;
+  margin-bottom: 10px;
+}
+
+.wtc-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.wtc-temp {
+  font-size: 48px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.wtc-icon { font-size: 52px; }
+
+.wtc-desc {
+  font-size: 14px;
+  opacity: 0.85;
+  margin-bottom: 4px;
+}
+
+.wtc-location {
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+.wtc-details {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.wtc-detail {
+  background: rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.wtc-alert {
+  background: rgba(255,200,0,0.2);
+  border: 1px solid rgba(255,200,0,0.4);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  margin-top: 10px;
+  color: #ffe066;
+}
+
+/* ── Forecast Row ── */
+.forecast-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+}
+.forecast-row::-webkit-scrollbar { display: none; }
+
+.forecast-day {
+  flex-shrink: 0;
+  background: white;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  text-align: center;
+  border: 1.5px solid var(--border);
+  min-width: 70px;
+}
+
+.fc-day {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.fc-icon { font-size: 22px; margin-bottom: 4px; }
+
+.fc-temp {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--green);
+}
+
+.fc-rain {
+  font-size: 10px;
+  color: #2196f3;
+  margin-top: 2px;
+}
+
+/* ── Market Prices ── */
+.prices-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.price-card {
+  background: white;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  border: 1.5px solid var(--border);
+}
+
+.price-crop {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.price-value {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--green);
+}
+
+.price-unit {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.price-change {
+  font-size: 10px;
+  font-weight: 800;
+  margin-top: 4px;
+}
+
+.price-up { color: #e74c3c; }
+.price-down { color: var(--green); }
+.price-same { color: var(--text-muted); }
+
+.price-market {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ── Farming Tips ── */
+.tip-card {
+  background: var(--green-light);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 8px;
+  border-left: 4px solid var(--green);
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.tip-icon { font-size: 24px; flex-shrink: 0; }
+.tip-title { font-size: 13px; font-weight: 800; color: var(--green); margin-bottom: 4px; }
+.tip-desc { font-size: 12px; color: var(--text-mid); line-height: 1.5; }
+
+/* ── News Cards ── */
+.news-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 8px;
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+
+.news-card:hover { box-shadow: var(--shadow); }
+
+.news-source {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--green);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.news-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+.news-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.news-time {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* ── Government Schemes ── */
+.scheme-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 8px;
+  border: 1.5px solid var(--border);
+  border-left: 4px solid var(--accent);
+}
+
+.scheme-title { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.scheme-desc { font-size: 12px; color: var(--text-mid); line-height: 1.5; margin-bottom: 8px; }
+.scheme-btn {
+  background: var(--accent);
+  color: #3d2000;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: 'Nunito', sans-serif;
+  cursor: pointer;
+}
+
+/* ── Small Loader ── */
+.loader-sm {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 20px auto;
+}
