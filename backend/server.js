@@ -82,6 +82,11 @@ app.get('/',(req,res)=>{
     res.sendFile(path.join(__dirname,'web','index.html'))
 })
 
+//Shop Admin Portal
+app.get('/shop-admin',(req,res)=>{
+    res.sendFile(path.join(__dirname,'web','shop-admin.html'))
+})
+
 // Start the server on port 3000
 const PORT = process.env.PORT || 3000
 app.listen(PORT,()=>{

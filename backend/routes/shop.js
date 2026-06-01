@@ -2,6 +2,7 @@
 const express = require('express')
 const router = express.Router()
 const supabase = require('../services/supabase')
+const { captureOwnerStack } = require('react')
 
 //GET all active stores
 router.get('/stores',async(req,res)=>{
@@ -139,5 +140,137 @@ router.get('/orders/:farmer_id',async(req,res)=>{
         res.status(500).json({message:err.message})
     }
 })
+
+// HOP OWNER ROUTES
+
+router.get('/owner/:phone',async(req,res)=>{
+    const{phone} = req.params
+
+    try{
+        const {data,error} = await supabase
+            .from(-shop_owners)
+            .select('*,stores(*)')
+            .eq('phone',phone)
+            .eq('is_active',true)
+            .single()
+        
+        if(error || !data){
+            return res.status(404).json({message:'Not a registered shop owner'})
+        }
+        res.status(200).json({owner:data})
+
+
+    }catch(err){
+        res.status(500).json({message:err.message})
+    }
+})
+
+//Getting all orders from stores
+route.get('/orders/store/:store_id',async(req,res)=>{
+    const{store_id} = req.params
+
+    try{
+        const {data,error} = await supabase
+            .from('orders')
+            .select('*')
+            .eq('store_id',store_id)
+            .order('created_at',{ascending:false})
+        if(error)return res.status(400).json({message:error.message})
+        res.status(200).json({orders:data})
+
+    }catch(err){
+        res.status(500).json({message:err.message})
+    }
+})
+
+//PUT update order status
+router.put('/prders/:id/status',async(req,res)=>{
+    const{id} = req.params
+    const {status} = req.body
+
+    const validStatuses = ['pending','confirmed','out_for_delivery','delivered','cancelled']
+    if(!validStatuses.includes(status)){
+        return res.status(400).json({message:'Invalid Status'})
+    }
+
+    try{
+        const {data,error} = await supabase
+            .from('orders')
+            .update({status:status})
+            .eq('id',id)
+            .select()
+
+        if(error) return res.status(400).json({message:error.message})
+        res.status(200).json({message:'Status Updated.',order:data[0]})
+
+    }catch(err){
+        res.status(500).json({message:err.message})
+    }
+})
+
+//POST add product (shop Owner)
+
+router.post('/products',async(req,res)=>{
+    const{store_id,name,brand,category,unit,pricr,mrp,stock,description}= req.body
+
+    if(!store_id || !name || !price){
+        return res.status(400).json({message:'store_id'})
+    }
+    try{
+        const {data, error} = await supabase
+            .from('products')
+            .insert({
+                store_id,name,brand,category,unit,
+                price:parseFloat(price),
+                mrp: mrp? parseFloat(mrp):null,
+                stock:parseInt(stock) || 100,
+                description,is_available:true
+           })
+            .select()
+        if(error) return res.status(400).json({message:error.message})
+        res.status(201).json({product:data[0]})
+    }catch(err){
+        res.status(500).json({message:err.message})
+    }
+})
+
+//PUT update product
+
+router.put('/products/:id',async(req,res)=>{
+    const{id} = req.params
+    const updates = req.body
+
+    try{
+        const {data,error} = await supabase
+            .from('products')
+            .update(updates)
+            .eq('id',id)
+            .select()
+        if(error) return res.status(400).json({message:error.message})
+        res.status(200).json({product:data[0]})
+
+    }catch(err){
+        res.status(500).json({message:err.message})
+    }
+})
+
+//Delete product
+router.delete('/products/:id',async(req,res)=>{
+    const{id}= res.params
+    try{
+        const {error} = await supabase
+            .from('products')
+            .delete()
+            .eq('id',id)
+        if(error) return res.status(400).json({message:error.message})
+
+        res.status(200).json({message:'Product deleted'})
+
+    }catch(err){
+        res.status(500).json({message:err.message})
+    }
+
+})
+
 
 module.exports = router

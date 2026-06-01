@@ -1,0 +1,1011 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>RytuAI — Shop Owner Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ── RESET ── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;font-family:'Nunito',sans-serif;background:#f0f7f2;color:#1a1a1a;}
+
+/* ── VARIABLES ── */
+:root{
+  --green:#1a6e35;
+  --green-dark:#0d3d1e;
+  --green-light:#e8f5ee;
+  --green-pale:#f0f7f2;
+  --accent:#f5a623;
+  --white:#ffffff;
+  --border:#e0e0e0;
+  --text:#1a1a1a;
+  --muted:#888888;
+  --red:#e74c3c;
+  --radius:12px;
+  --shadow:0 2px 12px rgba(0,0,0,0.08);
+}
+
+/* ── LOGIN ── */
+.login-wrap{
+  min-height:100vh;
+  background:linear-gradient(135deg,#0d3d1e,#1a6e35);
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+}
+.login-box{
+  background:white;border-radius:20px;
+  padding:32px 28px;width:100%;max-width:380px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.2);
+}
+.login-logo{text-align:center;margin-bottom:28px;}
+.login-logo h1{font-size:28px;font-weight:900;color:var(--green);}
+.login-logo h1 span{color:var(--accent);}
+.login-logo p{font-size:12px;color:var(--muted);margin-top:4px;}
+.login-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.login-input{
+  width:100%;padding:14px 16px;border:1.5px solid var(--border);
+  border-radius:var(--radius);font-size:15px;font-family:'Nunito',sans-serif;
+  color:var(--text);outline:none;margin-bottom:12px;
+  transition:border-color 0.2s;
+}
+.login-input:focus{border-color:var(--green);}
+.otp-input{text-align:center;letter-spacing:8px;font-size:24px;font-weight:800;}
+.btn{
+  width:100%;padding:14px;background:var(--green);color:white;
+  border:none;border-radius:var(--radius);font-size:15px;font-weight:800;
+  font-family:'Nunito',sans-serif;cursor:pointer;margin-bottom:10px;
+  transition:opacity 0.2s;
+}
+.btn:active{opacity:0.85;}
+.btn-ghost{background:transparent;color:var(--green);border:1.5px solid var(--green);}
+.login-error{
+  background:#ffeaea;border:1px solid #ffb3b3;border-radius:var(--radius);
+  padding:10px 14px;font-size:12px;color:var(--red);
+  text-align:center;margin-top:8px;display:none;
+}
+
+/* ── APP ── */
+.app{display:none;min-height:100vh;flex-direction:column;}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:var(--green);color:white;
+  padding:0 20px;height:56px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 8px rgba(0,0,0,0.15);
+}
+.topbar-logo{font-size:18px;font-weight:900;}
+.topbar-logo span{color:var(--accent);}
+.topbar-owner{font-size:12px;opacity:0.8;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.logout-btn{
+  background:rgba(255,255,255,0.2);border:none;color:white;
+  border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;
+  font-family:'Nunito',sans-serif;cursor:pointer;
+}
+
+/* ── NAV TABS ── */
+.nav-tabs{
+  display:flex;background:white;
+  border-bottom:2px solid var(--border);
+  overflow-x:auto;scrollbar-width:none;
+  position:sticky;top:56px;z-index:99;
+}
+.nav-tabs::-webkit-scrollbar{display:none;}
+.nav-tab{
+  flex-shrink:0;padding:14px 20px;
+  font-size:13px;font-weight:700;color:var(--muted);
+  cursor:pointer;border-bottom:3px solid transparent;
+  transition:all 0.15s;white-space:nowrap;
+}
+.nav-tab.active{color:var(--green);border-bottom-color:var(--green);}
+
+/* ── CONTENT ── */
+.content{padding:20px;max-width:1200px;margin:0 auto;width:100%;}
+
+/* ── DASHBOARD ── */
+.stats-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:12px;margin-bottom:20px;
+}
+@media(min-width:768px){.stats-grid{grid-template-columns:repeat(4,1fr);}}
+
+.stat-card{
+  background:white;border-radius:var(--radius);
+  padding:16px;border:1.5px solid var(--border);
+  text-align:center;
+}
+.stat-val{font-size:28px;font-weight:900;color:var(--green);}
+.stat-label{font-size:11px;color:var(--muted);margin-top:4px;font-weight:700;text-transform:uppercase;}
+
+.section-title{
+  font-size:14px;font-weight:800;color:var(--text);
+  margin-bottom:12px;display:flex;align-items:center;
+  justify-content:space-between;
+}
+
+/* ── ORDER CARD ── */
+.order-card{
+  background:white;border-radius:var(--radius);
+  padding:16px;margin-bottom:10px;
+  border:1.5px solid var(--border);
+  border-left:4px solid var(--green);
+}
+.order-card.pending{border-left-color:#f5a623;}
+.order-card.confirmed{border-left-color:#2196f3;}
+.order-card.delivered{border-left-color:#1a6e35;}
+.order-card.cancelled{border-left-color:var(--red);}
+
+.order-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.order-id{font-size:14px;font-weight:800;}
+.order-time{font-size:11px;color:var(--muted);}
+.order-status{
+  font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;
+}
+.status-pending{background:#fff3cd;color:#856404;}
+.status-confirmed{background:#cce5ff;color:#004085;}
+.status-out_for_delivery{background:#d4edda;color:#155724;}
+.status-delivered{background:#d4edda;color:#155724;}
+.status-cancelled{background:#f8d7da;color:#721c24;}
+
+.order-farmer{font-size:13px;font-weight:700;margin-bottom:4px;}
+.order-address{font-size:11px;color:var(--muted);margin-bottom:8px;}
+.order-items{
+  background:var(--green-pale);border-radius:8px;
+  padding:10px;margin-bottom:10px;
+  font-size:12px;color:var(--text);line-height:1.8;
+}
+.order-total{font-size:15px;font-weight:900;color:var(--green);}
+.order-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.action-btn{
+  padding:8px 14px;border:none;border-radius:8px;
+  font-size:12px;font-weight:700;font-family:'Nunito',sans-serif;
+  cursor:pointer;transition:opacity 0.15s;
+}
+.action-btn:active{opacity:0.8;}
+.btn-confirm{background:#2196f3;color:white;}
+.btn-deliver{background:#1a6e35;color:white;}
+.btn-cancel{background:#ffeaea;color:var(--red);}
+.btn-call{background:var(--green-light);color:var(--green);}
+
+/* ── PRODUCT CARD ── */
+.products-grid{
+  display:grid;gap:10px;
+  grid-template-columns:1fr;
+}
+@media(min-width:600px){.products-grid{grid-template-columns:1fr 1fr;}}
+@media(min-width:900px){.products-grid{grid-template-columns:1fr 1fr 1fr;}}
+
+.product-card{
+  background:white;border-radius:var(--radius);
+  padding:16px;border:1.5px solid var(--border);
+}
+.product-name{font-size:14px;font-weight:800;margin-bottom:2px;}
+.product-brand{font-size:11px;color:var(--muted);margin-bottom:8px;}
+.product-price-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.p-price{font-size:18px;font-weight:900;color:var(--green);}
+.p-mrp{font-size:12px;color:var(--muted);text-decoration:line-through;}
+.p-stock{
+  font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;
+}
+.stock-good{background:#d4edda;color:#155724;}
+.stock-low{background:#fff3cd;color:#856404;}
+.stock-out{background:#f8d7da;color:#721c24;}
+.product-actions{display:flex;gap:8px;}
+.btn-edit{background:var(--green-light);color:var(--green);flex:1;}
+.btn-delete{background:#ffeaea;color:var(--red);flex:1;}
+.btn-toggle{background:#f5f5f5;color:var(--muted);flex:1;}
+
+/* ── ADD PRODUCT FORM ── */
+.form-card{
+  background:white;border-radius:var(--radius);
+  padding:20px;margin-bottom:20px;
+  border:1.5px solid var(--border);
+}
+.form-grid{display:grid;gap:12px;}
+@media(min-width:600px){.form-grid{grid-template-columns:1fr 1fr;}}
+
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-label{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.form-input{
+  padding:12px 14px;border:1.5px solid var(--border);
+  border-radius:var(--radius);font-size:14px;
+  font-family:'Nunito',sans-serif;color:var(--text);
+  outline:none;transition:border-color 0.2s;
+}
+.form-input:focus{border-color:var(--green);}
+.btn-add{
+  background:var(--green);color:white;border:none;
+  border-radius:var(--radius);padding:14px 24px;
+  font-size:14px;font-weight:800;font-family:'Nunito',sans-serif;
+  cursor:pointer;margin-top:8px;
+}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:48px 24px;color:var(--muted);}
+.empty-icon{font-size:48px;margin-bottom:12px;}
+.empty-title{font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px;}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  padding:12px 24px;border-radius:12px;
+  font-size:14px;font-weight:700;font-family:'Nunito',sans-serif;
+  color:white;z-index:9999;white-space:nowrap;
+  box-shadow:0 4px 20px rgba(0,0,0,0.2);
+  animation:fadeUp 0.3s ease;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* ── LOADER ── */
+.loader{
+  width:40px;height:40px;border:4px solid #e0e0e0;
+  border-top-color:var(--green);border-radius:50%;
+  animation:spin 0.8s linear infinite;margin:40px auto;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── MODAL ── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.5);z-index:10000;
+  align-items:center;justify-content:center;padding:20px;
+}
+.modal{
+  background:white;border-radius:20px;
+  padding:24px;width:100%;max-width:480px;
+  max-height:90vh;overflow-y:auto;
+}
+.modal-title{font-size:18px;font-weight:800;margin-bottom:20px;}
+.modal-actions{display:flex;gap:10px;margin-top:20px;}
+.btn-save{background:var(--green);color:white;flex:1;padding:14px;border:none;border-radius:var(--radius);font-size:14px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;}
+.btn-cancel-modal{background:#f5f5f5;color:var(--muted);flex:1;padding:14px;border:none;border-radius:var(--radius);font-size:14px;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="login-wrap" class="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">
+      <h1>Rytu<span>AI</span></h1>
+      <p>🏪 Shop Owner Portal</p>
+    </div>
+
+    <div id="owner-step-phone">
+      <div class="login-label">Mobile Number</div>
+      <input type="tel" id="owner-phone" class="login-input"
+        placeholder="Enter 10-digit number" maxlength="10">
+      <button class="btn" onclick="ownerSendOTP()">Send OTP →</button>
+    </div>
+
+    <div id="owner-step-otp" style="display:none;">
+      <div class="login-label">Enter OTP</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;" id="owner-otp-hint"></div>
+      <input type="tel" id="owner-otp" class="login-input otp-input"
+        placeholder="• • • • • •" maxlength="6">
+      <button class="btn" onclick="ownerVerifyOTP()">Verify & Login ✓</button>
+      <button class="btn btn-ghost" onclick="ownerBackToPhone()">← Change Number</button>
+    </div>
+
+    <div id="owner-loading" style="display:none;text-align:center;padding:20px;">
+      <div class="loader" style="margin:0 auto;"></div>
+      <div style="font-size:13px;color:var(--muted);margin-top:12px;" id="owner-loading-text">Sending OTP...</div>
+    </div>
+
+    <div id="owner-error" class="login-error"></div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="admin-app" class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-logo">Rytu<span>AI</span> Shop</div>
+      <div class="topbar-owner" id="owner-name-display">Owner Portal</div>
+    </div>
+    <div class="topbar-right">
+      <div id="topbar-store-name" style="font-size:12px;opacity:0.8;"></div>
+      <button class="logout-btn" onclick="ownerLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- NAV TABS -->
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="showTab('dashboard')">📊 Dashboard</div>
+    <div class="nav-tab" onclick="showTab('orders')">📦 Orders</div>
+    <div class="nav-tab" onclick="showTab('products')">🧴 Products</div>
+    <div class="nav-tab" onclick="showTab('add-product')">➕ Add Product</div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ── DASHBOARD TAB ── -->
+    <div id="tab-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-val" id="dash-today-orders">0</div>
+          <div class="stat-label">Today's Orders</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="dash-today-revenue">₹0</div>
+          <div class="stat-label">Today's Revenue</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="dash-pending">0</div>
+          <div class="stat-label">Pending Orders</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="dash-total-orders">0</div>
+          <div class="stat-label">Total Orders</div>
+        </div>
+      </div>
+
+      <div class="section-title">📦 Recent Orders</div>
+      <div id="dashboard-orders">
+        <div class="loader"></div>
+      </div>
+    </div>
+
+    <!-- ── ORDERS TAB ── -->
+    <div id="tab-orders" style="display:none;">
+      <!-- Filter -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none;">
+        <button class="action-btn btn-confirm" style="flex-shrink:0;" onclick="filterOrders('all')">All</button>
+        <button class="action-btn" style="flex-shrink:0;background:#fff3cd;color:#856404;" onclick="filterOrders('pending')">Pending</button>
+        <button class="action-btn" style="flex-shrink:0;background:#cce5ff;color:#004085;" onclick="filterOrders('confirmed')">Confirmed</button>
+        <button class="action-btn" style="flex-shrink:0;background:#d4edda;color:#155724;" onclick="filterOrders('delivered')">Delivered</button>
+      </div>
+      <div id="all-orders-list">
+        <div class="loader"></div>
+      </div>
+    </div>
+
+    <!-- ── PRODUCTS TAB ── -->
+    <div id="tab-products" style="display:none;">
+      <div id="products-list">
+        <div class="loader"></div>
+      </div>
+    </div>
+
+    <!-- ── ADD PRODUCT TAB ── -->
+    <div id="tab-add-product" style="display:none;">
+      <div class="form-card">
+        <div class="section-title">➕ Add New Product</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Product Name *</label>
+            <input type="text" id="p-name" class="form-input" placeholder="e.g. Spinosad 45% SC">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Brand</label>
+            <input type="text" id="p-brand" class="form-input" placeholder="e.g. Coragen">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category *</label>
+            <select id="p-category" class="form-input">
+              <option value="">Select Category</option>
+              <option value="Insecticide">Insecticide</option>
+              <option value="Fungicide">Fungicide</option>
+              <option value="Fertilizer">Fertilizer</option>
+              <option value="Bio-pesticide">Bio-pesticide</option>
+              <option value="Seeds">Seeds</option>
+              <option value="Equipment">Equipment</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Unit</label>
+            <input type="text" id="p-unit" class="form-input" placeholder="e.g. 100ml, 1kg, 50g">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Selling Price (₹) *</label>
+            <input type="number" id="p-price" class="form-input" placeholder="Your selling price">
+          </div>
+          <div class="form-group">
+            <label class="form-label">MRP (₹)</label>
+            <input type="number" id="p-mrp" class="form-input" placeholder="Market retail price">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Stock Quantity</label>
+            <input type="number" id="p-stock" class="form-input" placeholder="Available stock" value="100">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <input type="text" id="p-desc" class="form-input" placeholder="Short description">
+          </div>
+        </div>
+        <button class="btn-add" onclick="addProduct()">✅ Add Product</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ EDIT PRODUCT MODAL ══ -->
+<div id="edit-modal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-title">✏️ Edit Product</div>
+    <input type="hidden" id="edit-product-id">
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Product Name</label>
+        <input type="text" id="edit-p-name" class="form-input">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Brand</label>
+        <input type="text" id="edit-p-brand" class="form-input">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select id="edit-p-category" class="form-input">
+          <option value="Insecticide">Insecticide</option>
+          <option value="Fungicide">Fungicide</option>
+          <option value="Fertilizer">Fertilizer</option>
+          <option value="Bio-pesticide">Bio-pesticide</option>
+          <option value="Seeds">Seeds</option>
+          <option value="Equipment">Equipment</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Unit</label>
+        <input type="text" id="edit-p-unit" class="form-input">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Selling Price (₹)</label>
+        <input type="number" id="edit-p-price" class="form-input">
+      </div>
+      <div class="form-group">
+        <label class="form-label">MRP (₹)</label>
+        <input type="number" id="edit-p-mrp" class="form-input">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Stock</label>
+        <input type="number" id="edit-p-stock" class="form-input">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel-modal" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-save" onclick="saveEditProduct()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = ''
+let ownerPhone = ''
+let ownerData = null
+let allOrders = []
+let currentFilter = 'all'
+
+/* ══ TOAST ══ */
+function toast(msg, type) {
+  var old = document.getElementById('admin-toast')
+  if (old) old.remove()
+  var t = document.createElement('div')
+  t.id = 'admin-toast'
+  t.className = 'toast'
+  t.style.background = type === 'error' ? '#e74c3c' : '#1a6e35'
+  t.textContent = msg
+  document.body.appendChild(t)
+  setTimeout(function() { if (t.parentNode) t.remove() }, 3000)
+}
+
+/* ══ LOGIN ══ */
+function showOwnerError(msg) {
+  var el = document.getElementById('owner-error')
+  el.textContent = msg
+  el.style.display = 'block'
+  setTimeout(function() { el.style.display = 'none' }, 4000)
+}
+
+function showOwnerLoading(text) {
+  document.getElementById('owner-step-phone').style.display = 'none'
+  document.getElementById('owner-step-otp').style.display = 'none'
+  document.getElementById('owner-loading').style.display = 'block'
+  document.getElementById('owner-loading-text').textContent = text
+}
+
+function hideOwnerLoading() {
+  document.getElementById('owner-loading').style.display = 'none'
+}
+
+async function ownerSendOTP() {
+  var phone = document.getElementById('owner-phone').value.trim()
+  if (phone.length !== 10) { showOwnerError('Please enter valid 10-digit number'); return }
+  ownerPhone = phone
+  showOwnerLoading('Sending OTP...')
+
+  try {
+    var res = await fetch(API + '/auth/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: phone })
+    })
+    var data = await res.json()
+    hideOwnerLoading()
+    if (res.ok) {
+      document.getElementById('owner-step-otp').style.display = 'block'
+      document.getElementById('owner-otp-hint').textContent = 'OTP sent to ' + phone
+    } else {
+      document.getElementById('owner-step-phone').style.display = 'block'
+      showOwnerError(data.message || 'Failed to send OTP')
+    }
+  } catch(e) {
+    hideOwnerLoading()
+    document.getElementById('owner-step-phone').style.display = 'block'
+    showOwnerError('Cannot connect to server')
+  }
+}
+
+async function ownerVerifyOTP() {
+  var otp = document.getElementById('owner-otp').value.trim()
+  if (otp.length !== 6) { showOwnerError('Please enter 6-digit OTP'); return }
+  showOwnerLoading('Verifying...')
+
+  try {
+    var res = await fetch(API + '/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: ownerPhone, otp: otp })
+    })
+    var data = await res.json()
+    hideOwnerLoading()
+
+    if (res.ok) {
+      // Check if this phone is a shop owner
+      var ownerRes = await fetch(API + '/shop/owner/' + ownerPhone, {
+        headers: { 'Authorization': 'Bearer ' + data.token }
+      })
+      var ownerInfo = await ownerRes.json()
+
+      if (ownerRes.ok && ownerInfo.owner) {
+        localStorage.setItem('owner_token', data.token)
+        localStorage.setItem('owner_data', JSON.stringify(ownerInfo.owner))
+        ownerData = ownerInfo.owner
+        showAdminApp()
+      } else {
+        document.getElementById('owner-step-otp').style.display = 'block'
+        showOwnerError('This number is not registered as a shop owner')
+      }
+    } else {
+      document.getElementById('owner-step-otp').style.display = 'block'
+      showOwnerError(data.message || 'Invalid OTP')
+    }
+  } catch(e) {
+    hideOwnerLoading()
+    document.getElementById('owner-step-otp').style.display = 'block'
+    showOwnerError('Cannot connect to server')
+  }
+}
+
+function ownerBackToPhone() {
+  document.getElementById('owner-step-otp').style.display = 'none'
+  document.getElementById('owner-step-phone').style.display = 'block'
+  document.getElementById('owner-otp').value = ''
+}
+
+function ownerLogout() {
+  localStorage.removeItem('owner_token')
+  localStorage.removeItem('owner_data')
+  location.reload()
+}
+
+/* ══ SHOW APP ══ */
+function showAdminApp() {
+  document.getElementById('login-wrap').style.display = 'none'
+  var app = document.getElementById('admin-app')
+  app.style.display = 'flex'
+  app.style.flexDirection = 'column'
+
+  if (ownerData) {
+    document.getElementById('owner-name-display').textContent = ownerData.name
+    document.getElementById('topbar-store-name').textContent = '🏪 Store #' + ownerData.store_id
+  }
+
+  loadDashboard()
+}
+
+/* ══ TABS ══ */
+function showTab(name) {
+  document.querySelectorAll('[id^="tab-"]').forEach(function(t) {
+    t.style.display = 'none'
+  })
+  document.querySelectorAll('.nav-tab').forEach(function(t) {
+    t.classList.remove('active')
+  })
+
+  document.getElementById('tab-' + name).style.display = 'block'
+  event.target.classList.add('active')
+
+  if (name === 'dashboard') loadDashboard()
+  if (name === 'orders') loadAllOrders()
+  if (name === 'products') loadProducts()
+}
+
+/* ══ DASHBOARD ══ */
+async function loadDashboard() {
+  if (!ownerData) return
+  var storeId = ownerData.store_id
+  var token = localStorage.getItem('owner_token')
+
+  try {
+    var res = await fetch(API + '/shop/orders/store/' + storeId, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    var data = await res.json()
+    if (!res.ok) return
+
+    allOrders = data.orders || []
+    var today = new Date().toISOString().split('T')[0]
+
+    var todayOrders = allOrders.filter(function(o) {
+      return o.created_at && o.created_at.startsWith(today)
+    })
+    var todayRevenue = todayOrders.reduce(function(s, o) {
+      return s + parseFloat(o.total_amount || 0)
+    }, 0)
+    var pending = allOrders.filter(function(o) { return o.status === 'pending' }).length
+
+    document.getElementById('dash-today-orders').textContent = todayOrders.length
+    document.getElementById('dash-today-revenue').textContent = '₹' + todayRevenue
+    document.getElementById('dash-pending').textContent = pending
+    document.getElementById('dash-total-orders').textContent = allOrders.length
+
+    // Show recent 5 orders
+    var recent = allOrders.slice(0, 5)
+    document.getElementById('dashboard-orders').innerHTML =
+      recent.length > 0
+        ? recent.map(renderOrderCard).join('')
+        : '<div class="empty"><div class="empty-icon">📦</div><div class="empty-title">No orders yet</div></div>'
+
+  } catch(e) {
+    document.getElementById('dashboard-orders').innerHTML =
+      '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error loading orders</div></div>'
+  }
+}
+
+/* ══ ORDERS ══ */
+async function loadAllOrders() {
+  if (!ownerData) return
+  var token = localStorage.getItem('owner_token')
+  var listEl = document.getElementById('all-orders-list')
+  listEl.innerHTML = '<div class="loader"></div>'
+
+  try {
+    var res = await fetch(API + '/shop/orders/store/' + ownerData.store_id, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    var data = await res.json()
+    if (res.ok) {
+      allOrders = data.orders || []
+      renderFilteredOrders()
+    }
+  } catch(e) {
+    listEl.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Cannot load orders</div></div>'
+  }
+}
+
+function filterOrders(status) {
+  currentFilter = status
+  renderFilteredOrders()
+}
+
+function renderFilteredOrders() {
+  var filtered = currentFilter === 'all'
+    ? allOrders
+    : allOrders.filter(function(o) { return o.status === currentFilter })
+
+  var listEl = document.getElementById('all-orders-list')
+  listEl.innerHTML = filtered.length > 0
+    ? filtered.map(renderOrderCard).join('')
+    : '<div class="empty"><div class="empty-icon">📦</div><div class="empty-title">No orders found</div></div>'
+}
+
+function renderOrderCard(order) {
+  var items = []
+  try {
+    items = typeof order.items === 'string' ? JSON.parse(order.items) : (order.items || [])
+  } catch(e) {}
+
+  var itemsText = items.map(function(i) {
+    return i.name + ' x' + i.qty + ' (₹' + (i.price * i.qty) + ')'
+  }).join('\n')
+
+  var time = order.created_at
+    ? new Date(order.created_at).toLocaleString('en-IN', {
+        day: 'numeric', month: 'short',
+        hour: '2-digit', minute: '2-digit'
+      })
+    : '—'
+
+  var statusClass = 'status-' + (order.status || 'pending')
+  var cardClass = 'order-card ' + (order.status || 'pending')
+
+  var actions = ''
+
+  if (order.status === 'pending') {
+    actions += '<button class="action-btn btn-confirm" onclick="updateOrderStatus(' + order.id + ', \'confirmed\')">✅ Confirm</button>'
+    actions += '<button class="action-btn btn-cancel" onclick="updateOrderStatus(' + order.id + ', \'cancelled\')">❌ Cancel</button>'
+  }
+  if (order.status === 'confirmed') {
+    actions += '<button class="action-btn btn-deliver" onclick="updateOrderStatus(' + order.id + ', \'out_for_delivery\')">🚚 Out for Delivery</button>'
+  }
+  if (order.status === 'out_for_delivery') {
+    actions += '<button class="action-btn btn-deliver" onclick="updateOrderStatus(' + order.id + ', \'delivered\')">✅ Mark Delivered</button>'
+  }
+  if (order.farmer_phone) {
+    actions += '<button class="action-btn btn-call" onclick="window.open(\'tel:' + order.farmer_phone + '\')">📞 Call Farmer</button>'
+  }
+
+  return '<div class="' + cardClass + '" id="order-' + order.id + '">' +
+    '<div class="order-header">' +
+    '<div><div class="order-id">Order #' + order.id + '</div>' +
+    '<div class="order-time">' + time + '</div></div>' +
+    '<span class="order-status ' + statusClass + '">' + (order.status || 'pending').replace(/_/g,' ').toUpperCase() + '</span>' +
+    '</div>' +
+    '<div class="order-farmer">👨‍🌾 ' + (order.farmer_name || 'Farmer') + ' · ' + (order.farmer_phone || '') + '</div>' +
+    '<div class="order-address">📍 ' + (order.delivery_address || 'No address') + '</div>' +
+    '<div class="order-items">' + itemsText + '</div>' +
+    '<div class="order-total">Total: ₹' + order.total_amount + '</div>' +
+    (actions ? '<div class="order-actions">' + actions + '</div>' : '') +
+    '</div>'
+}
+
+async function updateOrderStatus(orderId, status) {
+  var token = localStorage.getItem('owner_token')
+  try {
+    var res = await fetch(API + '/shop/orders/' + orderId + '/status', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({ status: status })
+    })
+    var data = await res.json()
+    if (res.ok) {
+      toast('Order status updated!', 'success')
+      loadDashboard()
+      loadAllOrders()
+    } else {
+      toast(data.message || 'Update failed', 'error')
+    }
+  } catch(e) {
+    toast('Cannot connect to server', 'error')
+  }
+}
+
+/* ══ PRODUCTS ══ */
+async function loadProducts() {
+  if (!ownerData) return
+  var token = localStorage.getItem('owner_token')
+  var listEl = document.getElementById('products-list')
+  listEl.innerHTML = '<div class="loader"></div>'
+
+  try {
+    var res = await fetch(API + '/shop/products/' + ownerData.store_id, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    var data = await res.json()
+    if (res.ok) {
+      renderProducts(data.products || [])
+    }
+  } catch(e) {
+    listEl.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Cannot load products</div></div>'
+  }
+}
+
+function renderProducts(products) {
+  var listEl = document.getElementById('products-list')
+  if (products.length === 0) {
+    listEl.innerHTML = '<div class="empty"><div class="empty-icon">🧴</div><div class="empty-title">No products yet</div><div>Go to Add Product tab to add your first product</div></div>'
+    return
+  }
+
+  listEl.innerHTML = '<div class="products-grid">' +
+    products.map(function(p) {
+      var stockClass = p.stock > 20 ? 'stock-good' : p.stock > 0 ? 'stock-low' : 'stock-out'
+      var stockText = p.stock > 20 ? 'In Stock' : p.stock > 0 ? 'Low Stock (' + p.stock + ')' : 'Out of Stock'
+      var disc = p.mrp ? Math.round((1 - p.price / p.mrp) * 100) : 0
+
+      return '<div class="product-card">' +
+        '<div class="product-name">' + p.name + '</div>' +
+        '<div class="product-brand">' + (p.brand || '') + ' · ' + (p.unit || '') + ' · ' + (p.category || '') + '</div>' +
+        '<div class="product-price-row">' +
+        '<span class="p-price">₹' + p.price + '</span>' +
+        (p.mrp ? '<span class="p-mrp">₹' + p.mrp + '</span>' : '') +
+        (disc > 0 ? '<span style="font-size:10px;color:#e74c3c;font-weight:800;">' + disc + '% OFF</span>' : '') +
+        '</div>' +
+        '<span class="p-stock ' + stockClass + '">' + stockText + '</span>' +
+        '<div class="product-actions" style="margin-top:10px;">' +
+        '<button class="action-btn btn-edit" onclick="openEditModal(' + JSON.stringify(p).replace(/"/g,'&quot;') + ')">✏️ Edit</button>' +
+        '<button class="action-btn ' + (p.is_available ? 'btn-toggle' : 'btn-confirm') + '" onclick="toggleProduct(' + p.id + ', ' + p.is_available + ')">' +
+        (p.is_available ? '🚫 Hide' : '✅ Show') + '</button>' +
+        '<button class="action-btn btn-delete" onclick="deleteProduct(' + p.id + ')">🗑️</button>' +
+        '</div>' +
+        '</div>'
+    }).join('') +
+    '</div>'
+}
+
+async function addProduct() {
+  var name = document.getElementById('p-name').value.trim()
+  var brand = document.getElementById('p-brand').value.trim()
+  var category = document.getElementById('p-category').value
+  var unit = document.getElementById('p-unit').value.trim()
+  var price = document.getElementById('p-price').value
+  var mrp = document.getElementById('p-mrp').value
+  var stock = document.getElementById('p-stock').value
+  var desc = document.getElementById('p-desc').value.trim()
+
+  if (!name || !category || !price) {
+    toast('Please fill name, category and price', 'error')
+    return
+  }
+
+  var token = localStorage.getItem('owner_token')
+
+  try {
+    var res = await fetch(API + '/shop/products', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({
+        store_id: ownerData.store_id,
+        name: name, brand: brand, category: category,
+        unit: unit, price: parseFloat(price),
+        mrp: mrp ? parseFloat(mrp) : null,
+        stock: parseInt(stock) || 100,
+        description: desc
+      })
+    })
+    var data = await res.json()
+    if (res.ok) {
+      toast('Product added successfully!', 'success')
+      // Clear form
+      document.getElementById('p-name').value = ''
+      document.getElementById('p-brand').value = ''
+      document.getElementById('p-category').value = ''
+      document.getElementById('p-unit').value = ''
+      document.getElementById('p-price').value = ''
+      document.getElementById('p-mrp').value = ''
+      document.getElementById('p-stock').value = '100'
+      document.getElementById('p-desc').value = ''
+    } else {
+      toast(data.message || 'Failed to add product', 'error')
+    }
+  } catch(e) {
+    toast('Cannot connect to server', 'error')
+  }
+}
+
+/* ══ EDIT PRODUCT MODAL ══ */
+function openEditModal(product) {
+  document.getElementById('edit-product-id').value = product.id
+  document.getElementById('edit-p-name').value = product.name || ''
+  document.getElementById('edit-p-brand').value = product.brand || ''
+  document.getElementById('edit-p-category').value = product.category || ''
+  document.getElementById('edit-p-unit').value = product.unit || ''
+  document.getElementById('edit-p-price').value = product.price || ''
+  document.getElementById('edit-p-mrp').value = product.mrp || ''
+  document.getElementById('edit-p-stock').value = product.stock || ''
+
+  document.getElementById('edit-modal').style.display = 'flex'
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').style.display = 'none'
+}
+
+async function saveEditProduct() {
+  var id = document.getElementById('edit-product-id').value
+  var token = localStorage.getItem('owner_token')
+
+  var updates = {
+    name: document.getElementById('edit-p-name').value.trim(),
+    brand: document.getElementById('edit-p-brand').value.trim(),
+    category: document.getElementById('edit-p-category').value,
+    unit: document.getElementById('edit-p-unit').value.trim(),
+    price: parseFloat(document.getElementById('edit-p-price').value),
+    mrp: parseFloat(document.getElementById('edit-p-mrp').value) || null,
+    stock: parseInt(document.getElementById('edit-p-stock').value) || 0
+  }
+
+  try {
+    var res = await fetch(API + '/shop/products/' + id, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify(updates)
+    })
+    var data = await res.json()
+    if (res.ok) {
+      toast('Product updated!', 'success')
+      closeEditModal()
+      loadProducts()
+    } else {
+      toast(data.message || 'Update failed', 'error')
+    }
+  } catch(e) {
+    toast('Cannot connect to server', 'error')
+  }
+}
+
+async function toggleProduct(id, isAvailable) {
+  var token = localStorage.getItem('owner_token')
+  try {
+    var res = await fetch(API + '/shop/products/' + id, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({ is_available: !isAvailable })
+    })
+    if (res.ok) {
+      toast(isAvailable ? 'Product hidden from shop' : 'Product visible in shop', 'success')
+      loadProducts()
+    }
+  } catch(e) {
+    toast('Cannot connect to server', 'error')
+  }
+}
+
+async function deleteProduct(id) {
+  var confirmed = await showConfirm('Delete this product?')
+  if (!confirmed) return
+
+  var token = localStorage.getItem('owner_token')
+  try {
+    var res = await fetch(API + '/shop/products/' + id, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    if (res.ok) {
+      toast('Product deleted', 'success')
+      loadProducts()
+    }
+  } catch(e) {
+    toast('Cannot connect to server', 'error')
+  }
+}
+
+function showConfirm(msg) {
+  return new Promise(function(resolve) {
+    var old = document.getElementById('admin-confirm')
+    if (old) old.remove()
+    var box = document.createElement('div')
+    box.id = 'admin-confirm'
+    box.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:white;border-radius:16px;padding:20px;z-index:99999;box-shadow:0 8px 32px rgba(0,0,0,0.2);border:1.5px solid #e0e0e0;min-width:280px;'
+    box.innerHTML = '<div style="font-size:15px;font-weight:800;margin-bottom:16px;text-align:center;">' + msg + '</div>' +
+      '<div style="display:flex;gap:10px;">' +
+      '<button onclick="document.getElementById(\'admin-confirm\').remove();window._cr(false);" style="flex:1;padding:12px;background:#f5f5f5;color:#555;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:Nunito,sans-serif;cursor:pointer;">Cancel</button>' +
+      '<button onclick="document.getElementById(\'admin-confirm\').remove();window._cr(true);" style="flex:1;padding:12px;background:#e74c3c;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:Nunito,sans-serif;cursor:pointer;">Delete</button>' +
+      '</div>'
+    window._cr = resolve
+    document.body.appendChild(box)
+  })
+}
+
+/* ══ INIT ══ */
+window.onload = function() {
+  var token = localStorage.getItem('owner_token')
+  var data = localStorage.getItem('owner_data')
+  if (token && data) {
+    ownerData = JSON.parse(data)
+    showAdminApp()
+  }
+}
+</script>
+</body>
+</html>
