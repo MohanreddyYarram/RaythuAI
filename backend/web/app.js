@@ -2221,3 +2221,128 @@ function loadFeedSchemes() {
       '</div>'
   }).join('')
 }
+
+/* ══════════════════════════════════════
+   MY ORDERS
+══════════════════════════════════════ */
+async function loadMyOrders() {
+  var farmerData = localStorage.getItem('rytuai_farmer')
+  if (!farmerData) return
+  var farmer = JSON.parse(farmerData)
+
+  var container = document.getElementById('my-orders-list')
+  if (!container) return
+
+  container.innerHTML = '<div style="text-align:center;padding:40px;"><div class="loader-sm"></div></div>'
+
+  try {
+    var res = await fetch(API + '/shop/orders/' + farmer.phone, {
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
+    })
+    var data = await res.json()
+
+    if (res.ok && data.orders && data.orders.length > 0) {
+      renderMyOrders(data.orders)
+    } else {
+      container.innerHTML = '<div style="text-align:center;padding:48px;color:#888;">' +
+        '<div style="font-size:48px;margin-bottom:12px;">📦</div>' +
+        '<div style="font-size:16px;font-weight:800;color:#1a2e1e;">No orders yet</div>' +
+        '<div style="font-size:13px;margin-top:6px;">Your orders will appear here</div>' +
+        '</div>'
+    }
+  } catch(e) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;font-weight:700;">Cannot load orders</div>'
+  }
+}
+
+function renderMyOrders(orders) {
+  var container = document.getElementById('my-orders-list')
+  if (!container) return
+
+  var statusConfig = {
+    pending:          { label: 'Order Placed',       icon: '🕐', color: '#fff3cd', textColor: '#856404' },
+    confirmed:        { label: 'Confirmed',           icon: '✅', color: '#cce5ff', textColor: '#004085' },
+    out_for_delivery: { label: 'Out for Delivery',    icon: '🚚', color: '#d4edda', textColor: '#155724' },
+    delivered:        { label: 'Delivered',           icon: '🎉', color: '#d4edda', textColor: '#155724' },
+    cancelled:        { label: 'Cancelled',           icon: '❌', color: '#f8d7da', textColor: '#721c24' }
+  }
+
+  container.innerHTML = orders.map(function(order) {
+    var sc = statusConfig[order.status] || statusConfig['pending']
+    var items = []
+    try {
+      items = typeof order.items === 'string' ? JSON.parse(order.items) : (order.items || [])
+    } catch(e) {}
+
+    var itemsText = items.map(function(i) {
+      return i.name + ' x' + i.qty
+    }).join(', ')
+
+    var time = order.created_at ? new Date(order.created_at).toLocaleDateString('en-IN', {
+      day: 'numeric', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    }) : '—'
+
+    return '<div style="background:white;border-radius:14px;padding:16px;margin-bottom:10px;border:1.5px solid #e8e0d0;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+      '<div style="font-size:14px;font-weight:800;">Order #' + order.id + '</div>' +
+      '<div style="background:' + sc.color + ';color:' + sc.textColor + ';font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;">' +
+      sc.icon + ' ' + sc.label +
+      '</div>' +
+      '</div>' +
+      '<div style="font-size:12px;color:#888;margin-bottom:8px;">🕐 ' + time + '</div>' +
+      '<div style="font-size:13px;color:#444;background:#f8f5f0;border-radius:8px;padding:10px;margin-bottom:8px;">' +
+      '🛒 ' + itemsText +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+      '<div style="font-size:12px;color:#888;">📍 ' + (order.delivery_address || '—') + '</div>' +
+      '<div style="font-size:16px;font-weight:900;color:#1a6e35;">₹' + order.total_amount + '</div>' +
+      '</div>' +
+      // Progress bar
+      renderOrderProgress(order.status) +
+      '</div>'
+  }).join('')
+}
+
+function renderOrderProgress(status) {
+  var steps = ['pending', 'confirmed', 'out_for_delivery', 'delivered']
+  var labels = ['Placed', 'Confirmed', 'On Way', 'Delivered']
+  var currentIndex = steps.indexOf(status)
+
+  if (status === 'cancelled') {
+    return '<div style="margin-top:12px;background:#ffeaea;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;color:#e74c3c;text-align:center;">❌ Order Cancelled</div>'
+  }
+
+  var stepsHtml = steps.map(function(step, i) {
+    var isDone = i <= currentIndex
+    var dotColor = isDone ? '#1a6e35' : '#e0e0e0'
+    var textColor = isDone ? '#1a6e35' : '#aaa'
+    return '<div style="display:flex;flex-direction:column;align-items:center;flex:1;">' +
+      '<div style="width:20px;height:20px;border-radius:50%;background:' + dotColor + ';display:flex;align-items:center;justify-content:center;font-size:10px;color:white;font-weight:800;">' +
+      (isDone ? '✓' : (i + 1)) +
+      '</div>' +
+      '<div style="font-size:9px;font-weight:700;color:' + textColor + ';margin-top:3px;text-align:center;">' + labels[i] + '</div>' +
+      '</div>'
+  }).join('')
+
+  return '<div style="margin-top:12px;">' +
+    '<div style="display:flex;align-items:center;position:relative;">' +
+    '<div style="position:absolute;top:10px;left:10%;right:10%;height:2px;background:#e0e0e0;z-index:0;"></div>' +
+    '<div style="position:absolute;top:10px;left:10%;height:2px;background:#1a6e35;z-index:1;width:' + (currentIndex / 3 * 80) + '%;"></div>' +
+    '<div style="display:flex;justify-content:space-between;width:100%;position:relative;z-index:2;">' +
+    stepsHtml +
+    '</div>' +
+    '</div>' +
+    '</div>'
+}
+function openOrders() {
+  closeProfileMenu()
+  loadMyOrders()
+  var screen = document.getElementById('my-orders-screen')
+  if (screen) { screen.style.display = 'block'; screen.scrollTop = 0 }
+}
+
+function closeMyOrders() {
+  var screen = document.getElementById('my-orders-screen')
+  if (screen) screen.style.display = 'none'
+}

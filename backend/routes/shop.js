@@ -75,41 +75,7 @@ router.post('/orders',async(req,res)=>{
         if(error) return res.status(400).json({message:error.message})
         
         //Auto add to tracker
-        try{
-
-            var itemsArray = typeof items === 'string' ? JSON.parse(items) : items
-
-            var itemNames = itemsArray.map(function(i){
-                return i.name
-            }).join(', ')
-
-            var {data:storeData} = await supabase
-                .from('stores')
-                .select('name')
-                .eq('id',store_id)
-                .single()
-
-            var storeName = storeData ? storeData.name:'Rytu Shop'
-
-           var {error:trackerError} = await supabase.from('activities').insert({
-                farmer_id: farmer_id,
-                date: new Date().toISOString().split('T')[0],
-                type:'shop',
-                title:'Ordered from ' +storeName,
-                description : 'Ordered: '+ itemNames,
-                cost: parseFloat(total_amount),
-                source: 'shop'
-            })
-            if(trackerError){
-                console.log('Tracker insert error: ',trackerError.message)
-            }else{
-                console.log('Tracker auto-add success')
-            }
-
-        }catch (trackerErr){
-            console.log('Tracker auto-add error:',trackerErr.message)
-        }
-
+        
         res.status(201).json({
             message:'Order placed successfully!',
             order:data[0]
@@ -139,6 +105,62 @@ router.get('/orders/:farmer_id',async(req,res)=>{
     }catch (err){
         res.status(500).json({message:err.message})
     }
+})
+router.put('/orders/:id/status', async (req, res) => {
+  const { id } = req.params
+  const { status } = req.body
+
+  const validStatuses = ['pending','confirmed','out_for_delivery','delivered','cancelled']
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ message: 'Invalid status' })
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .update({ status: status })
+      .eq('id', id)
+      .select()
+
+    if (error) return res.status(400).json({ message: error.message })
+
+    // Add to tracker ONLY when delivered
+    if (status === 'delivered' && data[0]) {
+      try {
+        var order = data[0]
+        var itemsArray = typeof order.items === 'string'
+          ? JSON.parse(order.items) : order.items
+
+        var itemNames = itemsArray.map(function(i) {
+          return i.name
+        }).join(', ')
+
+        // Get store name
+        const { data: storeData } = await supabase
+          .from('stores').select('name').eq('id', order.store_id).single()
+
+        var storeName = storeData ? storeData.name : 'Rytu Shop'
+
+        await supabase.from('activities').insert({
+          farmer_id: order.farmer_id,
+          date: new Date().toISOString().split('T')[0],
+          type: 'shop',
+          title: 'Delivered: ' + storeName,
+          description: 'Items received: ' + itemNames,
+          cost: parseFloat(order.total_amount),
+          source: 'shop'
+        })
+
+        console.log('Tracker updated after delivery for farmer:', order.farmer_id)
+      } catch (trackerErr) {
+        console.log('Tracker update error:', trackerErr.message)
+      }
+    }
+
+    res.status(200).json({ message: 'Status updated', order: data[0] })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
 })
 
 // sHOP OWNER ROUTES
