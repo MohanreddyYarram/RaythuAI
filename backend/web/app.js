@@ -699,18 +699,26 @@ async function analyzeImages() {
   }
 }
 
+/* ══════════════════════════════════════
+   UPDATED renderResult function
+══════════════════════════════════════ */
+
 function renderResult(r) {
   var content = document.getElementById('result-content')
   if (content) content.style.display = 'block'
 
+  // Header
   var headerDiv = document.getElementById('result-header-div')
-  if (headerDiv) headerDiv.className = r.healthy ? 'result-hero healthy' : 'result-hero'
+  if (headerDiv) {
+    headerDiv.className = r.healthy ? 'result-hero healthy' : 'result-hero'
+  }
 
   function setText(id, val) {
     var el = document.getElementById(id)
     if (el) el.textContent = val || '—'
   }
 
+  // Main fields
   setText('r-emoji', r.healthy ? '✅' : '🦠')
   setText('r-disease', r.disease)
   setText('r-telugu', r.teluguName)
@@ -718,23 +726,259 @@ function renderResult(r) {
   setText('r-sev-val', r.severity)
   setText('r-spread-val', r.spread)
   setText('r-treat-val', r.treatWithin)
+
+  // English fields
   setText('r-what', r.whatIsThis)
   setText('r-symptoms', r.symptomsFound)
   setText('r-prevention', r.prevention)
 
+  // Telugu fields
+  setText('r-what-telugu', r.whatIsThisTelugu)
+  setText('r-symptoms-telugu', r.symptomsFoundTelugu)
+  setText('r-prevention-telugu', r.preventionTelugu)
+
+  // Telugu summary card
+  var teluguCard = document.getElementById('telugu-summary-card')
+  var teluguSummaryEl = document.getElementById('r-telugu-summary')
+  if (teluguSummaryEl && r.teluguSummary) {
+    teluguSummaryEl.textContent = r.teluguSummary
+    if (teluguCard) teluguCard.style.display = 'block'
+  }
+
+  // Pesticides
   var pestDiv = document.getElementById('r-pesticides')
   if (pestDiv) {
     pestDiv.innerHTML = (r.pesticides || []).map(function(p) {
-      var disc = Math.round((1 - p.priceRytu / p.priceMRP) * 100)
+      var disc = p.priceMRP ? Math.round((1 - p.priceRytu / p.priceMRP) * 100) : 0
       return '<div class="pest-item" onclick="switchScreen(\'shop\')">' +
         '<div class="pest-icon">' + (p.icon || '🧴') + '</div>' +
-        '<div class="pest-info"><div class="pest-name">' + p.name + '</div>' +
-        '<div class="pest-brand">' + p.brand + '</div></div>' +
-        '<div class="pest-price-col"><div class="price">₹' + p.priceRytu + '</div>' +
-        '<div class="mrp">₹' + p.priceMRP + '</div>' +
-        '<div class="discount">' + disc + '% OFF</div></div></div>'
+        '<div class="pest-info">' +
+        '<div class="pest-name">' + p.name + '</div>' +
+        '<div class="pest-brand">' + p.brand + ' · Rytu Shop</div>' +
+        (p.usage ? '<div style="font-size:11px;color:#555;margin-top:2px;">📋 ' + p.usage + '</div>' : '') +
+        (p.usageTelugu ? '<div style="font-size:11px;color:#1a6e35;font-family:Tiro Telugu,serif;margin-top:2px;">📋 ' + p.usageTelugu + '</div>' : '') +
+        '</div>' +
+        '<div class="pest-price-col">' +
+        '<div class="price">₹' + p.priceRytu + '</div>' +
+        (p.priceMRP ? '<div class="mrp">₹' + p.priceMRP + '</div>' : '') +
+        (disc > 0 ? '<div class="discount">' + disc + '% OFF</div>' : '') +
+        '</div>' +
+        '</div>'
     }).join('')
   }
+}
+/* ══════════════════════════════════════
+   SCAN HISTORY + ORDER FROM RESULT
+   Paste at bottom of web/app.js
+══════════════════════════════════════ */
+
+/* ── Override renderResult to add buttons ── */
+var _origRenderResult = renderResult
+function renderResult(r) {
+  _origRenderResult(r)
+  setTimeout(function() { addScanActionButtons(r) }, 200)
+}
+
+function addScanActionButtons(r) {
+  var resultBody = document.querySelector('#result-content .result-body')
+  if (!resultBody) return
+
+  var existing = document.getElementById('scan-action-btns')
+  if (existing) existing.remove()
+
+  showToast('✅ Scan saved to your history', 'success')
+
+  var div = document.createElement('div')
+  div.id = 'scan-action-btns'
+
+  if (!r.healthy && r.pesticides && r.pesticides.length > 0) {
+    div.innerHTML =
+      '<div style="background:#e8f5ee;border-radius:12px;padding:14px;' +
+      'margin-top:16px;border:1.5px solid #c8ddc8;">' +
+      '<div style="font-size:12px;font-weight:800;color:#1a6e35;margin-bottom:6px;">' +
+      '🛒 Order Recommended Pesticides — సూచించిన మందులు ఆర్డర్ చేయండి' +
+      '</div>' +
+      '<div style="font-size:12px;color:#555;margin-bottom:10px;">' +
+      'Add all recommended pesticides to cart and order from Rytu Shop.' +
+      '</div>' +
+      '<button onclick="orderPesticidesFromScan(' +
+      JSON.stringify(r.pesticides).replace(/"/g, '&quot;') + ')" style="' +
+      'width:100%;padding:14px;background:#1a6e35;color:white;' +
+      'border:none;border-radius:12px;font-size:14px;font-weight:800;' +
+      'font-family:Nunito,sans-serif;cursor:pointer;">' +
+      '🛒 Add ' + r.pesticides.length + ' Pesticide(s) to Cart' +
+      '</button>' +
+      '</div>'
+  } else if (r.healthy) {
+    div.innerHTML =
+      '<div style="background:#e8f5ee;border-radius:12px;padding:16px;' +
+      'margin-top:16px;text-align:center;border:1.5px solid #c8ddc8;">' +
+      '<div style="font-size:28px;margin-bottom:8px;">🎉</div>' +
+      '<div style="font-size:14px;font-weight:800;color:#1a6e35;">Your crop looks healthy!</div>' +
+      '<div style="font-size:12px;color:#555;margin-top:4px;font-family:Tiro Telugu,serif;">' +
+      'మీ పంట ఆరోగ్యంగా ఉంది! మంచి వ్యవసాయ పద్ధతులు కొనసాగించండి.' +
+      '</div>' +
+      '</div>'
+  }
+
+  resultBody.appendChild(div)
+}
+
+function orderPesticidesFromScan(pesticides) {
+  if (!currentStoreId) {
+    currentStoreId = 1
+    currentStoreName = 'RytuAI Pilot Store — Guntur'
+  }
+
+  var added = 0
+  pesticides.forEach(function(p) {
+    var existing = cart.find(function(c) { return c.name === p.name })
+    if (!existing) {
+      cart.push({
+        id: 'scan-' + Date.now() + Math.random(),
+        name: p.name,
+        price: p.priceRytu || 0,
+        qty: 1
+      })
+      added++
+    }
+  })
+
+  updateCartBar()
+
+  if (added > 0) {
+    showToast(added + ' pesticide(s) added to cart!', 'success')
+    setTimeout(function() { switchScreen('shop') }, 1500)
+  } else {
+    showToast('Already in cart!', 'success')
+    switchScreen('shop')
+  }
+}
+
+/* ══════════════════════════════════════
+   SCAN HISTORY IN TRACKER
+══════════════════════════════════════ */
+async function loadScanHistory() {
+  var farmerData = localStorage.getItem('rytuai_farmer')
+  if (!farmerData) return
+  var farmer = JSON.parse(farmerData)
+
+  var container = document.getElementById('scan-history-list')
+  if (!container) return
+
+  container.innerHTML =
+    '<div style="text-align:center;padding:20px;">' +
+    '<div class="loader-sm"></div>' +
+    '</div>'
+
+  try {
+    var res = await fetch(API + '/detect/history/' + farmer.phone, {
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
+    })
+    var data = await res.json()
+
+    if (res.ok && data.scans && data.scans.length > 0) {
+      renderScanHistory(data.scans)
+    } else {
+      container.innerHTML =
+        '<div style="text-align:center;padding:32px;color:#888;">' +
+        '<div style="font-size:32px;margin-bottom:8px;">🔬</div>' +
+        '<div style="font-size:13px;font-weight:700;">No scans yet</div>' +
+        '<div style="font-size:11px;margin-top:4px;">Your AI scan history will appear here</div>' +
+        '</div>'
+    }
+  } catch(e) {
+    container.innerHTML =
+      '<div style="text-align:center;padding:20px;color:#e74c3c;font-weight:700;">Cannot load scan history</div>'
+  }
+}
+
+function renderScanHistory(scans) {
+  var container = document.getElementById('scan-history-list')
+  if (!container) return
+
+  container.innerHTML = scans.map(function(scan) {
+    var date = scan.created_at
+      ? new Date(scan.created_at).toLocaleDateString('en-IN', {
+          day: 'numeric', month: 'short', year: 'numeric'
+        })
+      : '—'
+
+    var severityColor = '#e74c3c'
+    if (scan.severity === 'Low') severityColor = '#f5a623'
+    if (scan.healthy) severityColor = '#1a6e35'
+
+    var pesticides = []
+    try {
+      pesticides = typeof scan.pesticides === 'string'
+        ? JSON.parse(scan.pesticides)
+        : (scan.pesticides || [])
+    } catch(e) {}
+
+    return '<div style="background:white;border-radius:14px;padding:14px;' +
+      'margin-bottom:10px;border:1.5px solid #e8e0d0;' +
+      'border-left:4px solid ' + severityColor + ';">' +
+
+      // Header
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">' +
+      '<div>' +
+      '<div style="font-size:14px;font-weight:800;color:#1a2e1e;">' +
+      (scan.healthy ? '✅ ' : '🦠 ') + scan.disease +
+      '</div>' +
+      (scan.telugu_name ? '<div style="font-size:12px;color:#1a6e35;font-family:Tiro Telugu,serif;margin-top:2px;">' + scan.telugu_name + '</div>' : '') +
+      '</div>' +
+      '<div style="font-size:10px;color:#888;text-align:right;">' +
+      date + '<br>' + scan.images_count + ' photo(s)' +
+      '</div>' +
+      '</div>' +
+
+      // Badges
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">' +
+      (scan.confidence ? '<span style="background:#f0f0f0;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;">' + scan.confidence + '</span>' : '') +
+      (scan.severity ? '<span style="background:' + severityColor + '20;color:' + severityColor + ';border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;">' + scan.severity + ' Severity</span>' : '') +
+      (scan.treat_within ? '<span style="background:#fff3cd;color:#856404;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;">Treat: ' + scan.treat_within + '</span>' : '') +
+      '</div>' +
+
+      // Telugu summary
+      (scan.telugu_summary ?
+        '<div style="background:#f0f7f2;border-radius:8px;padding:10px;margin-bottom:8px;' +
+        'font-family:Tiro Telugu,serif;font-size:13px;color:#1a2e1e;line-height:1.7;">' +
+        scan.telugu_summary +
+        '</div>' : '') +
+
+      // Symptoms English + Telugu
+      (scan.symptoms ?
+        '<div style="margin-bottom:6px;">' +
+        '<div style="font-size:11px;font-weight:800;color:#888;margin-bottom:3px;">SYMPTOMS</div>' +
+        '<div style="font-size:12px;color:#444;line-height:1.5;">' + scan.symptoms.substring(0, 120) + (scan.symptoms.length > 120 ? '...' : '') + '</div>' +
+        (scan.symptoms_telugu ? '<div style="font-size:12px;color:#1a6e35;font-family:Tiro Telugu,serif;margin-top:3px;line-height:1.6;">' + scan.symptoms_telugu.substring(0, 120) + '...</div>' : '') +
+        '</div>' : '') +
+
+      // Pesticides
+      (pesticides.length > 0 ?
+        '<div style="background:#f8f5f0;border-radius:8px;padding:10px;margin-top:8px;">' +
+        '<div style="font-size:11px;font-weight:800;color:#1a6e35;margin-bottom:6px;">💊 Recommended — సూచించిన మందులు</div>' +
+        pesticides.map(function(p) {
+          return '<div style="margin-bottom:6px;">' +
+            '<div style="font-size:12px;font-weight:700;color:#1a2e1e;">' +
+            (p.icon || '🧴') + ' ' + p.name +
+            (p.priceRytu ? ' <span style="color:#1a6e35;">₹' + p.priceRytu + '</span>' : '') +
+            '</div>' +
+            (p.usageTelugu ? '<div style="font-size:11px;color:#555;font-family:Tiro Telugu,serif;margin-top:1px;">' + p.usageTelugu + '</div>' : '') +
+            '</div>'
+        }).join('') +
+        '<button onclick="orderFromHistory(' + JSON.stringify(pesticides).replace(/"/g,'&quot;') + ')" style="' +
+        'margin-top:8px;width:100%;padding:10px;background:#1a6e35;color:white;' +
+        'border:none;border-radius:8px;font-size:13px;font-weight:800;' +
+        'font-family:Nunito,sans-serif;cursor:pointer;">🛒 Order Pesticides</button>' +
+        '</div>' : '') +
+
+      '</div>'
+  }).join('')
+}
+
+function orderFromHistory(pesticides) {
+  orderPesticidesFromScan(pesticides)
 }
 
 function logout() {
