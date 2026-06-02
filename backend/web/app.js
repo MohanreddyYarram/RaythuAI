@@ -155,6 +155,26 @@ var screenTitles = {
 }
 
 function switchScreen(name) {
+
+  // Clear uploaded images when leaving detect screen
+  if (currentScreen === 'detect' && name !== 'detect') {
+    uploadedImages = { 0: null, 1: null, 2: null, 3: null }
+    for (var i = 0; i < 4; i++) {
+      var slot = document.getElementById('slot-' + i)
+      if (slot) {
+        slot.classList.remove('filled')
+        slot.innerHTML = '<div class="slot-plus">+</div>' +
+          '<div class="slot-label">' +
+          (['Leaf Photo','Stem Photo','Full Plant','Extra'][i]) +
+          '</div>'
+      }
+    }
+    updateUploadCount()
+    updateAnalyzeBtn()
+  }
+
+  localStorage.setItem('rytuai_screen', name)
+  // ... rest of existing switchScreen code
   
   localStorage.setItem('rytuai_screen',name)
   document.querySelectorAll('.screen').forEach(function(s){
@@ -1745,18 +1765,18 @@ function closeCart() {
 }
 
 function cartDecrease(id) {
-  var item = cart.find(function(c) { return c.id == id })
+  var item = cart.find(function(c) { return String(c.id) == String(id) })
   if (!item) return
   item.qty--
   if (item.qty <= 0) {
-    cart = cart.filter(function(c) { return c.id != id })
+    cart = cart.filter(function(c) { return String(c.id) != String(id) })
   }
   renderCartScreen()
   updateCartBar()
 }
 
 function cartIncrease(id) {
-  var item = cart.find(function(c) { return c.id == id })
+  var item = cart.find(function(c) { return String(c.id) == String(id) })
   if (!item) return
   item.qty++
   renderCartScreen()
@@ -1785,7 +1805,7 @@ function renderCartScreen() {
       '<div class="qty-ctrl">' +
       '<button onclick="cartDecrease(\'' + item.id + '\')">−</button>' +
       '<span>' + item.qty + '</span>' +
-'<button onclick="cartIncrease(\'' + item.id + '\')">+</button>' +
+      '<button onclick="cartIncrease(\'' + item.id + '\')">+</button>' +
       '</div>' +
       '<div style="font-size:15px;font-weight:900;color:#1a6e35;min-width:60px;text-align:right;">₹' + (item.price * item.qty) + '</div>' +
       '</div>'
@@ -2651,7 +2671,7 @@ function renderPesticideShopList(aiPesticides, matched) {
             '</div>' +
             '</div>' +
             '<div style="text-align:right;">' +
-            '<div style="font-size:14px;font-weight:900;color:#1a6e35;">₹' + product.price + '</div>' +
+            '<div style="font-size:14px;font-weight:900;color:#1a6e35;">₹' + (parseFloat(product.price) || 0) + '</div>' +
             (product.mrp ? '<div style="font-size:10px;color:#aaa;text-decoration:line-through;">₹' + product.mrp + '</div>' : '') +
             (disc > 0 ? '<div style="font-size:9px;color:#e74c3c;font-weight:800;">' + disc + '% OFF</div>' : '') +
             '</div>' +
@@ -2728,7 +2748,7 @@ function togglePesticideOption(itemKey, pestIdx, product, aiPest) {
       pestIdx: pestIdx,
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: parseFloat(product.price) || 0,
       storeId: product.stores.id,
       storeName: product.stores.name,
       qty: 1
@@ -2979,43 +2999,7 @@ function renderScanHistory(scans) {
   }).join('')
 }
 
-function viewScanFromHistory(scan) {
-  var result = {
-    disease: scan.disease,
-    teluguName: scan.telugu_name,
-    confidence: scan.confidence,
-    severity: scan.severity,
-    spread: scan.spread,
-    treatWithin: scan.treat_within,
-    healthy: scan.healthy,
-    whatIsThis: scan.what_is_this,
-    whatIsThisTelugu: scan.what_is_this_telugu,
-    symptomsFound: scan.symptoms,
-    symptomsFoundTelugu: scan.symptoms_telugu,
-    prevention: scan.prevention,
-    preventionTelugu: scan.prevention_telugu,
-    teluguSummary: scan.telugu_summary,
-    pesticides: typeof scan.pesticides === 'string'
-      ? JSON.parse(scan.pesticides || '[]')
-      : (scan.pesticides || [])
-  }
 
-  lastScanResult = result
-  localStorage.setItem('rytuai_last_scan', JSON.stringify(result))
-
-  switchScreen('result')
-  setTimeout(function() {
-    var content = document.getElementById('result-content')
-    var loading = document.getElementById('result-loading')
-    var error = document.getElementById('result-error')
-    if (loading) loading.style.display = 'none'
-    if (error) error.style.display = 'none'
-    if (content) {
-      content.style.display = 'block'
-      renderResult(result)
-    }
-  }, 200)
-}
 
 function resetAndScan() {
   // Clear previous scan
@@ -3049,6 +3033,66 @@ function orderFromHistory(pesticides) {
   orderPesticidesFromScan(pesticides)
 }
 
+// ── VIEW SCAN FROM TRACKER ──
+function viewScanFromHistory(scan) {
+  var pesticides = []
+  try {
+    pesticides = typeof scan.pesticides === 'string'
+      ? JSON.parse(scan.pesticides || '[]')
+      : (scan.pesticides || [])
+  } catch(e) {}
+
+  var result = {
+    disease: scan.disease || '—',
+    teluguName: scan.telugu_name || '',
+    confidence: scan.confidence || '',
+    severity: scan.severity || '',
+    spread: scan.spread || '',
+    treatWithin: scan.treat_within || '',
+    healthy: scan.healthy || false,
+    whatIsThis: scan.what_is_this || '',
+    whatIsThisTelugu: scan.what_is_this_telugu || '',
+    symptomsFound: scan.symptoms || '',
+    symptomsFoundTelugu: scan.symptoms_telugu || '',
+    prevention: scan.prevention || '',
+    preventionTelugu: scan.prevention_telugu || '',
+    teluguSummary: scan.telugu_summary || '',
+    pesticides: pesticides
+  }
+
+  lastScanResult = result
+  localStorage.setItem('rytuai_last_scan', JSON.stringify(result))
+
+  // Switch to result screen
+  document.querySelectorAll('.screen').forEach(function(s) {
+    s.classList.remove('active')
+  })
+
+  var resultScreen = document.getElementById('screen-result')
+  if (resultScreen) resultScreen.classList.add('active')
+
+  var content = document.getElementById('result-content')
+  var loading = document.getElementById('result-loading')
+  var error = document.getElementById('result-error')
+  if (loading) loading.style.display = 'none'
+  if (error) error.style.display = 'none'
+  if (content) {
+    content.style.display = 'block'
+    renderResult(result)
+  }
+
+  // Update nav
+  document.querySelectorAll('.nav-item').forEach(function(n) {
+    n.classList.remove('active')
+    var onclick = n.getAttribute('onclick') || ''
+    if (onclick.indexOf("'detect'") !== -1) {
+      n.classList.add('active')
+    }
+  })
+
+  // Scroll to top
+  if (resultScreen) resultScreen.scrollTop = 0
+}
 
 
 
