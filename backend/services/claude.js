@@ -19,13 +19,13 @@ async function detectDisease(imageBlocks) {
   "spread": "Active",
   "treatWithin": "48 hours",
   "healthy": false,
-  "whatIsThis": "Clear explanation of the disease in English.",
-  "whatIsThisTelugu": "తెలుగులో వ్యాధి గురించి స్పష్టమైన వివరణ.",
-  "symptomsFound": "Symptoms visible in the uploaded photos in English.",
-  "symptomsFoundTelugu": "అప్లోడ్ చేసిన ఫోటోలలో కనిపించే లక్షణాలు తెలుగులో.",
-  "prevention": "Prevention and future protection tips in English.",
-  "preventionTelugu": "తెలుగులో నివారణ మరియు భవిష్యత్తులో రక్షణ చర్యలు.",
-  "teluguSummary": "రైతుకు సులభంగా అర్థమయ్యే విధంగా తెలుగులో పూర్తి సారాంశం.",
+  "whatIsThis": "max 2 sentences English",
+  "whatIsThisTelugu": "గరిష్టంగా 2 వాక్యాలు తెలుగులో",
+  "symptomsFound": "max 2 sentences English",
+  "symptomsFoundTelugu": "గరిష్టంగా 2 వాక్యాలు తెలుగులో",
+  "prevention": "max 2 sentences English.",
+  "preventionTelugu": " గరిష్టంగా 2 వాక్యాలు తెలుగులో",
+  "teluguSummary": "రైతుకు 2-3 వాక్యాల సారాంశం మాత్రమే",
   "pesticides": [
     {
       "name": "Pesticide name",
@@ -37,7 +37,8 @@ async function detectDisease(imageBlocks) {
       "icon": "🧴"
     }
   ]
-}`
+}
+Important: Maximum 2 pesticides only. Keep every field under 20 words. Telugu text must be simple and short.`
   try {
     console.log('Calling Claude...')
     console.log('API Key exists:', !!process.env.ANTHROPIC_API_KEY)
@@ -45,7 +46,7 @@ async function detectDisease(imageBlocks) {
 
     const response = await client.messages.create({
       model: 'claude-opus-4-5',
-      max_tokens: 4086,
+      max_tokens: 2048,
       messages: [
         {
           role: 'user',
