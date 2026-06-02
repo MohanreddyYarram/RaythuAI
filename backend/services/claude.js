@@ -62,9 +62,34 @@ async function detectDisease(imageBlocks) {
     const text = response.content[0].text
     console.log('Raw response:', text)
 
-    const clean = text.replace(/```json/g, '').replace(/```/g, '').trim()
-    const result = JSON.parse(clean)
-    return result
+   const clean = text.replace(/```json/g, '').replace(/```/g, '').trim()
+
+let result
+try {
+  result = JSON.parse(clean)
+} catch(parseErr) {
+  console.log('JSON parse failed, trying to extract...')
+  // Try to extract valid JSON
+  const jsonMatch = clean.match(/\{[\s\S]*\}/)
+  if (jsonMatch) {
+    // Fix truncated JSON by completing it
+    let jsonStr = jsonMatch[0]
+    try {
+      result = JSON.parse(jsonStr)
+    } catch(e) {
+      // Force close unclosed JSON
+      jsonStr = jsonStr.replace(/,\s*$/, '') + ']}}'
+      try {
+        result = JSON.parse(jsonStr)
+      } catch(e2) {
+        throw new Error('Cannot parse Claude response: ' + parseErr.message)
+      }
+    }
+  } else {
+    throw new Error('No JSON found in response')
+  }
+}
+return result
 
   } catch (err) {
     console.log('Claude Error:', err.message)
