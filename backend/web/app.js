@@ -156,22 +156,8 @@ var screenTitles = {
 
 function switchScreen(name) {
 
-  // Clear uploaded images when leaving detect screen
-  if (currentScreen === 'detect' && name !== 'detect') {
-    uploadedImages = { 0: null, 1: null, 2: null, 3: null }
-    for (var i = 0; i < 4; i++) {
-      var slot = document.getElementById('slot-' + i)
-      if (slot) {
-        slot.classList.remove('filled')
-        slot.innerHTML = '<div class="slot-plus">+</div>' +
-          '<div class="slot-label">' +
-          (['Leaf Photo','Stem Photo','Full Plant','Extra'][i]) +
-          '</div>'
-      }
-    }
-    updateUploadCount()
-    updateAnalyzeBtn()
-  }
+  
+  
 
   localStorage.setItem('rytuai_screen', name)
   // ... rest of existing switchScreen code
@@ -755,7 +741,20 @@ async function analyzeImages() {
 
     if (response.ok) {
       lastScanResult = data.result
-      detectScreenState = 'result'
+      localStorage.setItem('rytuai_last_scan',JSON.stringify(data.result))
+       uploadedImages = { 0: null, 1: null, 2: null, 3: null }
+  for (var i = 0; i < 4; i++) {
+    var slot = document.getElementById('slot-' + i)
+    if (slot) {
+      slot.classList.remove('filled')
+      slot.innerHTML = '<div class="slot-plus">+</div>' +
+        '<div class="slot-label">' +
+        (['Leaf Photo','Stem Photo','Full Plant','Extra'][i]) +
+        '</div>'
+    }
+  }
+     updateUploadCount()
+     updateAnalyzeBtn()
       renderResult(data.result)
     } else {
       throw new Error(data.message || 'Detection failed')
