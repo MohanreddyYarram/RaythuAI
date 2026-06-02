@@ -508,6 +508,9 @@ async function analyzeImages() {
     if (loading) loading.style.display = 'none'
 
     if (response.ok) {
+
+      cachedScans = null
+      lastScanLoadTime = 0
       lastScanResult = data.result
       
 
@@ -1569,12 +1572,23 @@ function goToShopWithSelectedPesticides() {
 }
 
 
+var cachedScans = null
+var lastScanLoadTime = 0
+
 async function loadScanHistory() {
+  var container = document.getElementById('scan-history-list')
+  if (!container) return
+
   var farmerData = localStorage.getItem('rytuai_farmer')
   if (!farmerData) return
   var farmer = JSON.parse(farmerData)
-  var container = document.getElementById('scan-history-list')
-  if (!container) return
+
+  // Use cache if loaded within last 60 seconds
+  var now = Date.now()
+  if (cachedScans && (now - lastScanLoadTime) < 60000) {
+    renderScanHistory(cachedScans)
+    return
+  }
 
   container.innerHTML = '<div style="text-align:center;padding:20px;"><div class="loader-sm"></div></div>'
 
@@ -1583,9 +1597,13 @@ async function loadScanHistory() {
       headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
     })
     var data = await res.json()
+
     if (res.ok && data.scans && data.scans.length > 0) {
+      cachedScans = data.scans
+      lastScanLoadTime = Date.now()
       renderScanHistory(data.scans)
     } else {
+      cachedScans = []
       container.innerHTML =
         '<div style="text-align:center;padding:32px;color:#888;">' +
         '<div style="font-size:32px;margin-bottom:8px;">🔬</div>' +
@@ -1593,7 +1611,12 @@ async function loadScanHistory() {
         '</div>'
     }
   } catch(e) {
-    container.innerHTML = '<div style="text-align:center;padding:20px;color:#e74c3c;font-weight:700;">Cannot load</div>'
+    // Show cached if available
+    if (cachedScans && cachedScans.length > 0) {
+      renderScanHistory(cachedScans)
+    } else {
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:#888;font-weight:700;">Cannot load scan history</div>'
+    }
   }
 }
 
