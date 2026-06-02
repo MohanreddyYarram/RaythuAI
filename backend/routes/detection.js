@@ -95,6 +95,45 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
   }
 })
 
+// Search products by pesticide name across all shops
+router.post('/search-pesticides', async (req, res) => {
+  const { pesticide_names } = req.body
+  if (!pesticide_names || !pesticide_names.length) {
+    return res.status(400).json({ message: 'pesticide_names required' })
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*, stores(id, name, address, phone, open_time, close_time)')
+      .eq('is_available', true)
+
+    if (error) return res.status(400).json({ message: error.message })
+
+    // Match products to pesticide names
+    var matched = {}
+
+    pesticide_names.forEach(function(pestName) {
+      var matches = data.filter(function(product) {
+        var pName = product.name.toLowerCase()
+        var searchName = pestName.toLowerCase()
+        return pName.includes(searchName.split(' ')[0]) ||
+               searchName.includes(pName.split(' ')[0]) ||
+               pName.includes(searchName) ||
+               searchName.includes(pName)
+      })
+
+      if (matches.length > 0) {
+        matched[pestName] = matches
+      }
+    })
+
+    res.status(200).json({ matched })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+
 // GET scan history
 router.get('/history/:phone', async (req, res) => {
   const { phone } = req.params

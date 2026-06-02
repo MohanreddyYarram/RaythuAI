@@ -5,6 +5,7 @@
 
 const API = ''
 let currentPhone = ''
+var lastScanResult = null
 
 /* ══════════════════════════════════════
    TOAST NOTIFICATION (replaces alert)
@@ -196,6 +197,11 @@ function switchScreen(name) {
       n.classList.add('active')
     }
   })
+  if (name === 'result'){
+    if(lastScanResult){
+      renderResult(lastScanResult)
+    }
+  }
   if (name === 'tracker') {
          if (typeof loadActivities === 'function') loadActivities()
         if (typeof loadScanHistory === 'function') loadScanHistory()
@@ -209,6 +215,11 @@ function switchScreen(name) {
   if(name==='shop'){
     if(typeof loadStores === 'function') loadStores()
   }
+  
+  if(name=== 'detect'){
+
+  }
+
 
 
 }
@@ -733,6 +744,7 @@ async function analyzeImages() {
 ══════════════════════════════════════ */
 
 function renderResult(r) {
+  lastScanResult = r
   var content = document.getElementById('result-content')
   if (content) content.style.display = 'block'
 
@@ -1235,20 +1247,8 @@ async function addShopActivityToTracker(item, price) {
         break
       case 'detect':
         // Reset upload slots
-        Object.keys(uploadedImages).forEach(function(k) {
-          uploadedImages[k] = null
-        })
-        if (typeof updateCountMsg === 'function') updateCountMsg()
-        if (typeof checkAnalyzeReady === 'function') checkAnalyzeReady()
-        // Reset slot UI
-        for (var i = 0; i < 4; i++) {
-          var slot = document.getElementById('slot-' + i)
-          if (slot) {
-            slot.classList.remove('filled')
-            slot.innerHTML = '<div class="slot-plus">+</div>' +
-              '<div class="slot-label">' + (['Leaf Photo','Stem Photo','Full Plant','Extra'][i]) + '</div>'
-          }
-        }
+       
+        
         break
       default:
         // For roadmap — nothing to refresh
@@ -2506,7 +2506,7 @@ async function loadScanHistory() {
   }
 }
 
-function addScanActionButtons(r) {
+async function addScanActionButtons(r) {
   var resultBody = document.querySelector('#result-content .result-body')
   if (!resultBody) return
 
@@ -2520,20 +2520,30 @@ function addScanActionButtons(r) {
     div.innerHTML =
       '<div style="background:#e8f5ee;border-radius:12px;padding:14px;' +
       'margin-top:16px;border:1.5px solid #c8ddc8;">' +
-      '<div style="font-size:13px;font-weight:800;color:#1a6e35;margin-bottom:10px;">' +
-      '💊 Select Pesticides to Order' +
+      '<div style="font-size:13px;font-weight:800;color:#1a6e35;margin-bottom:4px;">' +
+      '💊 Recommended Pesticides' +
       '</div>' +
-      '<div id="scan-pesticide-list"></div>' +
+      '<div style="font-size:11px;color:#888;margin-bottom:10px;">' +
+      'Select pesticides from available shops' +
+      '</div>' +
+      '<div id="scan-pesticide-list">' +
+      '<div style="text-align:center;padding:16px;">' +
+      '<div class="loader-sm"></div>' +
+      '<div style="font-size:12px;color:#888;margin-top:8px;">Searching shops...</div>' +
+      '</div></div>' +
+      '<div id="scan-cart-info" style="display:none;background:#1a6e35;' +
+      'border-radius:10px;padding:12px;margin-top:10px;color:white;' +
+      'font-size:12px;font-weight:700;"></div>' +
       '<button onclick="goToShopWithSelectedPesticides()" id="scan-order-btn" style="' +
       'display:none;width:100%;padding:14px;background:#1a6e35;color:white;' +
       'border:none;border-radius:12px;font-size:14px;font-weight:800;' +
       'font-family:Nunito,sans-serif;cursor:pointer;margin-top:10px;">' +
-      '🛒 Order Selected Items' +
+      '🛒 Add to Cart & Order' +
       '</button>' +
       '</div>'
 
     resultBody.appendChild(div)
-    renderScanPesticideList(r.pesticides)
+    await searchPesticidesFromShops(r.pesticides)
 
   } else if (r.healthy) {
     div.innerHTML =
@@ -2548,154 +2558,277 @@ function addScanActionButtons(r) {
     resultBody.appendChild(div)
   }
 }
-async function fetchMatchingProducts(aiPesticides) {
+
+// ── Search pesticides across ALL shops ──
+async function searchPesticidesFromShops(aiPesticides) {
   var container = document.getElementById('scan-pesticide-list')
   if (!container) return
 
   try {
-    // Get all products from store 1
-    var res = await fetch(API + '/shop/products/1', {
-      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
+    var pestNames = aiPesticides.map(function(p) { return p.name })
+
+    var res = await fetch(API + '/detect/search-pesticides', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token')
+      },
+      body: JSON.stringify({ pesticide_names: pestNames })
     })
+
     var data = await res.json()
-    var shopProducts = data.products || []
+    var matched = data.matched || {}
 
-    // Match AI pesticides with shop products
-    var matched = []
-    var unmatched = []
-
-    aiPesticides.forEach(function(aiPest) {
-      // Search shop products for matching name
-      var found = shopProducts.find(function(sp) {
-        var spName = sp.name.toLowerCase()
-        var aiName = aiPest.name.toLowerCase()
-
-        // Check if names overlap
-        return spName.includes(aiName.split(' ')[0]) ||
-               aiName.includes(spName.split(' ')[0]) ||
-               spName.includes(aiName) ||
-               aiName.includes(spName)
-      })
-
-      if (found) {
-        // Use real shop data
-        matched.push({
-          id: found.id,
-          name: found.name,
-          brand: found.brand || aiPest.brand,
-          unit: found.unit,
-          priceRytu: found.price,
-          priceMRP: found.mrp,
-          usage: aiPest.usage,
-          usageTelugu: aiPest.usageTelugu,
-          icon: aiPest.icon || '🧴',
-          fromShop: true
-        })
-      } else {
-        // Use AI data — not in shop
-        unmatched.push({
-          name: aiPest.name,
-          brand: aiPest.brand,
-          priceRytu: aiPest.priceRytu,
-          priceMRP: aiPest.priceMRP,
-          usage: aiPest.usage,
-          usageTelugu: aiPest.usageTelugu,
-          icon: aiPest.icon || '🧴',
-          fromShop: false
-        })
-      }
-    })
-
-    var allPesticides = matched.concat(unmatched)
-    renderScanPesticideList(allPesticides)
+    renderPesticideShopList(aiPesticides, matched)
 
   } catch(e) {
-    console.log('fetchMatchingProducts error:', e.message)
-    // Fallback to AI pesticides
-    renderScanPesticideList(aiPesticides)
+    console.log('searchPesticidesFromShops error:', e.message)
+    renderPesticideShopList(aiPesticides, {})
   }
 }
 
+// ── Render pesticide list with shop options ──
 var selectedScanPesticides = []
+var selectedShopId = null
+var selectedShopName = null
 
-function renderScanPesticideList(pesticides) {
-  selectedScanPesticides = []
+function renderPesticideShopList(aiPesticides, matched) {
   var container = document.getElementById('scan-pesticide-list')
   if (!container) return
+  selectedScanPesticides = []
 
-  container.innerHTML = pesticides.map(function(p, idx) {
-    return '<div id="scan-pest-' + idx + '" style="' +
-      'background:white;border-radius:10px;padding:12px;margin-bottom:8px;' +
-      'border:2px solid #e0e0e0;cursor:pointer;" ' +
-      'onclick="toggleScanPesticide(' + idx + ', ' + JSON.stringify(p).replace(/"/g,'&quot;') + ')">' +
-      '<div style="display:flex;align-items:center;gap:10px;">' +
+  var html = ''
 
-      // Checkbox
-      '<div id="scan-pest-check-' + idx + '" style="width:22px;height:22px;' +
-      'border-radius:50%;border:2px solid #ccc;display:flex;align-items:center;' +
-      'justify-content:center;font-size:11px;flex-shrink:0;">○</div>' +
+  aiPesticides.forEach(function(aiPest, pestIdx) {
+    var shopOptions = matched[aiPest.name] || []
 
-      '<div style="flex:1;">' +
-      '<div style="display:flex;align-items:center;gap:6px;">' +
-      '<div style="font-size:13px;font-weight:800;">' + (p.icon || '🧴') + ' ' + p.name + '</div>' +
-      // Shop badge
-      (p.fromShop ?
-        '<span style="background:#1a6e35;color:white;font-size:9px;font-weight:800;' +
-        'padding:2px 6px;border-radius:6px;">IN SHOP</span>' :
-        '<span style="background:#f5a623;color:white;font-size:9px;font-weight:800;' +
-        'padding:2px 6px;border-radius:6px;">ASK SHOP</span>') +
+    html += '<div style="margin-bottom:14px;">' +
+
+      // Pesticide name header
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">' +
+      '<div style="font-size:13px;font-weight:800;color:#1a2e1e;">' +
+      (aiPest.icon || '🧴') + ' ' + aiPest.name +
       '</div>' +
-      '<div style="font-size:11px;color:#888;">' +
-      (p.brand || '') + (p.unit ? ' · ' + p.unit : '') +
-      '</div>' +
-      (p.usageTelugu ?
-        '<div style="font-size:11px;color:#555;font-family:Tiro Telugu,serif;margin-top:2px;">' +
-        p.usageTelugu + '</div>' : '') +
       '</div>' +
 
-      // Price
-      '<div style="text-align:right;flex-shrink:0;">' +
-      (p.priceRytu ?
-        '<div style="font-size:15px;font-weight:900;color:#1a6e35;">₹' + p.priceRytu + '</div>' :
-        '<div style="font-size:11px;color:#888;">Price on request</div>') +
-      (p.priceMRP ?
-        '<div style="font-size:10px;color:#aaa;text-decoration:line-through;">₹' + p.priceMRP + '</div>' : '') +
-      '</div>' +
-      '</div>' +
+      // AI usage tip
+      (aiPest.usageTelugu ?
+        '<div style="font-size:11px;color:#555;font-family:Tiro Telugu,serif;' +
+        'margin-bottom:6px;padding:6px 8px;background:#f8f8f8;border-radius:6px;">' +
+        aiPest.usageTelugu + '</div>' : '') +
+
+      // Shop options
+      (shopOptions.length > 0 ?
+        '<div style="font-size:10px;font-weight:800;color:#888;' +
+        'text-transform:uppercase;margin-bottom:4px;">Available in shops:</div>' +
+        shopOptions.map(function(product) {
+          var disc = product.mrp
+            ? Math.round((1 - product.price / product.mrp) * 100) : 0
+          var itemKey = pestIdx + '_' + product.id + '_' + product.stores.id
+          return '<div id="pest-option-' + itemKey + '" style="' +
+            'background:white;border-radius:8px;padding:10px;margin-bottom:6px;' +
+            'border:2px solid #e0e0e0;cursor:pointer;" ' +
+            'onclick="selectPesticideOption(\'' + itemKey + '\',' + pestIdx + ',' +
+            JSON.stringify(product).replace(/"/g,'&quot;') + ',' +
+            JSON.stringify(aiPest).replace(/"/g,'&quot;') + ')">' +
+            '<div style="display:flex;align-items:center;gap:8px;">' +
+            '<div id="pest-check-' + itemKey + '" style="width:20px;height:20px;' +
+            'border-radius:50%;border:2px solid #ccc;display:flex;align-items:center;' +
+            'justify-content:center;font-size:10px;flex-shrink:0;">○</div>' +
+            '<div style="flex:1;">' +
+            '<div style="font-size:12px;font-weight:800;">' + product.name + '</div>' +
+            '<div style="font-size:10px;color:#888;">' +
+            '🏪 ' + product.stores.name + ' · ' + (product.unit || '') +
+            '</div>' +
+            '</div>' +
+            '<div style="text-align:right;">' +
+            '<div style="font-size:14px;font-weight:900;color:#1a6e35;">₹' + product.price + '</div>' +
+            (product.mrp ? '<div style="font-size:10px;color:#aaa;text-decoration:line-through;">₹' + product.mrp + '</div>' : '') +
+            (disc > 0 ? '<div style="font-size:9px;color:#e74c3c;font-weight:800;">' + disc + '% OFF</div>' : '') +
+            '</div>' +
+            '</div>' +
+            '</div>'
+        }).join('')
+        :
+        // Not in any shop
+        '<div style="background:#fff8e1;border-radius:8px;padding:10px;' +
+        'font-size:12px;color:#856404;border:1px solid #ffe082;">' +
+        '⚠️ Not available in shops currently. Ask your local dealer.' +
+        '</div>'
+      ) +
       '</div>'
-  }).join('')
-}
-
-function toggleScanPesticide(idx, pesticide) {
-  var card = document.getElementById('scan-pest-' + idx)
-  var check = document.getElementById('scan-pest-check-' + idx)
-  if (!card || !check) return
-
-  var existing = selectedScanPesticides.findIndex(function(p) {
-    return p.name === pesticide.name
   })
 
-  if (existing >= 0) {
-    selectedScanPesticides.splice(existing, 1)
+  container.innerHTML = html
+}
+
+// ── Select pesticide from a specific shop ──
+function selectPesticideOption(itemKey, pestIdx, product, aiPest) {
+  // Check if different shop selected
+  var newShopId = product.stores.id
+  var newShopName = product.stores.name
+
+  if (selectedShopId && selectedShopId !== newShopId) {
+    // Different shop — warn user
+    showShopConflictWarning(newShopId, newShopName, itemKey, pestIdx, product, aiPest)
+    return
+  }
+
+  togglePesticideOption(itemKey, pestIdx, product, aiPest)
+}
+
+function togglePesticideOption(itemKey, pestIdx, product, aiPest) {
+  var card = document.getElementById('pest-option-' + itemKey)
+  var check = document.getElementById('pest-check-' + itemKey)
+  if (!card || !check) return
+
+  // Check if this pestIdx already has a selection
+  var existingIdx = selectedScanPesticides.findIndex(function(p) {
+    return p.pestIdx === pestIdx
+  })
+
+  // Check if this exact option is already selected
+  var isSelected = existingIdx >= 0 && selectedScanPesticides[existingIdx].itemKey === itemKey
+
+  if (isSelected) {
+    // Deselect
+    selectedScanPesticides.splice(existingIdx, 1)
     card.style.border = '2px solid #e0e0e0'
     check.textContent = '○'
     check.style.background = 'white'
-    check.style.color = '#ccc'
     check.style.borderColor = '#ccc'
+    check.style.color = '#ccc'
   } else {
-    selectedScanPesticides.push(pesticide)
+    // Deselect previous selection for this pesticide
+    if (existingIdx >= 0) {
+      var prevKey = selectedScanPesticides[existingIdx].itemKey
+      var prevCard = document.getElementById('pest-option-' + prevKey)
+      var prevCheck = document.getElementById('pest-check-' + prevKey)
+      if (prevCard) prevCard.style.border = '2px solid #e0e0e0'
+      if (prevCheck) {
+        prevCheck.textContent = '○'
+        prevCheck.style.background = 'white'
+        prevCheck.style.borderColor = '#ccc'
+      }
+      selectedScanPesticides.splice(existingIdx, 1)
+    }
+
+    // Select new
+    selectedScanPesticides.push({
+      itemKey: itemKey,
+      pestIdx: pestIdx,
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      storeId: product.stores.id,
+      storeName: product.stores.name,
+      qty: 1
+    })
+
+    selectedShopId = product.stores.id
+    selectedShopName = product.stores.name
+
     card.style.border = '2px solid #1a6e35'
     check.textContent = '✓'
     check.style.background = '#1a6e35'
-    check.style.color = 'white'
     check.style.borderColor = '#1a6e35'
+    check.style.color = 'white'
   }
 
-  var orderBtn = document.getElementById('scan-order-btn')
-  if (orderBtn) {
-    orderBtn.style.display = selectedScanPesticides.length > 0 ? 'block' : 'none'
-    orderBtn.textContent = '🛒 Order ' + selectedScanPesticides.length + ' Item(s) from Shop'
+  // Recalculate shop
+  if (selectedScanPesticides.length === 0) {
+    selectedShopId = null
+    selectedShopName = null
   }
+
+  updateScanOrderButton()
+}
+
+function updateScanOrderButton() {
+  var btn = document.getElementById('scan-order-btn')
+  var info = document.getElementById('scan-cart-info')
+
+  if (selectedScanPesticides.length === 0) {
+    if (btn) btn.style.display = 'none'
+    if (info) info.style.display = 'none'
+    return
+  }
+
+  var total = selectedScanPesticides.reduce(function(sum, p) {
+    return sum + p.price
+  }, 0)
+
+  if (info) {
+    info.style.display = 'block'
+    info.innerHTML = '🏪 ' + selectedShopName + ' · ' +
+      selectedScanPesticides.length + ' item(s) · Total: ₹' + total
+  }
+
+  if (btn) {
+    btn.style.display = 'block'
+    btn.textContent = '🛒 Add ' + selectedScanPesticides.length + ' Item(s) to Cart'
+  }
+}
+
+// ── Multi-shop conflict warning ──
+function showShopConflictWarning(newShopId, newShopName, itemKey, pestIdx, product, aiPest) {
+  var old = document.getElementById('shop-conflict-box')
+  if (old) old.remove()
+
+  var box = document.createElement('div')
+  box.id = 'shop-conflict-box'
+  box.style.cssText = 'position:fixed;bottom:90px;left:16px;right:16px;' +
+    'background:white;border-radius:16px;padding:20px;z-index:99999;' +
+    'box-shadow:0 8px 32px rgba(0,0,0,0.2);border:1.5px solid #e8e0d0;'
+
+  box.innerHTML =
+    '<div style="font-size:14px;font-weight:800;margin-bottom:8px;">🏪 Different Shop</div>' +
+    '<div style="font-size:12px;color:#555;margin-bottom:14px;">' +
+    'Your cart has items from <strong>' + selectedShopName + '</strong>.<br>' +
+    'Do you want to clear cart and order from <strong>' + newShopName + '</strong>?' +
+    '</div>' +
+    '<div style="display:flex;gap:10px;">' +
+    '<button onclick="document.getElementById(\'shop-conflict-box\').remove()" ' +
+    'style="flex:1;padding:12px;background:#f5f5f5;color:#555;border:none;' +
+    'border-radius:10px;font-size:13px;font-weight:700;font-family:Nunito,sans-serif;cursor:pointer;">' +
+    'Keep Current' +
+    '</button>' +
+    '<button onclick="clearAndSelectNewShop(\'' + itemKey + '\',' + pestIdx + ',' +
+    JSON.stringify(product).replace(/"/g,'&quot;') + ',' +
+    JSON.stringify(aiPest).replace(/"/g,'&quot;') + ')" ' +
+    'style="flex:1;padding:12px;background:#1a6e35;color:white;border:none;' +
+    'border-radius:10px;font-size:13px;font-weight:700;font-family:Nunito,sans-serif;cursor:pointer;">' +
+    'Switch Shop' +
+    '</button>' +
+    '</div>'
+
+  document.body.appendChild(box)
+}
+
+function clearAndSelectNewShop(itemKey, pestIdx, product, aiPest) {
+  var box = document.getElementById('shop-conflict-box')
+  if (box) box.remove()
+
+  // Clear all selections
+  selectedScanPesticides.forEach(function(p) {
+    var prevCard = document.getElementById('pest-option-' + p.itemKey)
+    var prevCheck = document.getElementById('pest-check-' + p.itemKey)
+    if (prevCard) prevCard.style.border = '2px solid #e0e0e0'
+    if (prevCheck) {
+      prevCheck.textContent = '○'
+      prevCheck.style.background = 'white'
+      prevCheck.style.borderColor = '#ccc'
+    }
+  })
+
+  selectedScanPesticides = []
+  selectedShopId = null
+  selectedShopName = null
+  cart = []
+  updateCartBar()
+
+  // Now select new shop
+  togglePesticideOption(itemKey, pestIdx, product, aiPest)
 }
 
 function goToShopWithSelectedPesticides() {
@@ -2703,48 +2836,40 @@ function goToShopWithSelectedPesticides() {
     showToast('Please select at least one pesticide', 'error')
     return
   }
-  if (!currentStoreId) {
-    currentStoreId = 1
-    currentStoreName = 'RytuAI Pilot Store — Guntur'
-  }
-  var added = 0
+
+  // Set store
+  currentStoreId = selectedShopId
+  currentStoreName = selectedShopName
+
+  // Clear cart and add selected
+  cart = []
   selectedScanPesticides.forEach(function(p) {
-    var existing = cart.find(function(c) { return c.name === p.name })
-    if (!existing) {
-      cart.push({
-        id: 'scan-' + Date.now() + Math.random(),
-        name: p.name, price: p.priceRytu || 0, qty: 1
-      })
-      added++
-    }
+    cart.push({
+      id: p.id,
+      name: p.name,
+      price: p.price,
+      qty: 1
+    })
   })
+
   updateCartBar()
-  showToast(added + ' item(s) added to cart!', 'success')
-  setTimeout(function() { switchScreen('shop') }, 1000)
+  showToast(selectedScanPesticides.length + ' item(s) added to cart!', 'success')
+  setTimeout(function() {
+    switchScreen('shop')
+    setTimeout(function() { openCart() }, 500)
+  }, 1000)
 }
 
-function orderPesticidesFromScan(pesticides) {
-  if (!currentStoreId) {
-    currentStoreId = 1
-    currentStoreName = 'RytuAI Pilot Store — Guntur'
-  }
-  var added = 0
-  pesticides.forEach(function(p) {
-    var existing = cart.find(function(c) { return c.name === p.name })
-    if (!existing) {
-      cart.push({ id: 'scan-' + Date.now() + Math.random(), name: p.name, price: p.priceRytu || 0, qty: 1 })
-      added++
-    }
-  })
-  updateCartBar()
-  if (added > 0) {
-    showToast(added + ' pesticide(s) added to cart!', 'success')
-    setTimeout(function() { switchScreen('shop') }, 1500)
-  } else {
-    showToast('Already in cart!', 'success')
-    switchScreen('shop')
-  }
-}
+
+var selectedScanPesticides = []
+
+
+
+
+
+
+
+
 
 async function loadScanHistory() {
   var farmerData = localStorage.getItem('rytuai_farmer')
