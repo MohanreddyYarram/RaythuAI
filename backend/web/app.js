@@ -653,6 +653,22 @@ function updateAnalyzeBtn() {
 /* ══════════════════════════════════════
    AI DETECTION
 ══════════════════════════════════════ */
+function compressImage(base64, quality) {
+  return new Promise(function(resolve) {
+    var img = new Image()
+    img.onload = function() {
+      var canvas = document.createElement('canvas')
+      var maxW = 800
+      var ratio = Math.min(maxW / img.width, maxW / img.height)
+      canvas.width = img.width * (ratio < 1 ? ratio : 1)
+      canvas.height = img.height * (ratio < 1 ? ratio : 1)
+      var ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      resolve(canvas.toDataURL('image/jpeg', quality || 0.7))
+    }
+    img.src = base64
+  })
+}
 async function analyzeImages() {
   if (countUploaded() < 1) {
     showToast('Please upload at least 1 photo', 'error')
@@ -670,18 +686,25 @@ async function analyzeImages() {
   if (content) content.style.display = 'none'
 
   try {
-    var formData = new FormData()
-    Object.values(uploadedImages)
-      .filter(function(v) { return v !== null })
-      .forEach(function(base64, index) {
-        var byteStr = atob(base64.split(',')[1])
-        var mime = base64.split(',')[0].split(':')[1].split(';')[0]
-        var ab = new ArrayBuffer(byteStr.length)
-        var ia = new Uint8Array(ab)
-        for (var i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i)
-        var blob = new Blob([ab], { type: mime })
-        formData.append('photos', blob, 'photo' + index + '.jpg')
-      })
+     var compressedImages = []
+     var imagesToProcess = Object.values(uploadedImages).filter(function(v) { return v !== null })
+     for (var i = 0; i < imagesToProcess.length; i++) {
+      var compressed = await compressImage(imagesToProcess[i], 0.7)
+      compressedImages.push(compressed)
+     }
+
+    // Build formData from compressed images
+     var formData = new FormData()
+     compressedImages.forEach(function(base64, index) {
+      var byteStr = atob(base64.split(',')[1])
+      var mime = 'image/jpeg'
+      var ab = new ArrayBuffer(byteStr.length)
+      var ia = new Uint8Array(ab)
+      for (var i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i)
+      var blob = new Blob([ab], { type: mime })
+      formData.append('photos', blob, 'photo' + index + '.jpg')
+     })
+    
 
     var response = await fetch(API + '/detect', {
       method: 'POST',
@@ -2471,8 +2494,6 @@ function addScanActionButtons(r) {
   var existing = document.getElementById('scan-action-btns')
   if (existing) existing.remove()
 
-  showToast('Scan saved to history', 'success')
-
   var div = document.createElement('div')
   div.id = 'scan-action-btns'
 
@@ -2480,27 +2501,120 @@ function addScanActionButtons(r) {
     div.innerHTML =
       '<div style="background:#e8f5ee;border-radius:12px;padding:14px;' +
       'margin-top:16px;border:1.5px solid #c8ddc8;">' +
-      '<div style="font-size:12px;font-weight:800;color:#1a6e35;margin-bottom:6px;">' +
-      '🛒 Order Recommended Pesticides' +
+      '<div style="font-size:13px;font-weight:800;color:#1a6e35;margin-bottom:10px;">' +
+      '💊 Select Pesticides to Order' +
       '</div>' +
-      '<button onclick="orderPesticidesFromScan(' +
-      JSON.stringify(r.pesticides).replace(/"/g, '&quot;') + ')" style="' +
-      'width:100%;padding:14px;background:#1a6e35;color:white;' +
+      '<div id="scan-pesticide-list"></div>' +
+      '<button onclick="goToShopWithSelectedPesticides()" id="scan-order-btn" style="' +
+      'display:none;width:100%;padding:14px;background:#1a6e35;color:white;' +
       'border:none;border-radius:12px;font-size:14px;font-weight:800;' +
-      'font-family:Nunito,sans-serif;cursor:pointer;">' +
-      '🛒 Add ' + r.pesticides.length + ' Pesticide(s) to Cart' +
+      'font-family:Nunito,sans-serif;cursor:pointer;margin-top:10px;">' +
+      '🛒 Order Selected Items' +
       '</button>' +
       '</div>'
+
+    resultBody.appendChild(div)
+    renderScanPesticideList(r.pesticides)
+
   } else if (r.healthy) {
     div.innerHTML =
       '<div style="background:#e8f5ee;border-radius:12px;padding:16px;' +
       'margin-top:16px;text-align:center;border:1.5px solid #c8ddc8;">' +
       '<div style="font-size:28px;margin-bottom:8px;">🎉</div>' +
       '<div style="font-size:14px;font-weight:800;color:#1a6e35;">Your crop looks healthy!</div>' +
+      '<div style="font-size:12px;color:#555;margin-top:4px;font-family:Tiro Telugu,serif;">' +
+      'మీ పంట ఆరోగ్యంగా ఉంది!' +
+      '</div>' +
       '</div>'
+    resultBody.appendChild(div)
+  }
+}
+
+var selectedScanPesticides = []
+
+function renderScanPesticideList(pesticides) {
+  selectedScanPesticides = []
+  var container = document.getElementById('scan-pesticide-list')
+  if (!container) return
+
+  container.innerHTML = pesticides.map(function(p, idx) {
+    return '<div id="scan-pest-' + idx + '" style="' +
+      'background:white;border-radius:10px;padding:12px;margin-bottom:8px;' +
+      'border:2px solid #e0e0e0;cursor:pointer;" ' +
+      'onclick="toggleScanPesticide(' + idx + ', ' + JSON.stringify(p).replace(/"/g,'&quot;') + ')">' +
+      '<div style="display:flex;align-items:center;gap:10px;">' +
+      '<div id="scan-pest-check-' + idx + '" style="width:22px;height:22px;' +
+      'border-radius:50%;border:2px solid #ccc;display:flex;align-items:center;' +
+      'justify-content:center;font-size:11px;flex-shrink:0;">○</div>' +
+      '<div style="flex:1;">' +
+      '<div style="font-size:13px;font-weight:800;">' + (p.icon || '🧴') + ' ' + p.name + '</div>' +
+      '<div style="font-size:11px;color:#888;">' + (p.brand || '') + '</div>' +
+      (p.usageTelugu ? '<div style="font-size:11px;color:#555;font-family:Tiro Telugu,serif;margin-top:2px;">' + p.usageTelugu + '</div>' : '') +
+      '</div>' +
+      '<div style="text-align:right;flex-shrink:0;">' +
+      '<div style="font-size:15px;font-weight:900;color:#1a6e35;">₹' + (p.priceRytu || '—') + '</div>' +
+      (p.priceMRP ? '<div style="font-size:10px;color:#aaa;text-decoration:line-through;">₹' + p.priceMRP + '</div>' : '') +
+      '</div>' +
+      '</div>' +
+      '</div>'
+  }).join('')
+}
+
+function toggleScanPesticide(idx, pesticide) {
+  var card = document.getElementById('scan-pest-' + idx)
+  var check = document.getElementById('scan-pest-check-' + idx)
+  if (!card || !check) return
+
+  var existing = selectedScanPesticides.findIndex(function(p) {
+    return p.name === pesticide.name
+  })
+
+  if (existing >= 0) {
+    selectedScanPesticides.splice(existing, 1)
+    card.style.border = '2px solid #e0e0e0'
+    check.textContent = '○'
+    check.style.background = 'white'
+    check.style.color = '#ccc'
+    check.style.borderColor = '#ccc'
+  } else {
+    selectedScanPesticides.push(pesticide)
+    card.style.border = '2px solid #1a6e35'
+    check.textContent = '✓'
+    check.style.background = '#1a6e35'
+    check.style.color = 'white'
+    check.style.borderColor = '#1a6e35'
   }
 
-  resultBody.appendChild(div)
+  var orderBtn = document.getElementById('scan-order-btn')
+  if (orderBtn) {
+    orderBtn.style.display = selectedScanPesticides.length > 0 ? 'block' : 'none'
+    orderBtn.textContent = '🛒 Order ' + selectedScanPesticides.length + ' Item(s) from Shop'
+  }
+}
+
+function goToShopWithSelectedPesticides() {
+  if (selectedScanPesticides.length === 0) {
+    showToast('Please select at least one pesticide', 'error')
+    return
+  }
+  if (!currentStoreId) {
+    currentStoreId = 1
+    currentStoreName = 'RytuAI Pilot Store — Guntur'
+  }
+  var added = 0
+  selectedScanPesticides.forEach(function(p) {
+    var existing = cart.find(function(c) { return c.name === p.name })
+    if (!existing) {
+      cart.push({
+        id: 'scan-' + Date.now() + Math.random(),
+        name: p.name, price: p.priceRytu || 0, qty: 1
+      })
+      added++
+    }
+  })
+  updateCartBar()
+  showToast(added + ' item(s) added to cart!', 'success')
+  setTimeout(function() { switchScreen('shop') }, 1000)
 }
 
 function orderPesticidesFromScan(pesticides) {
@@ -2551,19 +2665,57 @@ async function loadScanHistory() {
 function renderScanHistory(scans) {
   var container = document.getElementById('scan-history-list')
   if (!container) return
+
   container.innerHTML = scans.map(function(scan) {
-    var date = scan.created_at ? new Date(scan.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'
-    var severityColor = scan.healthy ? '#1a6e35' : scan.severity === 'Low' ? '#f5a623' : '#e74c3c'
+    var date = scan.created_at
+      ? new Date(scan.created_at).toLocaleDateString('en-IN', {
+          day: 'numeric', month: 'short'
+        })
+      : '—'
+
+    var severityColor = scan.healthy ? '#1a6e35'
+      : scan.severity === 'Low' ? '#f5a623' : '#e74c3c'
+
     var pesticides = []
-    try { pesticides = typeof scan.pesticides === 'string' ? JSON.parse(scan.pesticides) : (scan.pesticides || []) } catch(e) {}
-    return '<div style="background:white;border-radius:14px;padding:14px;margin-bottom:10px;border:1.5px solid #e8e0d0;border-left:4px solid ' + severityColor + ';">' +
-      '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">' +
-      '<div style="font-size:14px;font-weight:800;">' + (scan.healthy ? '✅ ' : '🦠 ') + scan.disease + '</div>' +
-      '<div style="font-size:10px;color:#888;">' + date + '</div>' +
+    try {
+      pesticides = typeof scan.pesticides === 'string'
+        ? JSON.parse(scan.pesticides) : (scan.pesticides || [])
+    } catch(e) {}
+
+    // Short summary — 80 chars only
+    var shortSummary = scan.telugu_summary
+      ? scan.telugu_summary.substring(0, 80) + '...'
+      : ''
+
+    return '<div style="background:white;border-radius:12px;padding:12px 14px;' +
+      'margin-bottom:8px;border:1.5px solid #e8e0d0;' +
+      'border-left:4px solid ' + severityColor + ';">' +
+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+      '<div style="flex:1;">' +
+      '<div style="font-size:13px;font-weight:800;color:#1a2e1e;">' +
+      (scan.healthy ? '✅ ' : '🦠 ') + scan.disease + '</div>' +
+      (scan.telugu_name ?
+        '<div style="font-size:12px;color:#1a6e35;font-family:Tiro Telugu,serif;">' +
+        scan.telugu_name + '</div>' : '') +
+      (shortSummary ?
+        '<div style="font-size:11px;color:#666;font-family:Tiro Telugu,serif;' +
+        'margin-top:3px;line-height:1.5;">' + shortSummary + '</div>' : '') +
       '</div>' +
-      (scan.telugu_name ? '<div style="font-size:12px;color:#1a6e35;font-family:Tiro Telugu,serif;margin-bottom:6px;">' + scan.telugu_name + '</div>' : '') +
-      (scan.telugu_summary ? '<div style="background:#f0f7f2;border-radius:8px;padding:8px;font-family:Tiro Telugu,serif;font-size:12px;color:#1a2e1e;line-height:1.7;margin-bottom:8px;">' + scan.telugu_summary + '</div>' : '') +
-      (pesticides.length > 0 ? '<button onclick="orderFromHistory(' + JSON.stringify(pesticides).replace(/"/g,'&quot;') + ')" style="width:100%;padding:8px;background:#1a6e35;color:white;border:none;border-radius:8px;font-size:12px;font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;">🛒 Order Pesticides</button>' : '') +
+      '<div style="text-align:right;flex-shrink:0;margin-left:8px;">' +
+      '<div style="font-size:10px;color:#888;">' + date + '</div>' +
+      (scan.severity ?
+        '<div style="font-size:10px;font-weight:700;color:' + severityColor + ';margin-top:2px;">' +
+        scan.severity + '</div>' : '') +
+      '</div>' +
+      '</div>' +
+
+      (pesticides.length > 0 ?
+        '<button onclick="orderFromHistory(' + JSON.stringify(pesticides).replace(/"/g,'&quot;') + ')" style="' +
+        'margin-top:8px;width:100%;padding:7px;background:#f0f7f2;color:#1a6e35;' +
+        'border:1.5px solid #c8ddc8;border-radius:8px;font-size:12px;font-weight:800;' +
+        'font-family:Nunito,sans-serif;cursor:pointer;">🛒 Order Pesticides</button>'
+        : '') +
       '</div>'
   }).join('')
 }

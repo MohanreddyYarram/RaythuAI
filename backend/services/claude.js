@@ -45,8 +45,8 @@ async function detectDisease(imageBlocks) {
     console.log('Image blocks count:', imageBlocks.length)
 
     const response = await client.messages.create({
-      model: 'claude-opus-4-5',
-      max_tokens: 2048,
+      model: 'claude-haiku-4-52025101',
+      max_tokens: 1024,
       messages: [
         {
           role: 'user',
