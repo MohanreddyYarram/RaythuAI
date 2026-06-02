@@ -1735,6 +1735,25 @@ function closeCart() {
   if (screen) screen.style.display = 'none'
 }
 
+function cartDecrease(id) {
+  var item = cart.find(function(c) { return c.id == id })
+  if (!item) return
+  item.qty--
+  if (item.qty <= 0) {
+    cart = cart.filter(function(c) { return c.id != id })
+  }
+  renderCartScreen()
+  updateCartBar()
+}
+
+function cartIncrease(id) {
+  var item = cart.find(function(c) { return c.id == id })
+  if (!item) return
+  item.qty++
+  renderCartScreen()
+  updateCartBar()
+}
+
 function renderCartScreen() {
   var container = document.getElementById('cart-items-container')
   if (!container) return
@@ -1755,9 +1774,9 @@ function renderCartScreen() {
       '<div style="font-size:12px;color:#888;margin-top:2px;">₹' + item.price + ' each</div>' +
       '</div>' +
       '<div class="qty-ctrl">' +
-      '<button onclick="cartDecrease(' + item.id + ')">−</button>' +
+      '<button onclick="cartDecrease(\'' + item.id + '\')">−</button>' +
       '<span>' + item.qty + '</span>' +
-      '<button onclick="cartIncrease(' + item.id + ')">+</button>' +
+'<button onclick="cartIncrease(\'' + item.id + '\')">+</button>' +
       '</div>' +
       '<div style="font-size:15px;font-weight:900;color:#1a6e35;min-width:60px;text-align:right;">₹' + (item.price * item.qty) + '</div>' +
       '</div>'
@@ -2529,6 +2548,73 @@ function addScanActionButtons(r) {
     resultBody.appendChild(div)
   }
 }
+async function fetchMatchingProducts(aiPesticides) {
+  var container = document.getElementById('scan-pesticide-list')
+  if (!container) return
+
+  try {
+    // Get all products from store 1
+    var res = await fetch(API + '/shop/products/1', {
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
+    })
+    var data = await res.json()
+    var shopProducts = data.products || []
+
+    // Match AI pesticides with shop products
+    var matched = []
+    var unmatched = []
+
+    aiPesticides.forEach(function(aiPest) {
+      // Search shop products for matching name
+      var found = shopProducts.find(function(sp) {
+        var spName = sp.name.toLowerCase()
+        var aiName = aiPest.name.toLowerCase()
+
+        // Check if names overlap
+        return spName.includes(aiName.split(' ')[0]) ||
+               aiName.includes(spName.split(' ')[0]) ||
+               spName.includes(aiName) ||
+               aiName.includes(spName)
+      })
+
+      if (found) {
+        // Use real shop data
+        matched.push({
+          id: found.id,
+          name: found.name,
+          brand: found.brand || aiPest.brand,
+          unit: found.unit,
+          priceRytu: found.price,
+          priceMRP: found.mrp,
+          usage: aiPest.usage,
+          usageTelugu: aiPest.usageTelugu,
+          icon: aiPest.icon || '🧴',
+          fromShop: true
+        })
+      } else {
+        // Use AI data — not in shop
+        unmatched.push({
+          name: aiPest.name,
+          brand: aiPest.brand,
+          priceRytu: aiPest.priceRytu,
+          priceMRP: aiPest.priceMRP,
+          usage: aiPest.usage,
+          usageTelugu: aiPest.usageTelugu,
+          icon: aiPest.icon || '🧴',
+          fromShop: false
+        })
+      }
+    })
+
+    var allPesticides = matched.concat(unmatched)
+    renderScanPesticideList(allPesticides)
+
+  } catch(e) {
+    console.log('fetchMatchingProducts error:', e.message)
+    // Fallback to AI pesticides
+    renderScanPesticideList(aiPesticides)
+  }
+}
 
 var selectedScanPesticides = []
 
@@ -2543,17 +2629,37 @@ function renderScanPesticideList(pesticides) {
       'border:2px solid #e0e0e0;cursor:pointer;" ' +
       'onclick="toggleScanPesticide(' + idx + ', ' + JSON.stringify(p).replace(/"/g,'&quot;') + ')">' +
       '<div style="display:flex;align-items:center;gap:10px;">' +
+
+      // Checkbox
       '<div id="scan-pest-check-' + idx + '" style="width:22px;height:22px;' +
       'border-radius:50%;border:2px solid #ccc;display:flex;align-items:center;' +
       'justify-content:center;font-size:11px;flex-shrink:0;">○</div>' +
+
       '<div style="flex:1;">' +
+      '<div style="display:flex;align-items:center;gap:6px;">' +
       '<div style="font-size:13px;font-weight:800;">' + (p.icon || '🧴') + ' ' + p.name + '</div>' +
-      '<div style="font-size:11px;color:#888;">' + (p.brand || '') + '</div>' +
-      (p.usageTelugu ? '<div style="font-size:11px;color:#555;font-family:Tiro Telugu,serif;margin-top:2px;">' + p.usageTelugu + '</div>' : '') +
+      // Shop badge
+      (p.fromShop ?
+        '<span style="background:#1a6e35;color:white;font-size:9px;font-weight:800;' +
+        'padding:2px 6px;border-radius:6px;">IN SHOP</span>' :
+        '<span style="background:#f5a623;color:white;font-size:9px;font-weight:800;' +
+        'padding:2px 6px;border-radius:6px;">ASK SHOP</span>') +
       '</div>' +
+      '<div style="font-size:11px;color:#888;">' +
+      (p.brand || '') + (p.unit ? ' · ' + p.unit : '') +
+      '</div>' +
+      (p.usageTelugu ?
+        '<div style="font-size:11px;color:#555;font-family:Tiro Telugu,serif;margin-top:2px;">' +
+        p.usageTelugu + '</div>' : '') +
+      '</div>' +
+
+      // Price
       '<div style="text-align:right;flex-shrink:0;">' +
-      '<div style="font-size:15px;font-weight:900;color:#1a6e35;">₹' + (p.priceRytu || '—') + '</div>' +
-      (p.priceMRP ? '<div style="font-size:10px;color:#aaa;text-decoration:line-through;">₹' + p.priceMRP + '</div>' : '') +
+      (p.priceRytu ?
+        '<div style="font-size:15px;font-weight:900;color:#1a6e35;">₹' + p.priceRytu + '</div>' :
+        '<div style="font-size:11px;color:#888;">Price on request</div>') +
+      (p.priceMRP ?
+        '<div style="font-size:10px;color:#aaa;text-decoration:line-through;">₹' + p.priceMRP + '</div>' : '') +
       '</div>' +
       '</div>' +
       '</div>'
