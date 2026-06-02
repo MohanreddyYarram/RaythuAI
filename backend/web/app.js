@@ -549,7 +549,7 @@ function renderResult(r) {
   setText('r-emoji', r.healthy ? '✅' : '🦠')
   setText('r-disease', r.disease)
   setText('r-telugu', r.teluguName)
-  setText('r-confidence', (r.confidence || '') + ' · ' + countUploaded() + ' images')
+  setText('r-confidence', (r.confidence || '') + (r.images_count ? ' · ' + r.images_count + ' images' : ''))
   setText('r-sev-val', r.severity)
   setText('r-spread-val', r.spread)
   setText('r-treat-val', r.treatWithin)
@@ -1568,25 +1568,32 @@ function goToShopWithSelectedPesticides() {
   setTimeout(function() { switchScreen('shop'); setTimeout(function() { openStore(selectedShopId, selectedShopName) }, 300) }, 1000)
 }
 
-var scanHistoryLoading = false
+
 async function loadScanHistory() {
-  if(scanHistoryLoading) return
-  scanHistoryLoading = true
   var farmerData = localStorage.getItem('rytuai_farmer')
-  if (!farmerData) {scanHistoryLoading = false; return}
+  if (!farmerData) return
   var farmer = JSON.parse(farmerData)
   var container = document.getElementById('scan-history-list')
-  if (!container) {scanHistoryLoading=false;return}
+  if (!container) return
+
   container.innerHTML = '<div style="text-align:center;padding:20px;"><div class="loader-sm"></div></div>'
+
   try {
-    var res = await fetch(API + '/detect/history/' + farmer.phone, { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') } })
+    var res = await fetch(API + '/detect/history/' + farmer.phone, {
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
+    })
     var data = await res.json()
-    if (res.ok && data.scans && data.scans.length > 0) renderScanHistory(data.scans)
-    else container.innerHTML = '<div style="text-align:center;padding:32px;color:#888;"><div style="font-size:32px;margin-bottom:8px;">🔬</div><div style="font-size:13px;font-weight:700;">No scans yet</div></div>'
-  } catch(e) { 
-    container.innerHTML = '<div style="text-align:center;padding:20px;color:#e74c3c;font-weight:700;">Cannot load scan history</div>'
-  } finally{
-    setTimeout(function() {scanHistoryLoading=false},3000)
+    if (res.ok && data.scans && data.scans.length > 0) {
+      renderScanHistory(data.scans)
+    } else {
+      container.innerHTML =
+        '<div style="text-align:center;padding:32px;color:#888;">' +
+        '<div style="font-size:32px;margin-bottom:8px;">🔬</div>' +
+        '<div style="font-size:13px;font-weight:700;">No scans yet</div>' +
+        '</div>'
+    }
+  } catch(e) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:#e74c3c;font-weight:700;">Cannot load</div>'
   }
 }
 
