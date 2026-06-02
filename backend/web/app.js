@@ -2943,24 +2943,23 @@ function renderScanHistory(scans) {
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
       '<div style="flex:1;">' +
 
-      // English + Telugu disease name
       '<div style="font-size:13px;font-weight:800;color:#1a2e1e;">' +
       (scan.healthy ? '✅ ' : '🦠 ') + scan.disease + '</div>' +
+
       (scan.telugu_name ?
         '<div style="font-size:12px;color:#1a6e35;font-family:Tiro Telugu,serif;">' +
         scan.telugu_name + '</div>' : '') +
 
-      // Short Telugu summary
       (shortSummary ?
         '<div style="font-size:11px;color:#666;font-family:Tiro Telugu,serif;' +
         'margin-top:4px;line-height:1.5;">' + shortSummary + '</div>' : '') +
 
-      // Pesticide names only
       (pestNames ?
-        '<div style="font-size:11px;color:#888;margin-top:4px;">' +
-        '💊 ' + pestNames + '</div>' : '') +
+        '<div style="font-size:11px;color:#888;margin-top:4px;">💊 ' + pestNames + '</div>'
+        : '') +
 
       '</div>' +
+
       '<div style="text-align:right;flex-shrink:0;margin-left:8px;">' +
       '<div style="font-size:10px;color:#888;">' + date + '</div>' +
       (scan.severity ?
@@ -2969,8 +2968,53 @@ function renderScanHistory(scans) {
       '</div>' +
       '</div>' +
 
+      // View Full Result button
+      '<button onclick="viewScanFromHistory(' +
+      JSON.stringify(scan).replace(/"/g, '&quot;') + ')" style="' +
+      'margin-top:8px;width:100%;padding:7px;background:#f0f7f2;color:#1a6e35;' +
+      'border:1.5px solid #c8ddc8;border-radius:8px;font-size:12px;font-weight:800;' +
+      'font-family:Nunito,sans-serif;cursor:pointer;">👁️ View Full Result</button>' +
+
       '</div>'
   }).join('')
+}
+
+function viewScanFromHistory(scan) {
+  var result = {
+    disease: scan.disease,
+    teluguName: scan.telugu_name,
+    confidence: scan.confidence,
+    severity: scan.severity,
+    spread: scan.spread,
+    treatWithin: scan.treat_within,
+    healthy: scan.healthy,
+    whatIsThis: scan.what_is_this,
+    whatIsThisTelugu: scan.what_is_this_telugu,
+    symptomsFound: scan.symptoms,
+    symptomsFoundTelugu: scan.symptoms_telugu,
+    prevention: scan.prevention,
+    preventionTelugu: scan.prevention_telugu,
+    teluguSummary: scan.telugu_summary,
+    pesticides: typeof scan.pesticides === 'string'
+      ? JSON.parse(scan.pesticides || '[]')
+      : (scan.pesticides || [])
+  }
+
+  lastScanResult = result
+  localStorage.setItem('rytuai_last_scan', JSON.stringify(result))
+
+  switchScreen('result')
+  setTimeout(function() {
+    var content = document.getElementById('result-content')
+    var loading = document.getElementById('result-loading')
+    var error = document.getElementById('result-error')
+    if (loading) loading.style.display = 'none'
+    if (error) error.style.display = 'none'
+    if (content) {
+      content.style.display = 'block'
+      renderResult(result)
+    }
+  }, 200)
 }
 
 function resetAndScan() {
