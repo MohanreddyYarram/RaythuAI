@@ -10,17 +10,42 @@ const client = new Anthropic({
 })
 
 async function detectDisease(imageBlocks) {
-  const prompt = `You are an expert agricultural scientist for chilli crops in Andhra Pradesh India. Analyze these crop photos and respond ONLY with this exact JSON, no other text:
-{"disease":"name","teluguName":"తెలుగు పేరు","confidence":"85%","severity":"High","spread":"Active","treatWithin":"48 hours","healthy":false,"whatIsThis":"Brief English explanation","whatIsThisTelugu":"తెలుగు వివరణ","symptomsFound":"English symptoms","symptomsFoundTelugu":"తెలుగు లక్షణాలు","prevention":"English prevention","preventionTelugu":"తెలుగు నివారణ","teluguSummary":"తెలుగులో సారాంశం","pesticides":[{"name":"name","brand":"brand","usage":"English usage","usageTelugu":"తెలుగు వాడకం","priceRytu":200,"priceMRP":280,"icon":"🧴"}]}`
-
+ const prompt = `You are an expert agricultural scientist specializing in chilli crops in Andhra Pradesh India. Analyze these crop photos and respond ONLY with valid JSON in this exact format with no other text:
+{
+  "disease": "Disease name in English",
+  "teluguName": "వ్యాధి పేరు తెలుగులో",
+  "confidence": "90%",
+  "severity": "High",
+  "spread": "Active",
+  "treatWithin": "48 hours",
+  "healthy": false,
+  "whatIsThis": "Clear explanation of the disease in English.",
+  "whatIsThisTelugu": "తెలుగులో వ్యాధి గురించి స్పష్టమైన వివరణ.",
+  "symptomsFound": "Symptoms visible in the uploaded photos in English.",
+  "symptomsFoundTelugu": "అప్లోడ్ చేసిన ఫోటోలలో కనిపించే లక్షణాలు తెలుగులో.",
+  "prevention": "Prevention and future protection tips in English.",
+  "preventionTelugu": "తెలుగులో నివారణ మరియు భవిష్యత్తులో రక్షణ చర్యలు.",
+  "teluguSummary": "రైతుకు సులభంగా అర్థమయ్యే విధంగా తెలుగులో పూర్తి సారాంశం.",
+  "pesticides": [
+    {
+      "name": "Pesticide name",
+      "brand": "Brand name",
+      "usage": "How to use in English — dosage and method",
+      "usageTelugu": "వాడే విధానం తెలుగులో — మోతాదు మరియు పద్ధతి",
+      "priceRytu": 200,
+      "priceMRP": 280,
+      "icon": "🧴"
+    }
+  ]
+}`
   try {
     console.log('Calling Claude...')
     console.log('API Key exists:', !!process.env.ANTHROPIC_API_KEY)
     console.log('Image blocks count:', imageBlocks.length)
 
     const response = await client.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 4096,
+      model: 'claude-opus-4-5',
+      max_tokens: 2048,
       messages: [
         {
           role: 'user',
