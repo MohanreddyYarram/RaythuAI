@@ -33,6 +33,11 @@ app.use(helmet({
     contentSecurityPolicy:false
 }))
 
+const limiter = rateLimit({
+    windowMs : 15 * 60 * 1000,
+    max : 100
+})
+
 //Import Routes for farmers
 const farmersRoute = require('./routes/farmers')
 const authRoute = require('./routes/auth')
