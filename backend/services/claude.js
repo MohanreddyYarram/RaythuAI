@@ -45,7 +45,7 @@ async function detectDisease(imageBlocks) {
 
     const response = await client.messages.create({
       model: 'claude-opus-4-5',
-      max_tokens: 2048,
+      max_tokens: 4086,
       messages: [
         {
           role: 'user',
@@ -60,37 +60,53 @@ async function detectDisease(imageBlocks) {
     console.log('Claude responded!')
     const text = response.content[0].text
     console.log('Raw response:', text)
-
-   const clean = text.replace(/```json/g, '').replace(/```/g, '').trim()
-
+const clean = text.replace(/```json/g, '').replace(/```/g, '').trim()
 let result
+
 try {
   result = JSON.parse(clean)
 } catch(parseErr) {
-  console.log('JSON parse failed, trying to extract...')
-  // Try to extract valid JSON
-  const jsonMatch = clean.match(/\{[\s\S]*\}/)
-  if (jsonMatch) {
-    // Fix truncated JSON by completing it
-    let jsonStr = jsonMatch[0]
-    try {
-      result = JSON.parse(jsonStr)
-    } catch(e) {
-      // Force close unclosed JSON
-      jsonStr = jsonStr.replace(/,\s*$/, '') + ']}}'
-      try {
-        result = JSON.parse(jsonStr)
-      } catch(e2) {
-        throw new Error('Cannot parse Claude response: ' + parseErr.message)
-      }
+  console.log('Trying to repair truncated JSON...')
+  try {
+    // Find last complete pesticide entry and close JSON properly
+    let repaired = clean
+
+    // Remove incomplete last entry
+    const lastCompleteObj = repaired.lastIndexOf('},')
+    const lastCompleteArr = repaired.lastIndexOf('}]')
+
+    if (lastCompleteArr > lastCompleteObj) {
+      repaired = repaired.substring(0, lastCompleteArr + 2) + '}'
+    } else if (lastCompleteObj > 0) {
+      repaired = repaired.substring(0, lastCompleteObj + 1) + ']}'
     }
-  } else {
-    throw new Error('No JSON found in response')
+
+    result = JSON.parse(repaired)
+    console.log('JSON repaired successfully!')
+  } catch(repairErr) {
+    // Last resort — return basic result
+    console.log('JSON repair failed, using basic result')
+    result = {
+      disease: 'Detection incomplete',
+      teluguName: 'గుర్తింపు అసంపూర్ణం',
+      confidence: '—',
+      severity: '—',
+      spread: '—',
+      treatWithin: '—',
+      healthy: false,
+      whatIsThis: 'Analysis was incomplete. Please try again with clearer photos.',
+      whatIsThisTelugu: 'విశ్లేషణ అసంపూర్ణంగా ఉంది. దయచేసి స్పష్టమైన ఫోటోలతో మళ్ళీ ప్రయత్నించండి.',
+      symptomsFound: '—',
+      symptomsFoundTelugu: '—',
+      prevention: '—',
+      preventionTelugu: '—',
+      teluguSummary: 'విశ్లేషణ పూర్తి కాలేదు. మళ్ళీ ప్రయత్నించండి.',
+      pesticides: []
+    }
   }
 }
-return result
-
-  } catch (err) {
+     return result
+} catch (err) {
     console.log('Claude Error:', err.message)
     throw err
   }
