@@ -51,10 +51,7 @@ function showApp() {
   setTimeout(loadGreetingAndWeather, 300)
 
   // Restore last scan result
-  var savedScan = localStorage.getItem('rytuai_last_scan')
-  if (savedScan) {
-    try { lastScanResult = JSON.parse(savedScan) } catch(e) { lastScanResult = null }
-  }
+  
 
   var lastScreen = localStorage.getItem('rytuai_screen') || 'home'
   switchScreen(lastScreen)
@@ -512,7 +509,7 @@ async function analyzeImages() {
 
     if (response.ok) {
       lastScanResult = data.result
-      localStorage.setItem('rytuai_last_scan', JSON.stringify(data.result))
+      
 
       // Clear images after successful detection
       uploadedImages = { 0: null, 1: null, 2: null, 3: null }
@@ -1596,80 +1593,86 @@ async function loadScanHistory() {
 function renderScanHistory(scans) {
   var container = document.getElementById('scan-history-list')
   if (!container) return
+
   container.innerHTML = scans.map(function(scan) {
-    var date = scan.created_at ? new Date(scan.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '—'
-    var severityColor = scan.healthy ? '#1a6e35' : scan.severity === 'Low' ? '#f5a623' : '#e74c3c'
+    var date = scan.created_at
+      ? new Date(scan.created_at).toLocaleDateString('en-IN', {
+          day: 'numeric', month: 'short'
+        })
+      : '—'
+
+    var severityColor = scan.healthy ? '#1a6e35'
+      : scan.severity === 'Low' ? '#f5a623' : '#e74c3c'
+
     var pesticides = []
-    try { pesticides = typeof scan.pesticides === 'string' ? JSON.parse(scan.pesticides) : (scan.pesticides || []) } catch(e) {}
-    var pestNames = pesticides.map(function(p) { return p.name }).join(', ')
-    var shortSummary = scan.telugu_summary ? scan.telugu_summary.substring(0, 80) + '...' : ''
-    return '<div style="background:white;border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1.5px solid #e8e0d0;border-left:4px solid ' + severityColor + ';">' +
+    try {
+      pesticides = typeof scan.pesticides === 'string'
+        ? JSON.parse(scan.pesticides) : (scan.pesticides || [])
+    } catch(e) {}
+
+    // Only first 2 pesticide names
+    var pestNames = pesticides.slice(0, 2).map(function(p) {
+      return p.name
+    }).join(', ')
+    if (pesticides.length > 2) pestNames += ' +' + (pesticides.length - 2) + ' more'
+
+    // Short summary — 80 chars
+    var shortSummary = scan.telugu_summary
+      ? scan.telugu_summary.substring(0, 80) + '...'
+      : ''
+
+    return '<div style="background:white;border-radius:12px;padding:12px 14px;' +
+      'margin-bottom:8px;border:1.5px solid #e8e0d0;' +
+      'border-left:4px solid ' + severityColor + ';">' +
+
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
       '<div style="flex:1;">' +
-      '<div style="font-size:13px;font-weight:800;color:#1a2e1e;">' + (scan.healthy ? '✅ ' : '🦠 ') + scan.disease + '</div>' +
-      (scan.telugu_name ? '<div style="font-size:12px;color:#1a6e35;font-family:Tiro Telugu,serif;">' + scan.telugu_name + '</div>' : '') +
-      (shortSummary ? '<div style="font-size:11px;color:#666;font-family:Tiro Telugu,serif;margin-top:4px;line-height:1.5;">' + shortSummary + '</div>' : '') +
-      (pestNames ? '<div style="font-size:11px;color:#888;margin-top:4px;">💊 ' + pestNames + '</div>' : '') +
+
+      '<div style="font-size:13px;font-weight:800;color:#1a2e1e;">' +
+      (scan.healthy ? '✅ ' : '🦠 ') + scan.disease + '</div>' +
+
+      (scan.telugu_name ?
+        '<div style="font-size:12px;color:#1a6e35;font-family:Tiro Telugu,serif;">' +
+        scan.telugu_name + '</div>' : '') +
+
+      (shortSummary ?
+        '<div style="font-size:11px;color:#666;font-family:Tiro Telugu,serif;' +
+        'margin-top:4px;line-height:1.5;">' + shortSummary + '</div>' : '') +
+
+      (pestNames ?
+        '<div style="font-size:11px;color:#888;margin-top:4px;">💊 ' + pestNames + '</div>'
+        : '') +
+
       '</div>' +
+
       '<div style="text-align:right;flex-shrink:0;margin-left:8px;">' +
       '<div style="font-size:10px;color:#888;">' + date + '</div>' +
-      (scan.severity ? '<div style="font-size:10px;font-weight:700;color:' + severityColor + ';margin-top:2px;">' + scan.severity + '</div>' : '') +
-      '</div></div>' +
-      '<button onclick="viewScanFromHistory(' + JSON.stringify(scan).replace(/"/g, '&quot;') + ')" style="margin-top:8px;width:100%;padding:7px;background:#f0f7f2;color:#1a6e35;border:1.5px solid #c8ddc8;border-radius:8px;font-size:12px;font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;">👁️ View Full Result</button>' +
+      (scan.severity ?
+        '<div style="font-size:10px;font-weight:700;color:' + severityColor + ';margin-top:2px;">' +
+        scan.severity + '</div>' : '') +
+      '</div>' +
+      '</div>' +
       '</div>'
   }).join('')
 }
 
-function viewScanFromHistory(scan) {
-  var pesticides = []
-  try { pesticides = typeof scan.pesticides === 'string' ? JSON.parse(scan.pesticides || '[]') : (scan.pesticides || []) } catch(e) {}
-  var result = {
-    disease: scan.disease || '—', teluguName: scan.telugu_name || '',
-    confidence: scan.confidence || '', severity: scan.severity || '',
-    spread: scan.spread || '', treatWithin: scan.treat_within || '',
-    healthy: scan.healthy || false, whatIsThis: scan.what_is_this || '',
-    whatIsThisTelugu: scan.what_is_this_telugu || '', symptomsFound: scan.symptoms || '',
-    symptomsFoundTelugu: scan.symptoms_telugu || '', prevention: scan.prevention || '',
-    preventionTelugu: scan.prevention_telugu || '', teluguSummary: scan.telugu_summary || '',
-    pesticides: pesticides
-  }
-  lastScanResult = result
-  localStorage.setItem('rytuai_last_scan', JSON.stringify(result))
-  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active') })
-  var resultScreen = document.getElementById('screen-result')
-  if (resultScreen) { resultScreen.classList.add('active'); resultScreen.scrollTop = 0 }
-  var content = document.getElementById('result-content')
-  var loading = document.getElementById('result-loading')
-  var error = document.getElementById('result-error')
-  if (loading) loading.style.display = 'none'
-  if (error) error.style.display = 'none'
-  if (content) { content.style.display = 'block'; renderResult(result) }
-  document.querySelectorAll('.nav-item').forEach(function(n) {
-    n.classList.remove('active')
-    var onclick = n.getAttribute('onclick') || ''
-    if (onclick.indexOf("'detect'") !== -1) n.classList.add('active')
-  })
-  currentScreen = 'result'
-  localStorage.setItem('rytuai_screen', 'result')
-}
 
 function resetAndScan() {
   lastScanResult = null
-  detectScreenState = 'upload'
-  localStorage.removeItem('rytuai_last_scan')
   uploadedImages = { 0: null, 1: null, 2: null, 3: null }
   for (var i = 0; i < 4; i++) {
     var slot = document.getElementById('slot-' + i)
-    if (slot) { slot.classList.remove('filled'); slot.innerHTML = '<div class="slot-plus">+</div><div class="slot-label">' + slotLabels[i] + '</div>' }
+    if (slot) {
+      slot.classList.remove('filled')
+      slot.innerHTML = '<div class="slot-plus">+</div>' +
+        '<div class="slot-label">' + slotLabels[i] + '</div>'
+    }
   }
   updateUploadCount()
   updateAnalyzeBtn()
-  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active') })
-  var detectScreen = document.getElementById('screen-detect')
-  if (detectScreen) detectScreen.classList.add('active')
-  currentScreen = 'detect'
-  localStorage.setItem('rytuai_screen', 'detect')
+  switchScreen('detect')
 }
+
 
 function orderFromHistory(pesticides) { orderPesticidesFromScan(pesticides) }
 
