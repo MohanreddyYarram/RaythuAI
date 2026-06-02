@@ -257,6 +257,7 @@
           <div class="upload-tip">
             📸 Take clear close-up photos from different angles for the most accurate AI diagnosis
           </div>
+          <div id="scan-count-display" style="padding:0 16px;"></div>
           <div class="upload-grid">
             <div class="upload-slot" id="slot-0" onclick="triggerUpload(0)">
               <div class="slot-plus">+</div><div class="slot-label">Leaf Photo</div>
@@ -271,6 +272,7 @@
               <div class="slot-plus">+</div><div class="slot-label">Extra</div>
             </div>
           </div>
+
           <input type="file" id="file-0" accept="image/*" style="display:none" onchange="handleUpload(0,this)">
           <input type="file" id="file-1" accept="image/*" style="display:none" onchange="handleUpload(1,this)">
           <input type="file" id="file-2" accept="image/*" style="display:none" onchange="handleUpload(2,this)">

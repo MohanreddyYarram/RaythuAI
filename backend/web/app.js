@@ -47,8 +47,8 @@ window.onload = function() {
 function showApp() {
   document.getElementById('login-screen').style.display = 'none'
   document.getElementById('app').style.display = 'flex'
-  setTimeout(loadFarmerData, 200)
-  setTimeout(loadGreetingAndWeather, 300)
+  setTimeout(loadFarmerData, 100)
+  setTimeout(loadGreetingAndWeather, 1000)
 
   // Restore last scan result
   
@@ -142,7 +142,13 @@ function switchScreen(name) {
 
   if (name === 'tracker') {
     if (typeof loadActivities === 'function') loadActivities()
-    if (typeof loadScanHistory === 'function') loadScanHistory()
+      setTimeout(function() {
+      if (typeof loadScanHistory === 'function') loadScanHistory()
+    },500)
+    
+  }
+  if(name === 'detect'){
+    if (typeof loadScanCount === 'function') loadScanCount()
   }
   if (name === 'feed') { if (typeof loadFeed === 'function') loadFeed() }
   if (name === 'shop') { if (typeof loadStores === 'function') loadStores() }
@@ -458,7 +464,7 @@ function compressImage(base64, quality) {
     var img = new Image()
     img.onload = function() {
       var canvas = document.createElement('canvas')
-      var maxW = 800
+      var maxW = 600
       var ratio = Math.min(maxW / img.width, maxW / img.height)
       canvas.width = img.width * (ratio < 1 ? ratio : 1)
       canvas.height = img.height * (ratio < 1 ? ratio : 1)
@@ -526,7 +532,19 @@ async function analyzeImages() {
       updateUploadCount()
       updateAnalyzeBtn()
       renderResult(data.result)
-    } else {
+    } else if (response.status === 429 && data.limit){
+      if (error) { error.style.display = 'flex'; error.style.flexDirection = 'column' }
+      var errMsg = document.getElementById('error-msg')
+      if (errMsg) errMsg.innerHTML =
+      '<div style="text-align:center;">' +
+      '<div style="font-size:32px;margin-bottom:8px;">🔬</div>' +
+      '<div style="font-size:15px;font-weight:800;color:#1a2e1e;margin-bottom:6px;">' +
+      'Monthly Scan Limit Reached</div>' +
+      '<div style="font-size:13px;color:#555;margin-bottom:4px;">' +
+      'You have used ' + data.used + '/' + data.limit + ' free scans this month.</div>' +
+      '<div style="font-size:12px;color:#888;">Resets on 1st of next month.</div>' +
+      '</div>'
+    }else {
       throw new Error(data.message || 'Detection failed')
     }
   } catch(err) {
@@ -535,6 +553,33 @@ async function analyzeImages() {
     var errMsg = document.getElementById('error-msg')
     if (errMsg) errMsg.textContent = err.message || 'Something went wrong'
   }
+}
+
+async function loadScanCount() {
+  var farmerData = localStorage.getItem('rytuai_farmer')
+  if (!farmerData) return
+  var farmer = JSON.parse(farmerData)
+
+  try {
+    var res = await fetch(API + '/detect/scan-count/' + farmer.phone, {
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
+    })
+    var data = await res.json()
+    if (res.ok) {
+      var countEl = document.getElementById('scan-count-display')
+      if (countEl) {
+        var used = data.count || 0
+        var remaining = 5 - used
+        countEl.innerHTML =
+          '<div style="background:' + (remaining <= 1 ? '#fff3cd' : '#e8f5ee') + ';' +
+          'border-radius:10px;padding:10px 14px;margin-bottom:12px;' +
+          'font-size:12px;font-weight:700;text-align:center;' +
+          'color:' + (remaining <= 1 ? '#856404' : '#1a6e35') + ';">' +
+          '🔬 ' + used + '/5 scans used this month · ' + remaining + ' remaining' +
+          '</div>'
+      }
+    }
+  } catch(e) {}
 }
 
 /* ══════════════════════════════════════
@@ -643,7 +688,13 @@ async function loadActivities() {
   var farmer = JSON.parse(farmerData)
   var listEl = document.getElementById('activities-list')
   if (!listEl) return
-  listEl.innerHTML = '<div style="text-align:center;padding:40px;color:#888;"><div style="font-size:32px;margin-bottom:8px;">⏳</div><div style="font-size:13px;font-weight:700;">Loading activities...</div></div>'
+  listEl.innerHTML =
+    '<div style="padding:16px;">' +
+    [1,2,3].map(function() {
+    return '<div style="background:#f0f0f0;border-radius:12px;height:80px;margin-bottom:10px;animation:pulse 1.5s infinite;"></div>'
+    }).join('') +
+    '</div>' +
+   '<style>@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}</style>'
   try {
     var response = await fetch(API + '/activities/' + farmer.phone, {
       headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
@@ -1717,3 +1768,7 @@ function orderPesticidesFromScan(pesticides) {
   if (added > 0) { showToast(added + ' pesticide(s) added to cart!', 'success'); setTimeout(function() { switchScreen('shop') }, 1500) }
   else { showToast('Already in cart!', 'success'); switchScreen('shop') }
 }
+
+setInterval(function() {
+  fetch('/auth/ping').catch(function() {})
+}, 10 * 60 * 1000) // 10 minutes

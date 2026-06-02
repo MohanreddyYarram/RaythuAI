@@ -1,7 +1,8 @@
 
 //process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
-const rateLimit = require('express-rate-limit')
 const helmet = require('helmet')
+const rateLimit = require('express-rate-limit')
+
 //Main Entry point for backend
 
 //Import express (the framework that handles request)
@@ -23,7 +24,10 @@ app.use(express.json())
 
 // Enable cors so frontend can connect
 app.use(cors({
-    origin :'*',
+    origin : [
+        'https://raythuai.up.railway.app',
+        'http://localhost:8080'
+    ],
     methods:['GET','POST','PUT','DELETE'],
     allowedHeaders:['Content-Type','Authorization']
 
@@ -33,10 +37,47 @@ app.use(helmet({
     contentSecurityPolicy:false
 }))
 
+/**
+ * Production related code for sequrity
+ * const helmet = require('helmet')
+const rateLimit = require('express-rate-limit')
+const cors = require('cors')
+
+// Security headers
+app.use(helmet())
+
+// CORS — only allow your domain
+app.use(cors({
+  origin: [
+    'https://raythuai.up.railway.app',
+    'http://localhost:8080'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}))
+
+// Rate limiting — prevent brute force
 const limiter = rateLimit({
-    windowMs : 15 * 60 * 1000,
-    max : 200
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200,
+  message: { message: 'Too many requests, please try again later' }
 })
+app.use(limiter)
+
+// Stricter limit for OTP — prevent OTP spam
+const otpLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 3, // max 3 OTP requests per minute
+  message: { message: 'Too many OTP requests. Wait 1 minute.' }
+})
+app.use('/auth/send-otp', otpLimiter)
+
+// JWT secret must be strong
+// Make sure JWT_SECRET in Railway is a long random string
+// Not 'rytuai2024secret' — change to something like:
+// openssl rand -base64 32
+ */
+
 
 //Import Routes for farmers
 const farmersRoute = require('./routes/farmers')

@@ -31,8 +31,31 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
     return res.status(401).json({ message: 'Session expired. Please login again' })
   }
 
+  //Limit Code Block
+
+
   try {
-    if (!req.files || req.files.length < 1) {
+   
+
+    var startOfMonth = new Date()
+    startOfMonth.setDate(1)
+    startOfMonth.setHours(0,0,0,0)
+
+    const {data:scanCount, error:countError} = await supabase
+      .from('scans')
+      .select('id',{count:'exact'})
+      .eq('farmer_id',farmerPhone)
+      .gte('created_at',startOfMonth.toISOString())
+
+    if(!countError && scanCount && scanCount.length >=5){
+      return res.status(429).json({
+        message : 'Monthly scan limit reached',
+        limit:5,
+        used: scanCount.length,
+        resets:'Next month'
+      })
+    }
+     if (!req.files || req.files.length < 1) {
       return res.status(400).json({ message: 'Please upload at least one image' })
     }
 
@@ -45,6 +68,8 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
         data: file.buffer.toString('base64')
       }
     }))
+
+
 
     console.log('Calling Claude with', imageBlocks.length, 'images...')
     const result = await claude.detectDisease(imageBlocks)
@@ -147,6 +172,26 @@ router.get('/history/:phone', async (req, res) => {
     if (error) return res.status(400).json({ message: error.message })
     res.status(200).json({ scans: data })
   } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+
+router.get('/scan-count/:phone', async (req, res) => {
+  const { phone } = req.params
+  try {
+    var startOfMonth = new Date()
+    startOfMonth.setDate(1)
+    startOfMonth.setHours(0, 0, 0, 0)
+
+    const { data, error } = await supabase
+      .from('scans')
+      .select('id')
+      .eq('farmer_id', phone)
+      .gte('created_at', startOfMonth.toISOString())
+
+    if (error) return res.status(400).json({ message: error.message })
+    res.status(200).json({ count: data.length, limit: 5 })
+  } catch(err) {
     res.status(500).json({ message: err.message })
   }
 })
