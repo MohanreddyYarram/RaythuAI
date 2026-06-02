@@ -188,88 +188,202 @@ function showStep(id) {
   if (el) { el.style.display = 'flex'; el.style.flexDirection = 'column' }
 }
 
-async function sendOTP() {
-  var phone = document.getElementById('login-phone').value.trim()
-  if (phone.length !== 10) { showLoginError('Please enter a valid 10-digit mobile number'); return }
-  currentPhone = phone
-  showLoginLoading('Sending OTP...')
-  try {
-    var response = await fetch(API + '/auth/send-otp', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: phone })
-    })
-    var data = await response.json()
-    if (response.ok) {
-      showStep('step-otp')
-      var hint = document.getElementById('otp-sent-to')
-      if (hint) hint.textContent = 'OTP sent to ' + phone
-    } else { showStep('step-phone'); showLoginError(data.message || 'Failed to send OTP') }
-  } catch(err) { showStep('step-phone'); showLoginError('Cannot connect to server') }
+/* ══════════════════════════════════════
+   LOGIN — Phone + Password
+   Replace existing login functions in app.js
+══════════════════════════════════════ */
+
+function showLoginError(msg) {
+  var el = document.getElementById('login-error')
+  if (!el) return
+  el.textContent = msg
+  el.style.display = 'block'
+  setTimeout(function() { el.style.display = 'none' }, 4000)
 }
 
-async function verifyOTP() {
-  var otp = document.getElementById('login-otp').value.trim()
-  if (otp.length !== 6) { showLoginError('Please enter the 6-digit OTP'); return }
-  showLoginLoading('Verifying OTP...')
+function showLoginLoading(text) {
+  var steps = ['step-login','step-signup','step-forgot','step-reset']
+  steps.forEach(function(s) {
+    var el = document.getElementById(s)
+    if (el) el.style.display = 'none'
+  })
+  var loading = document.getElementById('login-loading')
+  var loadingText = document.getElementById('loading-text')
+  if (loading) loading.style.display = 'block'
+  if (loadingText) loadingText.textContent = text
+}
+
+function hideLoginLoading() {
+  var loading = document.getElementById('login-loading')
+  if (loading) loading.style.display = 'none'
+}
+
+function showStep(id) {
+  var steps = ['step-login','step-signup','step-forgot','step-reset']
+  steps.forEach(function(s) {
+    var el = document.getElementById(s)
+    if (el) el.style.display = 'none'
+  })
+  hideLoginLoading()
+  var el = document.getElementById(id)
+  if (el) { el.style.display = 'flex'; el.style.flexDirection = 'column' }
+  var err = document.getElementById('login-error')
+  if (err) err.style.display = 'none'
+}
+
+function togglePassword(id) {
+  var input = document.getElementById(id)
+  if (!input) return
+  input.type = input.type === 'password' ? 'text' : 'password'
+}
+
+// ── LOGIN ──
+async function loginWithPassword() {
+  var phone = document.getElementById('login-phone').value.trim()
+  var password = document.getElementById('login-password').value
+
+  if (phone.length !== 10) { showLoginError('Please enter valid 10-digit number'); return }
+  if (!password) { showLoginError('Please enter your password'); return }
+
+  showLoginLoading('Logging in...')
+
   try {
-    var response = await fetch(API + '/auth/verify-otp', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: currentPhone, otp: otp })
+    var response = await fetch(API + '/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, password })
     })
     var data = await response.json()
+
+    hideLoginLoading()
+
     if (response.ok) {
       localStorage.setItem('rytuai_token', data.token)
-      localStorage.setItem('rytuai_phone', currentPhone)
-      if (data.farmer) { localStorage.setItem('rytuai_farmer', JSON.stringify(data.farmer)); showApp() }
-      else showRegistrationStep()
-    } else { showStep('step-otp'); showLoginError(data.message || 'Invalid OTP') }
-  } catch(err) { showStep('step-otp'); showLoginError('Cannot connect to server') }
+      localStorage.setItem('rytuai_phone', phone)
+      localStorage.setItem('rytuai_farmer', JSON.stringify(data.farmer))
+      showApp()
+    } else {
+      showStep('step-login')
+      showLoginError(data.message || 'Login failed')
+    }
+  } catch(err) {
+    hideLoginLoading()
+    showStep('step-login')
+    showLoginError('Cannot connect to server')
+  }
 }
 
-function backToPhone() {
-  document.getElementById('step-otp').style.display = 'none'
-  showStep('step-phone')
-  var otpEl = document.getElementById('login-otp')
-  if (otpEl) otpEl.value = ''
-}
-
-function showRegistrationStep() {
-  document.getElementById('step-phone').style.display = 'none'
-  document.getElementById('step-otp').style.display = 'none'
-  document.getElementById('login-loading').style.display = 'none'
-  var reg = document.getElementById('step-register')
-  if (reg) { reg.style.display = 'flex'; reg.style.flexDirection = 'column' }
-  var ls = document.getElementById('login-screen')
-  if (ls) ls.scrollTop = 0
-}
-
-function backToOTP() {
-  document.getElementById('step-register').style.display = 'none'
-  showStep('step-otp')
-}
-
-async function registerFarmer() {
+// ── REGISTER ──
+async function registerWithPassword() {
+  var phone = document.getElementById('reg-phone').value.trim()
   var name = document.getElementById('reg-name').value.trim()
   var village = document.getElementById('reg-village').value.trim()
   var district = document.getElementById('reg-district').value.trim()
   var land_acres = document.getElementById('reg-acres').value
   var crop_type = document.getElementById('reg-crop').value
   var sowing_date = document.getElementById('reg-sowing').value
+  var password = document.getElementById('reg-password').value
+  var confirmPassword = document.getElementById('reg-confirm-password').value
+
+  if (phone.length !== 10) { showLoginError('Please enter valid 10-digit number'); return }
   if (!name || !village || !district) { showLoginError('Please fill name, village and district'); return }
-  showLoginLoading('Saving your profile...')
+  if (!password || password.length < 6) { showLoginError('Password must be at least 6 characters'); return }
+  if (password !== confirmPassword) { showLoginError('Passwords do not match'); return }
+
+  showLoginLoading('Creating account...')
+
   try {
-    var response = await fetch(API + '/farmers', {
+    var response = await fetch(API + '/auth/register', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') },
-      body: JSON.stringify({ name, phone: currentPhone, village, district, land_acres: parseFloat(land_acres) || 0, crop_type, sowing_date })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone, name, village, district,
+        land_acres: parseFloat(land_acres) || 0,
+        crop_type, sowing_date, password
+      })
     })
     var data = await response.json()
+
+    hideLoginLoading()
+
     if (response.ok) {
-      var farmer = data.farmer || { name, phone: currentPhone, village, district, land_acres: parseFloat(land_acres) || 0, crop_type, sowing_date }
-      localStorage.setItem('rytuai_farmer', JSON.stringify(farmer))
+      localStorage.setItem('rytuai_token', data.token)
+      localStorage.setItem('rytuai_phone', phone)
+      localStorage.setItem('rytuai_farmer', JSON.stringify(data.farmer))
       showApp()
-    } else { showRegistrationStep(); showLoginError(data.message || 'Registration failed') }
-  } catch(err) { showRegistrationStep(); showLoginError('Cannot connect to server') }
+    } else {
+      showStep('step-signup')
+      showLoginError(data.message || 'Registration failed')
+    }
+  } catch(err) {
+    hideLoginLoading()
+    showStep('step-signup')
+    showLoginError('Cannot connect to server')
+  }
+}
+
+// ── FORGOT PASSWORD ──
+var forgotPhone = ''
+async function sendResetOTP() {
+  var phone = document.getElementById('forgot-phone').value.trim()
+  if (phone.length !== 10) { showLoginError('Please enter valid 10-digit number'); return }
+  forgotPhone = phone
+  showLoginLoading('Sending OTP...')
+
+  try {
+    var response = await fetch(API + '/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone })
+    })
+    var data = await response.json()
+    hideLoginLoading()
+
+    if (response.ok) {
+      showStep('step-reset')
+      showLoginError('OTP sent! Check Railway logs during testing.')
+    } else {
+      showStep('step-forgot')
+      showLoginError(data.message || 'Failed to send OTP')
+    }
+  } catch(err) {
+    hideLoginLoading()
+    showStep('step-forgot')
+    showLoginError('Cannot connect to server')
+  }
+}
+
+// ── RESET PASSWORD ──
+async function resetPassword() {
+  var otp = document.getElementById('reset-otp').value.trim()
+  var newPassword = document.getElementById('reset-new-password').value
+
+  if (otp.length !== 6) { showLoginError('Please enter 6-digit OTP'); return }
+  if (!newPassword || newPassword.length < 6) { showLoginError('Password must be at least 6 characters'); return }
+
+  showLoginLoading('Resetting password...')
+
+  try {
+    var response = await fetch(API + '/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: forgotPhone, otp, new_password: newPassword })
+    })
+    var data = await response.json()
+    hideLoginLoading()
+
+    if (response.ok) {
+      showStep('step-login')
+      showLoginError('Password reset successful! Please login.')
+    } else {
+      showStep('step-reset')
+      showLoginError(data.message || 'Reset failed')
+    }
+  } catch(err) {
+    hideLoginLoading()
+    showStep('step-reset')
+    showLoginError('Cannot connect to server')
+  }
 }
 
 /* ══════════════════════════════════════

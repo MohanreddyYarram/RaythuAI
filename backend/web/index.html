@@ -12,38 +12,52 @@
 <!-- ═══════════════════════════════ -->
 <!--         LOGIN SCREEN           -->
 <!-- ═══════════════════════════════ -->
+
 <div id="login-screen" class="login-screen">
   <div class="login-logo">
     <div class="login-chilli">🌶️</div>
     <h1>Rytu<span>AI</span></h1>
     <p class="login-telugu">రైతు AI అప్లికేషన్</p>
-    <p class="login-tagline">Smart Farming</p>
+    <p class="login-tagline">Smart Farming — Andhra Pradesh</p>
   </div>
 
-  <div id="step-phone" class="login-card">
+  <!-- ── LOGIN STEP ── -->
+  <div id="step-login" class="login-card">
     <div class="login-field-label">📱 Mobile Number</div>
     <input type="tel" id="login-phone" class="login-input"
       placeholder="Enter 10-digit number" maxlength="10">
-    <button class="btn-primary" onclick="sendOTP()">Send OTP →</button>
+    <div class="login-field-label" style="margin-top:8px;">🔒 Password</div>
+    <div style="position:relative;">
+      <input type="password" id="login-password" class="login-input"
+        placeholder="Enter password" style="padding-right:44px;">
+      <button onclick="togglePassword('login-password')" style="
+        position:absolute;right:12px;top:50%;transform:translateY(-50%);
+        background:none;border:none;cursor:pointer;font-size:16px;color:#888;">👁️</button>
+    </div>
+    <button class="btn-primary" onclick="loginWithPassword()">Login →</button>
+    <div style="display:flex;justify-content:space-between;margin-top:8px;">
+      <button class="btn-ghost" onclick="showStep('step-signup')"
+        style="font-size:12px;padding:8px;">New farmer? Sign Up</button>
+      <button class="btn-ghost" onclick="showStep('step-forgot')"
+        style="font-size:12px;padding:8px;">Forgot Password?</button>
+    </div>
   </div>
 
-  <div id="step-otp" class="login-card" style="display:none;">
-    <div class="login-field-label">🔐 Enter OTP</div>
-    <div class="otp-hint" id="otp-sent-to"></div>
-    <input type="tel" id="login-otp" class="login-input otp-input"
-      placeholder="• • • • • •" maxlength="6">
-    <button class="btn-primary" onclick="verifyOTP()">Verify & Login ✓</button>
-    <button class="btn-ghost" onclick="backToPhone()">← Change Number</button>
-  </div>
-
-  <div id="step-register" class="login-card" style="display:none;">
-    <div class="login-field-label">👨‍🌾 Complete Your Profile</div>
-    <button class="btn-ghost btn-sm" onclick="backToOTP()"
-      style="margin-bottom:14px;width:auto;">← Back</button>
-    <input type="text" id="reg-name" class="login-input" placeholder="Full Name — మీ పేరు">
-    <input type="text" id="reg-village" class="login-input" placeholder="Village — మీ గ్రామం">
-    <input type="text" id="reg-district" class="login-input" placeholder="District — జిల్లా">
-    <input type="number" id="reg-acres" class="login-input" placeholder="Land in Acres — ఎకరాలు">
+  <!-- ── SIGNUP STEP ── -->
+  <div id="step-signup" class="login-card" style="display:none;">
+    <div class="login-field-label">👨‍🌾 Create Account</div>
+    <button class="btn-ghost btn-sm" onclick="showStep('step-login')"
+      style="margin-bottom:14px;width:auto;">← Back to Login</button>
+    <input type="tel" id="reg-phone" class="login-input"
+      placeholder="📱 Mobile Number" maxlength="10">
+    <input type="text" id="reg-name" class="login-input"
+      placeholder="Full Name — మీ పేరు">
+    <input type="text" id="reg-village" class="login-input"
+      placeholder="Village — మీ గ్రామం">
+    <input type="text" id="reg-district" class="login-input"
+      placeholder="District — జిల్లా">
+    <input type="number" id="reg-acres" class="login-input"
+      placeholder="Land in Acres — ఎకరాలు">
     <select id="reg-crop" class="login-input login-select">
       <option value="">Select Crop — పంట ఎంచుకోండి</option>
       <option value="Chilli">🌶️ Chilli — మిరప</option>
@@ -53,13 +67,55 @@
       <option value="Maize">🌽 Maize — మొక్కజొన్న</option>
     </select>
     <input type="date" id="reg-sowing" class="login-input">
-    <button class="btn-primary" onclick="registerFarmer()">Save & Continue →</button>
+    <div class="login-field-label">🔒 Create Password</div>
+    <div style="position:relative;">
+      <input type="password" id="reg-password" class="login-input"
+        placeholder="Min 6 characters" style="padding-right:44px;">
+      <button onclick="togglePassword('reg-password')" style="
+        position:absolute;right:12px;top:50%;transform:translateY(-50%);
+        background:none;border:none;cursor:pointer;font-size:16px;color:#888;">👁️</button>
+    </div>
+    <div style="position:relative;">
+      <input type="password" id="reg-confirm-password" class="login-input"
+        placeholder="Confirm Password" style="padding-right:44px;">
+      <button onclick="togglePassword('reg-confirm-password')" style="
+        position:absolute;right:12px;top:50%;transform:translateY(-50%);
+        background:none;border:none;cursor:pointer;font-size:16px;color:#888;">👁️</button>
+    </div>
+    <button class="btn-primary" onclick="registerWithPassword()">Create Account →</button>
   </div>
 
+  <!-- ── FORGOT PASSWORD STEP ── -->
+  <div id="step-forgot" class="login-card" style="display:none;">
+    <div class="login-field-label">🔑 Reset Password</div>
+    <button class="btn-ghost btn-sm" onclick="showStep('step-login')"
+      style="margin-bottom:14px;width:auto;">← Back to Login</button>
+    <input type="tel" id="forgot-phone" class="login-input"
+      placeholder="Enter registered mobile number" maxlength="10">
+    <button class="btn-primary" onclick="sendResetOTP()">Send Reset OTP →</button>
+  </div>
+
+  <!-- ── RESET PASSWORD STEP ── -->
+  <div id="step-reset" class="login-card" style="display:none;">
+    <div class="login-field-label">🔐 Enter New Password</div>
+    <input type="tel" id="reset-otp" class="login-input otp-input"
+      placeholder="• • • • • •" maxlength="6">
+    <div style="position:relative;">
+      <input type="password" id="reset-new-password" class="login-input"
+        placeholder="New Password (min 6 chars)" style="padding-right:44px;">
+      <button onclick="togglePassword('reset-new-password')" style="
+        position:absolute;right:12px;top:50%;transform:translateY(-50%);
+        background:none;border:none;cursor:pointer;font-size:16px;color:#888;">👁️</button>
+    </div>
+    <button class="btn-primary" onclick="resetPassword()">Reset Password →</button>
+  </div>
+
+  <!-- LOADING -->
   <div id="login-loading" class="login-loading" style="display:none;">
     <div class="loader-ring"></div>
-    <p id="loading-text">Sending OTP...</p>
+    <p id="loading-text">Please wait...</p>
   </div>
+
   <div id="login-error" class="login-error" style="display:none;"></div>
 </div>
 
