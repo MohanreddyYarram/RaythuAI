@@ -6,6 +6,7 @@
 const API = ''
 let currentPhone = ''
 var lastScanResult = null
+var detectScreenState ='upload'
 
 /* ══════════════════════════════════════
    TOAST NOTIFICATION (replaces alert)
@@ -197,10 +198,16 @@ function switchScreen(name) {
       n.classList.add('active')
     }
   })
-  if (name === 'result'){
-    if(lastScanResult){
-      renderResult(lastScanResult)
-    }
+  // Restore result screen if result exists
+  if (name === 'result' && lastScanResult) {
+    setTimeout(function() {
+    var content = document.getElementById('result-content')
+    var loading = document.getElementById('result-loading')
+    var error = document.getElementById('result-error')
+    if (loading) loading.style.display = 'none'
+    if (error) error.style.display = 'none'
+    if (content) content.style.display = 'block'
+    }, 100)
   }
   if (name === 'tracker') {
          if (typeof loadActivities === 'function') loadActivities()
@@ -727,6 +734,8 @@ async function analyzeImages() {
     if (loading) loading.style.display = 'none'
 
     if (response.ok) {
+      lastScanResult = data.result
+      detectScreenState = 'result'
       renderResult(data.result)
     } else {
       throw new Error(data.message || 'Detection failed')
@@ -2841,22 +2850,28 @@ function goToShopWithSelectedPesticides() {
   currentStoreId = selectedShopId
   currentStoreName = selectedShopName
 
-  // Clear cart and add selected
-  cart = []
-  selectedScanPesticides.forEach(function(p) {
+ //Add selected to cart - don't clear existing
+
+ selectedScanPesticides.forEach(function(p){
+  var existing = cart.find(function(c){ return c.id == p.id})
+  if (!existing){
     cart.push({
-      id: p.id,
-      name: p.name,
-      price: p.price,
-      qty: 1
+      id:p.id,
+      name:p.name,
+      price:p.pride,
+      qty:1
     })
-  })
+  }
+ })
+  
 
   updateCartBar()
-  showToast(selectedScanPesticides.length + ' item(s) added to cart!', 'success')
+  showToast(selectedScanPesticides.length + ' item(s) added! Browse more from store', 'success')
   setTimeout(function() {
     switchScreen('shop')
-    setTimeout(function() { openCart() }, 500)
+    setTimeout(function() { 
+      openStore(selectedShopId,selectedShopName)
+  },300)
   }, 1000)
 }
 
@@ -2913,7 +2928,10 @@ function renderScanHistory(scans) {
         ? JSON.parse(scan.pesticides) : (scan.pesticides || [])
     } catch(e) {}
 
-    // Short summary — 80 chars only
+    var pestNames = pesticides.map(function(p) {
+      return p.name
+    }).join(', ')
+
     var shortSummary = scan.telugu_summary
       ? scan.telugu_summary.substring(0, 80) + '...'
       : ''
@@ -2924,14 +2942,24 @@ function renderScanHistory(scans) {
 
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
       '<div style="flex:1;">' +
+
+      // English + Telugu disease name
       '<div style="font-size:13px;font-weight:800;color:#1a2e1e;">' +
       (scan.healthy ? '✅ ' : '🦠 ') + scan.disease + '</div>' +
       (scan.telugu_name ?
         '<div style="font-size:12px;color:#1a6e35;font-family:Tiro Telugu,serif;">' +
         scan.telugu_name + '</div>' : '') +
+
+      // Short Telugu summary
       (shortSummary ?
         '<div style="font-size:11px;color:#666;font-family:Tiro Telugu,serif;' +
-        'margin-top:3px;line-height:1.5;">' + shortSummary + '</div>' : '') +
+        'margin-top:4px;line-height:1.5;">' + shortSummary + '</div>' : '') +
+
+      // Pesticide names only
+      (pestNames ?
+        '<div style="font-size:11px;color:#888;margin-top:4px;">' +
+        '💊 ' + pestNames + '</div>' : '') +
+
       '</div>' +
       '<div style="text-align:right;flex-shrink:0;margin-left:8px;">' +
       '<div style="font-size:10px;color:#888;">' + date + '</div>' +
@@ -2941,14 +2969,36 @@ function renderScanHistory(scans) {
       '</div>' +
       '</div>' +
 
-      (pesticides.length > 0 ?
-        '<button onclick="orderFromHistory(' + JSON.stringify(pesticides).replace(/"/g,'&quot;') + ')" style="' +
-        'margin-top:8px;width:100%;padding:7px;background:#f0f7f2;color:#1a6e35;' +
-        'border:1.5px solid #c8ddc8;border-radius:8px;font-size:12px;font-weight:800;' +
-        'font-family:Nunito,sans-serif;cursor:pointer;">🛒 Order Pesticides</button>'
-        : '') +
       '</div>'
   }).join('')
+}
+
+function resetAndScan() {
+  // Clear previous scan
+  lastScanResult = null
+  detectScreenState = 'upload'
+
+  // Reset uploaded images
+  uploadedImages = { 0: null, 1: null, 2: null, 3: null }
+
+  // Reset slot UI
+  for (var i = 0; i < 4; i++) {
+    var slot = document.getElementById('slot-' + i)
+    if (slot) {
+      slot.classList.remove('filled')
+      slot.innerHTML = '<div class="slot-plus">+</div>' +
+        '<div class="slot-label">' +
+        (['Leaf Photo', 'Stem Photo', 'Full Plant', 'Extra'][i]) +
+        '</div>'
+    }
+  }
+
+  // Reset count and button
+  updateUploadCount()
+  updateAnalyzeBtn()
+
+  // Go to detect screen
+  switchScreen('detect')
 }
 
 function orderFromHistory(pesticides) {
