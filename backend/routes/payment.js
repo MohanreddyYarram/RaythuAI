@@ -15,7 +15,7 @@ const razorpay = new Razorpay({
 // Ordere Creation
 
 router.post('/create-order',authenticateToken,async(req,res)=>{
-    const {amount,farmer_id,store_id,items,delivery_address,note} = req.body
+    const {amount,farmer_id,store_id,items,delivery_address,notes=''} = req.body
 
     if(!amount || amount <= 0){
         return res.status(400).json({message:'Invalid amount'})
@@ -26,8 +26,8 @@ router.post('/create-order',authenticateToken,async(req,res)=>{
             currency:'INR',
             receipt :'rytuai_' + Date.now(),
             notes:{
-                farmer_id,
-                store_id: String(store_id)
+                farmer_id:farmer_id || '',
+                store_id: String(store_id || '')
             }
         })
 
