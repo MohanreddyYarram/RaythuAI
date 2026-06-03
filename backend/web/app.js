@@ -1111,17 +1111,24 @@ var allProducts = []
 async function loadStores() {
   var shopBody = document.getElementById('shop-body-content')
   if (!shopBody) return
-  var farmerData = localStorage.getItem('rytuai_farmer')
-  var district = ''
-  if (farmerData) { try { district = JSON.parse(farmerData).district || '' } catch(e) {} }
+
   shopBody.innerHTML = '<div style="text-align:center;padding:40px;color:#888;"><div style="font-size:32px;">⏳</div><div style="font-size:13px;font-weight:700;margin-top:8px;">Loading stores...</div></div>'
+
   try {
-    var url = API + '/shop/stores' + (district ? '?district=' + encodeURIComponent(district) : '')
-    var response = await fetch(url, { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') } })
+    // No district filter — load all active stores
+    var response = await fetch(API + '/shop/stores', {
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
+    })
     var data = await response.json()
-    if (response.ok && data.stores && data.stores.length > 0) renderStores(data.stores)
-    else renderStores([])
-  } catch(err) { shopBody.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;font-weight:700;">Cannot connect to server</div>' }
+
+    if (response.ok && data.stores && data.stores.length > 0) {
+      renderStores(data.stores)
+    } else {
+      renderStores([])
+    }
+  } catch(err) {
+    shopBody.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;font-weight:700;">Cannot connect to server</div>'
+  }
 }
 
 function renderStores(stores) {
