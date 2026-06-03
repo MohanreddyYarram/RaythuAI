@@ -5,7 +5,7 @@ const router = express.Router()
 const Razorpay = require('razorpay') 
 const crypto = require('crypto')
 const supabase = require('../services/supabase')
-const authenticationToken = require('../middleware/auth')
+const authenticateToken = require('../middleware/auth')
 
 const razorpay = new Razorpay({
     key_id : process.env.RAZORPAY_KEY_ID,
@@ -14,7 +14,7 @@ const razorpay = new Razorpay({
 
 // Ordere Creation
 
-router.post('/create-order',authenticationToken,async(req,res)=>{
+router.post('/create-order',authenticateToken,async(req,res)=>{
     const {amount,farmer_id,store_id,items,delivery_address,note} = req.body
 
     if(!amount || amount <= 0){
@@ -64,7 +64,7 @@ router.post('/create-order',authenticationToken,async(req,res)=>{
 })
 
 //Payment Verification
-router.post('/verify',authenticationToken,async(req,res)=>{
+router.post('/verify',authenticateToken,async(req,res)=>{
     const{
         razorpay_order_id,
         razorpay_payment_id,
