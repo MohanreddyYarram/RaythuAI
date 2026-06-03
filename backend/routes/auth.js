@@ -12,15 +12,32 @@ const supabase = require('../services/supabase')
 const JWT_SECRET = process.env.JWT_SECRET || 'rytuai2024secret'
 const SALT_ROUNDS = 10
 
+function sanitizePhone(phone) {
+  return phone ? phone.replace(/[^0-9]/g, '').substring(0, 10) : ''
+}
+
+function sanitizeText(text) {
+  return text ? text.replace(/<[^>]*>/g, '').trim().substring(0, 500) : ''
+}
+
 // ── REGISTER ──
 router.post('/register', async (req, res) => {
-  const { phone, password, name, village, district, land_acres, crop_type, sowing_date } = req.body
+  const phone = sanitizePhone(req.body.phone)
+  const name = sanitizeText(req.body.name)
+  const village = sanitizeText(req.body.village)
+  const district = sanitizeText(req.body.district)
+  const crop_type = sanitizeText(req.body.crop_type)
+  const {  password,land_acres, sowing_date } = req.body
 
   if (!phone || phone.length !== 10) {
     return res.status(400).json({ message: 'Valid 10-digit phone number required' })
   }
-  if (!password || password.length < 6) {
+  if (!password || password.length < 8) {
     return res.status(400).json({ message: 'Password must be at least 6 characters' })
+
+  }
+  if(!/[0-9]/.test(password)){
+    return res.status(400).json({message:'Password must contain at least one number'})
   }
   if (!name || !village || !district) {
     return res.status(400).json({ message: 'Name, village and district are required' })
@@ -56,11 +73,13 @@ router.post('/register', async (req, res) => {
 
     // Generate token
     const token = jwt.sign({ phone }, JWT_SECRET, { expiresIn: '30d' })
-
+    
+    var farmerData = data[0]
+    delete farmerData.password_hash
     res.status(201).json({
       message: 'Registration successful!',
       token,
-      farmer: data[0]
+      farmer: farmerData
     })
   } catch(err) {
     console.log('Register error:', err.message)
@@ -70,7 +89,8 @@ router.post('/register', async (req, res) => {
 
 // ── LOGIN ──
 router.post('/login', async (req, res) => {
-  const { phone, password } = req.body
+  const phone = sanitizePhone(req.body.phone)
+  const {  password } = req.body
 
   if (!phone || phone.length !== 10) {
     return res.status(400).json({ message: 'Valid 10-digit phone number required' })
@@ -83,7 +103,7 @@ router.post('/login', async (req, res) => {
     // Find farmer
     const { data: farmer, error } = await supabase
       .from('farmers')
-      .select('*')
+      .select('phone,name,village,district,land_acres,crop_type,sowing_date,password_hash')
       .eq('phone', phone)
       .single()
 

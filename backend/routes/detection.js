@@ -11,6 +11,13 @@ const claude = require('../services/claude')
 const supabase = require('../services/supabase')
 
 const upload = multer({ storage: multer.memoryStorage() })
+function sanitizePhone(phone) {
+  return phone ? phone.replace(/[^0-9]/g, '').substring(0, 10) : ''
+}
+
+function sanitizeText(text) {
+  return text ? text.replace(/<[^>]*>/g, '').trim().substring(0, 500) : ''
+}
 
 router.post('/', upload.array('photos', 4), async (req, res) => {
   console.log('=== DETECT ROUTE HIT ===')

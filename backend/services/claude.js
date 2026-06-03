@@ -113,4 +113,25 @@ try {
   }
 }
 
+// Retry logic for Claude API failures
+async function detectWithRetry(imageBlocks, maxRetries = 3) {
+  for (var i = 0; i < maxRetries; i++) {
+    try {
+      var response = await client.messages.create({
+        model: 'claude-opus-4-5',
+        max_tokens: 2048,
+        messages: [{ role: 'user', content: imageBlocks }]
+      })
+      return response
+    } catch(err) {
+      console.log('Claude attempt', i + 1, 'failed:', err.message)
+      if (i === maxRetries - 1) throw err
+      // Wait before retry
+      await new Promise(function(resolve) {
+        setTimeout(resolve, 1000 * (i + 1))
+      })
+    }
+  }
+}
+
 module.exports = { detectDisease }
