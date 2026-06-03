@@ -151,7 +151,11 @@ function switchScreen(name) {
     if (typeof loadScanCount === 'function') loadScanCount()
   }
   if (name === 'feed') { if (typeof loadFeed === 'function') loadFeed() }
-  if (name === 'shop') { if (typeof loadStores === 'function') loadStores() }
+  if (name === 'shop') {
+  setTimeout(function() {
+    if (typeof loadStores === 'function') loadStores()
+  }, 100)
+}
 }
 
 function goBack() { switchScreen('home') }
@@ -1885,4 +1889,4 @@ function orderPesticidesFromScan(pesticides) {
 
 setInterval(function() {
   fetch('/auth/ping').catch(function() {})
-}, 10 * 60 * 1000) // 10 minutes
+}, 10 * 60 * 1000) // 10 minute
