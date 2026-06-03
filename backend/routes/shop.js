@@ -6,14 +6,14 @@ const supabase = require('../services/supabase')
 
 //GET all active stores
 router.get('/stores',async(req,res)=>{
-    const {district} = req.query
+    const {phone} = req.query
     try{
         let query = supabase
             .from('stores')
             .select('*')
             .eq('is_active',true)
 
-        if(district) query = query.eq('district',district)
+        if(phone) query = query.eq('phone',phone)
 
         const {data,error} = await query
         if(error) return res.status(400).json({message:error.message})
