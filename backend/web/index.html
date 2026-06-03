@@ -676,36 +676,61 @@
 </div>
 
 <!-- ORDER SUCCESS SCREEN -->
-<div id="order-success-screen" class="fullscreen" style="display:none;background:#f0f7f2;">
-  <div style="display:flex;flex-direction:column;align-items:center;
-    justify-content:center;height:100%;padding:32px;text-align:center;">
-    <div style="font-size:72px;margin-bottom:16px;">🎉</div>
-    <div style="font-size:24px;font-weight:900;color:#1a6e35;margin-bottom:8px;">Order Placed!</div>
-    <div style="font-size:14px;color:#555;margin-bottom:6px;">
-      Your order <strong id="order-id">#—</strong> has been placed successfully
-    </div>
-    <div style="font-size:13px;color:#888;margin-bottom:32px;">
-      The store will contact you on your registered number
-    </div>
-    <div style="background:white;border-radius:16px;padding:20px;
-      width:100%;max-width:320px;margin-bottom:24px;border:1.5px solid #c8ddc8;">
-      <div style="font-size:13px;font-weight:800;color:#1a6e35;margin-bottom:8px;">📋 What happens next?</div>
-      <div style="font-size:12px;color:#555;line-height:1.8;text-align:left;">
-        1. Store confirms your order<br>
-        2. They call you within 1 hour<br>
-        3. Delivery to your field address<br>
-        4. Pay on delivery
-      </div>
-    </div>
-    <button onclick="closeOrderSuccess()"
-      style="width:100%;max-width:320px;padding:16px;
-      background:#1a6e35;color:white;border:none;
-      border-radius:14px;font-size:15px;font-weight:800;
-      font-family:'Nunito',sans-serif;cursor:pointer;">
-      Back to Home
-    </button>
+<div id="order-success-screen" style="display:none;position:fixed;inset:0;
+  background:white;z-index:9999;display:none;flex-direction:column;
+  align-items:center;justify-content:center;padding:32px 24px;text-align:center;">
+
+  <div style="font-size:72px;margin-bottom:16px;animation:bounceIn 0.5s ease;">🎉</div>
+
+  <div style="font-size:22px;font-weight:900;color:#1a6e35;margin-bottom:8px;">
+    Order Placed!
   </div>
+  <div style="font-size:14px;font-weight:700;color:#1a2e1e;margin-bottom:4px;">
+    ఆర్డర్ విజయవంతంగా పూర్తైంది!
+  </div>
+
+  <div style="background:#e8f5ee;border-radius:14px;padding:20px;margin:20px 0;width:100%;max-width:320px;">
+    <div style="font-size:12px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:4px;">Order Number</div>
+    <div style="font-size:24px;font-weight:900;color:#1a6e35;" id="order-id">—</div>
+    <div style="font-size:11px;color:#888;margin-top:8px;" id="order-payment-id" style="display:none;"></div>
+  </div>
+
+  <div style="font-size:13px;color:#555;margin-bottom:8px;line-height:1.6;">
+    ✅ Payment received<br>
+    🏪 Shop owner notified<br>
+    🚚 Delivery within 24 hours
+  </div>
+
+  <div style="font-size:12px;color:#888;margin-bottom:24px;font-family:Tiro Telugu,serif;">
+    మీ ఆర్డర్ స్వీకరించబడింది. 24 గంటల్లో డెలివరీ చేయబడుతుంది.
+  </div>
+
+  <button onclick="closeOrderSuccess()" style="
+    width:100%;max-width:320px;padding:16px;
+    background:#1a6e35;color:white;border:none;
+    border-radius:14px;font-size:15px;font-weight:800;
+    font-family:Nunito,sans-serif;cursor:pointer;">
+    🏠 Back to Home
+  </button>
+
+  <button onclick="openOrders()" style="
+    width:100%;max-width:320px;padding:14px;margin-top:10px;
+    background:#f0f7f2;color:#1a6e35;
+    border:1.5px solid #c8ddc8;border-radius:14px;
+    font-size:14px;font-weight:800;
+    font-family:Nunito,sans-serif;cursor:pointer;">
+    📦 View My Orders
+  </button>
 </div>
+
+<style>
+@keyframes bounceIn {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.1); }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1); opacity: 1; }
+}
+</style>
 
 <!-- ACTIVITY ADD/EDIT SCREEN -->
 <div id="activity-screen" class="fullscreen" style="display:none;">

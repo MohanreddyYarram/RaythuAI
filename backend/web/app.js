@@ -1309,36 +1309,211 @@ function renderCartScreen() {
   container.innerHTML = html
 }
 
+/* ══════════════════════════════════════
+   PAYMENT — Razorpay Integration
+   Add this to app.js — replace placeOrder function
+══════════════════════════════════════ */
+
+// ── LOAD RAZORPAY SCRIPT ──
+function loadRazorpayScript() {
+  return new Promise(function(resolve) {
+    if (window.Razorpay) { resolve(true); return }
+    var script = document.createElement('script')
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.onload = function() { resolve(true) }
+    script.onerror = function() { resolve(false) }
+    document.head.appendChild(script)
+  })
+}
+
+// ── PLACE ORDER WITH PAYMENT ──
 async function placeOrder() {
   if (cart.length === 0) { showToast('Cart is empty', 'error'); return }
+
   var farmerData = localStorage.getItem('rytuai_farmer')
   if (!farmerData) { showToast('Please login again', 'error'); return }
   var farmer = JSON.parse(farmerData)
-  var address = '', notes = ''
+
   var deliveryAddressEl = document.getElementById('delivery-address')
   var orderNotesEl = document.getElementById('order-notes')
-  if (deliveryAddressEl) address = deliveryAddressEl.value.trim()
-  if (orderNotesEl) notes = orderNotesEl.value.trim()
-  if (!address) { showToast('Please enter delivery address', 'error'); if (deliveryAddressEl) deliveryAddressEl.focus(); return }
+  var address = deliveryAddressEl ? deliveryAddressEl.value.trim() : ''
+  var notes = orderNotesEl ? orderNotesEl.value.trim() : ''
+
+  if (!address) {
+    showToast('Please enter delivery address', 'error')
+    if (deliveryAddressEl) deliveryAddressEl.focus()
+    return
+  }
+
   var placeBtn = document.getElementById('place-order-btn')
-  if (placeBtn) { placeBtn.textContent = 'Placing Order...'; placeBtn.disabled = true }
+  if (placeBtn) { placeBtn.textContent = 'Initializing Payment...'; placeBtn.disabled = true }
+
   try {
-    var response = await fetch(API + '/shop/orders', {
+    // Load Razorpay script
+    var loaded = await loadRazorpayScript()
+    if (!loaded) {
+      showToast('Payment service unavailable. Check internet connection.', 'error')
+      if (placeBtn) { placeBtn.textContent = 'Place Order'; placeBtn.disabled = false }
+      return
+    }
+
+    // Create order in backend
+    var response = await fetch(API + '/payment/create-order', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') },
-      body: JSON.stringify({ farmer_id: farmer.phone, farmer_name: farmer.name, farmer_phone: farmer.phone, store_id: currentStoreId, items: cart, total_amount: cartTotal(), delivery_address: address, notes: notes })
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token')
+      },
+      body: JSON.stringify({
+        amount: cartTotal(),
+        farmer_id: farmer.phone,
+        store_id: currentStoreId,
+        items: cart,
+        delivery_address: address,
+        notes: notes
+      })
     })
+
     var data = await response.json()
-    if (response.ok) {
+
+    if (!response.ok) {
+      showToast(data.message || 'Order creation failed', 'error')
+      if (placeBtn) { placeBtn.textContent = 'Place Order'; placeBtn.disabled = false }
+      return
+    }
+
+    // Open Razorpay payment
+    var options = {
+      key: data.key_id,
+      amount: data.amount,
+      currency: data.currency,
+      name: 'RytuAI Shop',
+      description: 'Pesticide Order from ' + currentStoreName,
+      image: '🌶️',
+      order_id: data.razorpay_order_id,
+      prefill: {
+        name: farmer.name,
+        contact: farmer.phone
+      },
+      notes: {
+        farmer: farmer.name,
+        store: currentStoreName,
+        address: address
+      },
+      theme: {
+        color: '#1a6e35'
+      },
+      handler: async function(paymentResponse) {
+        // Payment successful — verify
+        await verifyPayment(
+          paymentResponse.razorpay_order_id,
+          paymentResponse.razorpay_payment_id,
+          paymentResponse.razorpay_signature,
+          data.order_id
+        )
+      },
+      modal: {
+        ondismiss: async function() {
+          // Payment cancelled by user
+          showToast('Payment cancelled', 'error')
+          await markPaymentFailed(data.order_id)
+          if (placeBtn) { placeBtn.textContent = 'Place Order'; placeBtn.disabled = false }
+        }
+      }
+    }
+
+    var rzp = new window.Razorpay(options)
+
+    rzp.on('payment.failed', async function(response) {
+      showToast('Payment failed: ' + response.error.description, 'error')
+      await markPaymentFailed(data.order_id)
+      if (placeBtn) { placeBtn.textContent = 'Place Order'; placeBtn.disabled = false }
+    })
+
+    rzp.open()
+
+  } catch(err) {
+    console.log('Payment error:', err)
+    showToast('Payment failed. Please try again.', 'error')
+    if (placeBtn) { placeBtn.textContent = 'Place Order'; placeBtn.disabled = false }
+  }
+}
+
+// ── VERIFY PAYMENT ──
+async function verifyPayment(rzpOrderId, rzpPaymentId, rzpSignature, orderId) {
+  var placeBtn = document.getElementById('place-order-btn')
+  if (placeBtn) placeBtn.textContent = 'Verifying Payment...'
+
+  try {
+    var response = await fetch(API + '/payment/verify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token')
+      },
+      body: JSON.stringify({
+        razorpay_order_id: rzpOrderId,
+        razorpay_payment_id: rzpPaymentId,
+        razorpay_signature: rzpSignature,
+        order_id: orderId
+      })
+    })
+
+    var data = await response.json()
+
+    if (response.ok && data.success) {
+      // Clear cart
       cart = []
+      var deliveryAddressEl = document.getElementById('delivery-address')
+      var orderNotesEl = document.getElementById('order-notes')
       if (deliveryAddressEl) deliveryAddressEl.value = ''
       if (orderNotesEl) orderNotesEl.value = ''
       updateCartBar()
       closeCart()
       showOrderSuccess(data.order)
-    } else { showToast(data.message || 'Order failed', 'error') }
-  } catch(err) { showToast('Cannot connect to server', 'error') }
-  finally { if (placeBtn) { placeBtn.textContent = 'Place Order'; placeBtn.disabled = false } }
+    } else {
+      showToast('Payment verification failed. Contact support.', 'error')
+    }
+  } catch(err) {
+    showToast('Verification error. Contact support.', 'error')
+  } finally {
+    var placeBtn = document.getElementById('place-order-btn')
+    if (placeBtn) { placeBtn.textContent = 'Place Order'; placeBtn.disabled = false }
+  }
+}
+
+// ── MARK PAYMENT FAILED ──
+async function markPaymentFailed(orderId) {
+  try {
+    await fetch(API + '/payment/failed', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token')
+      },
+      body: JSON.stringify({ order_id: orderId })
+    })
+  } catch(err) {
+    console.log('Mark failed error:', err)
+  }
+}
+
+// ── UPDATE showOrderSuccess ──
+function showOrderSuccess(order) {
+  var screen = document.getElementById('order-success-screen')
+  if (!screen) return
+
+  var idEl = document.getElementById('order-id')
+  if (idEl) idEl.textContent = '#' + (order ? order.id : '—')
+
+  // Show payment details
+  var paymentEl = document.getElementById('order-payment-id')
+  if (paymentEl && order && order.razorpay_payment_id) {
+    paymentEl.textContent = 'Payment ID: ' + order.razorpay_payment_id
+    paymentEl.style.display = 'block'
+  }
+
+  screen.style.display = 'block'
 }
 
 function showOrderSuccess(order) {
