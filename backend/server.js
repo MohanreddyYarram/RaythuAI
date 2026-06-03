@@ -14,7 +14,7 @@ const compression = require('compression')
 const cors = require('cors')
 
 const path = require('path')
-const Sentry = require('@sentry/node')
+
 // Import dotenv (reads secerates)
 require('dotenv').config()
 
@@ -111,10 +111,7 @@ const authLimiter = rateLimit({
         message:' Too many otp requests,please try after 1 hour.'
     }
 })
-Sentry.init({
-    dsn:process.env.SENTRY_DSN,
-    environment:process.env.NODE_ENV || 'production'
-})
+
 app.use(Sentry.Handlers.requestHandler())
 app.use('/detect',detectLimiter)
 app.use('/auth/send-otp',authLimiter)
@@ -145,7 +142,7 @@ app.get('/',(req,res)=>{
 app.get('/shop-admin',(req,res)=>{
     res.sendFile(path.join(__dirname,'web','shop-admin.html'))
 })
-app.use(Sentry.Handlers.errorHandler())
+
 
 // Start the server on port 3000
 const PORT = process.env.PORT || 3000
