@@ -112,7 +112,7 @@ const authLimiter = rateLimit({
     }
 })
 
-app.use(Sentry.Handlers.requestHandler())
+
 app.use('/detect',detectLimiter)
 app.use('/auth/send-otp',authLimiter)
 
