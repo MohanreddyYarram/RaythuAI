@@ -2069,40 +2069,30 @@ function orderPesticidesFromScan(pesticides) {
   else { showToast('Already in cart!', 'success'); switchScreen('shop') }
 }
 
+
+setInterval(function() {
+  fetch('/auth/ping').catch(function() {})
+}, 10 * 60 * 1000) // 10 minute
+
 /* ══════════════════════════════════════
    SWIPE NAVIGATION
 ══════════════════════════════════════ */
 (function() {
   var touchStartX = 0
   var touchStartY = 0
-  var touchEndX = 0
-  var touchEndY = 0
-  var threshold = 80    // minimum swipe distance
-  var restraint = 100   // maximum vertical movement allowed
+  var threshold = 80
+  var restraint = 100
 
-  // Screen history for back navigation
   var screenHistory = ['home']
 
-  // Override switchScreen to track history
-  var _origSwitch = switchScreen
-  switchScreen = function(name) {
+  // Track screen changes
+  var originalSwitchScreen = switchScreen
+  window.switchScreenWithHistory = function(name) {
     if (name !== currentScreen) {
       screenHistory.push(name)
-      // Keep history max 10 screens
       if (screenHistory.length > 10) screenHistory.shift()
     }
-    _origSwitch(name)
-  }
-
-  function goToPreviousScreen() {
-    // Remove current screen from history
-    screenHistory.pop()
-
-    // Get previous screen
-    var previous = screenHistory[screenHistory.length - 1] || 'home'
-
-    // Use original switchScreen to avoid double-pushing history
-    _origSwitch(previous)
+    originalSwitchScreen(name)
   }
 
   document.addEventListener('touchstart', function(e) {
@@ -2111,31 +2101,43 @@ function orderPesticidesFromScan(pesticides) {
   }, { passive: true })
 
   document.addEventListener('touchend', function(e) {
-    touchEndX = e.changedTouches[0].screenX
-    touchEndY = e.changedTouches[0].screenY
+    var touchEndX = e.changedTouches[0].screenX
+    var touchEndY = e.changedTouches[0].screenY
 
     var distX = touchEndX - touchStartX
     var distY = Math.abs(touchEndY - touchStartY)
 
-    // Swipe right — go back
-    if (distX > threshold && distY < restraint) {
-      // Don't go back from home
-      if (currentScreen === 'home') return
+    // Only swipe right counts
+    if (distX < threshold) return
+    if (distY > restraint) return
 
-      // Don't interfere with result screen scan action buttons
-      var target = e.target
-      var isInsideCart = target.closest && target.closest('#cart-screen')
-      var isInsideActivity = target.closest && target.closest('#activity-screen')
-      var isInsideProfile = target.closest && target.closest('#profile-screen')
-      var isInsideOrders = target.closest && target.closest('#my-orders-screen')
+    // Don't go back from home
+    if (currentScreen === 'home') return
 
-      if (isInsideCart || isInsideActivity || isInsideProfile || isInsideOrders) return
-
-      goToPreviousScreen()
+    // Don't swipe inside overlays
+    var t = e.target
+    if (t.closest) {
+      if (t.closest('#cart-screen')) return
+      if (t.closest('#activity-screen')) return
+      if (t.closest('#profile-screen')) return
+      if (t.closest('#my-orders-screen')) return
+      if (t.closest('#order-success-screen')) return
     }
-  }, { passive: true })
-})()
 
-setInterval(function() {
-  fetch('/auth/ping').catch(function() {})
-}, 10 * 60 * 1000) // 10 minute
+    // Go to previous screen
+    screenHistory.pop()
+    var previous = screenHistory[screenHistory.length - 1] || 'home'
+    originalSwitchScreen(previous)
+    currentScreen = previous
+
+  }, { passive: true })
+
+  // Also track when switchScreen is called
+  var _orig = switchScreen
+  switchScreen = function(name) {
+    screenHistory.push(name)
+    if (screenHistory.length > 10) screenHistory.shift()
+    _orig(name)
+  }
+
+})()
