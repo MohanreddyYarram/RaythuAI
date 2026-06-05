@@ -102,7 +102,7 @@ router.post('/login', async (req, res) => {
     // Find farmer
     const { data: farmer, error } = await supabase
       .from('farmers')
-      .select('phone,name,village,district,land_acres,crop_type,sowing_date,password_hash')
+      .select('phone,name,village,district,land_acres,crop_type,sowing_date,password_hash,is_approved')
       .eq('phone', phone)
       .single()
 
@@ -225,8 +225,7 @@ router.post('/reset-password', async (req, res) => {
  function validatePassword(password){
   if (!password || password.length < 8) {
     return res.status(400).json({ message: 'Password must be at least 8 characters' })
-
-  }
+ }
   if(!/[0-9]/.test(password)){
     return res.status(400).json({message:'Password must contain at least one number'})
   }
