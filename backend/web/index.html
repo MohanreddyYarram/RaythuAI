@@ -75,10 +75,15 @@
     <div class="login-field-label">🔒 Create Password</div>
     <div style="position:relative;">
       <input type="password" id="reg-password" class="login-input"
-        placeholder="Min 8 characters with numbers" style="padding-right:44px;">
+        placeholder="Min 8 characters with numbers and characters" style="padding-right:44px;">
       <button onclick="togglePassword('reg-password')" style="
         position:absolute;right:12px;top:50%;transform:translateY(-50%);
         background:none;border:none;cursor:pointer;font-size:16px;color:#888;">👁️</button>
+    </div>
+    <div style="font-size:11px;color:#888;margin-bottom:8px;padding:8px;
+       background:#f8f8f8;border-radius:8px;">
+      🔒 Password must have:
+       Min 8 characters · One number · One capital letter · One special character (!@#$%^&*)
     </div>
     <div style="position:relative;">
       <input type="password" id="reg-confirm-password" class="login-input"

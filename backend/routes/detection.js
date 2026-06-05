@@ -50,19 +50,52 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
 
     const {data:scanCount, error:countError} = await supabase
       .from('scans')
-      .select('id',{count:'exact'})
+      .select('id')
       .eq('farmer_id',farmerPhone)
       .gte('created_at',startOfMonth.toISOString())
+    
+    const freeScansUsed = scanCount ? scanCount.length :0
+   //Checking if farmers has active subscription
+    const {data:subscription} = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('farmer_id',farmerPhone)
+      .eq('Plan','unlimited')
+      .gte('valid_until',new Date().toISOString())
+      .single()
+   // Check pay per scan credits
+   const {data:payPerScan} = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('farmer_id',farmerPhone)
+    .gt('scans_purchased',0)
+    .order('created_at',{ascending:false})
+    .limit(1)
+    .single()
 
-    if(!countError && scanCount && scanCount.length >=5){
-      return res.status(429).json({
+   //Decision logic
+   if(subscription){
+    console.log('Unlimited plan active for:',farmerPhone)
+   }else if(payPerScan && payPerScan.scans_purchased>payPerScan.scans_used){
+    // Has paid scan credit -deduct one
+    await supabase
+      .from('subscriptions')
+      .update({scans_used:payPerScan.scans_used+1})
+      .eq('id',payPerScan.id)
+    console.log('Pay per scan credit used for:',farmerPhone)
+   }else if(freeScansUsed >=5){
+    return res.status(429).json({
         message : 'Monthly scan limit reached',
         limit:5,
         used: scanCount.length,
         resets:'Next month'
       })
-    }
-     if (!req.files || req.files.length < 1) {
+
+   }
+
+
+  
+    if (!req.files || req.files.length < 1) {
       return res.status(400).json({ message: 'Please upload at least one image' })
     }
 

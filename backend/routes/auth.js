@@ -20,6 +20,8 @@ function sanitizeText(text) {
   return text ? text.replace(/<[^>]*>/g, '').trim().substring(0, 500) : ''
 }
 
+
+
 // ── REGISTER ──
 router.post('/register', async (req, res) => {
   const phone = sanitizePhone(req.body.phone)
@@ -28,16 +30,12 @@ router.post('/register', async (req, res) => {
   const district = sanitizeText(req.body.district)
   const crop_type = sanitizeText(req.body.crop_type)
   const {  password,land_acres, sowing_date } = req.body
-
+  const passwordError = validatePassword(password)
   if (!phone || phone.length !== 10) {
     return res.status(400).json({ message: 'Valid 10-digit phone number required' })
   }
-  if (!password || password.length < 8) {
-    return res.status(400).json({ message: 'Password must be at least 8 characters' })
-
-  }
-  if(!/[0-9]/.test(password)){
-    return res.status(400).json({message:'Password must contain at least one number'})
+  if (passwordError){
+   return res.status(400).json({message:passwordError})
   }
   if (!name || !village || !district) {
     return res.status(400).json({ message: 'Name, village and district are required' })
@@ -188,12 +186,12 @@ router.post('/forgot-password', async (req, res) => {
 // ── RESET PASSWORD ──
 router.post('/reset-password', async (req, res) => {
   const { phone, otp, new_password } = req.body
-
+  const passwordError=validatePassword(new_password)
   if (!phone || !otp || !new_password) {
     return res.status(400).json({ message: 'Phone, OTP and new password required' })
   }
-  if (new_password.length < 6) {
-    return res.status(400).json({ message: 'Password must be at least 6 characters' })
+  if (passwordError) {
+    return res.status(400).json({ message: passwordError })
   }
 
   try {
@@ -224,9 +222,27 @@ router.post('/reset-password', async (req, res) => {
   }
 })
 
+ function validatePassword(password){
+  if (!password || password.length < 8) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters' })
+
+  }
+  if(!/[0-9]/.test(password)){
+    return res.status(400).json({message:'Password must contain at least one number'})
+  }
+  if(!/[A-Z]/.test(password)){
+    return 'Password must contain at least one capital letter'
+  }
+  if(!/[!@#$%^&*]/.test(password)){
+    return 'Password must contain at least one special character (!@#$%^&*)'
+  }
+  return null
+ }
+
 // ── PING ──
 router.get('/ping', (req, res) => {
   res.status(200).json({ status: 'alive', time: new Date().toISOString() })
 })
+
 
 module.exports = router

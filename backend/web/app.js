@@ -676,18 +676,10 @@ async function analyzeImages() {
       updateUploadCount()
       updateAnalyzeBtn()
       renderResult(data.result)
-    } else if (response.status === 429 && data.limit){
-      if (error) { error.style.display = 'flex'; error.style.flexDirection = 'column' }
-      var errMsg = document.getElementById('error-msg')
-      if (errMsg) errMsg.innerHTML =
-      '<div style="text-align:center;">' +
-      '<div style="font-size:32px;margin-bottom:8px;">🔬</div>' +
-      '<div style="font-size:15px;font-weight:800;color:#1a2e1e;margin-bottom:6px;">' +
-      'Monthly Scan Limit Reached</div>' +
-      '<div style="font-size:13px;color:#555;margin-bottom:4px;">' +
-      'You have used ' + data.used + '/' + data.limit + ' free scans this month.</div>' +
-      '<div style="font-size:12px;color:#888;">Resets on 1st of next month.</div>' +
-      '</div>'
+    } else if (response.status === 429) {
+      if (loading) loading.style.display = 'none'
+     if (error) error.style.display = 'none'
+     showScanUpgradeUI()
     }else {
       throw new Error(data.message || 'Detection failed')
     }
@@ -696,6 +688,157 @@ async function analyzeImages() {
     if (error) { error.style.display = 'flex'; error.style.flexDirection = 'column' }
     var errMsg = document.getElementById('error-msg')
     if (errMsg) errMsg.textContent = err.message || 'Something went wrong'
+  }
+}
+function showScanUpgradeUI() {
+  var resultScreen = document.getElementById('screen-result')
+  if (!resultScreen) return
+
+  var content = document.getElementById('result-content')
+  var loading = document.getElementById('result-loading')
+  var error = document.getElementById('result-error')
+
+  if (loading) loading.style.display = 'none'
+  if (error) error.style.display = 'none'
+  if (content) {
+    content.style.display = 'block'
+    content.innerHTML =
+      '<div style="text-align:center;padding:32px 24px;">' +
+
+      '<div style="font-size:48px;margin-bottom:16px;">🔬</div>' +
+
+      '<div style="font-size:18px;font-weight:900;color:#1a2e1e;margin-bottom:8px;">' +
+      'Free Scans Used!' +
+      '</div>' +
+      '<div style="font-size:14px;color:#888;margin-bottom:24px;font-family:Tiro Telugu,serif;">' +
+      'ఈ నెల మీ 5 ఉచిత స్కాన్‌లు పూర్తయ్యాయి' +
+      '</div>' +
+
+      // Plan cards
+      '<div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">' +
+
+      // Pay per scan
+      '<div style="background:white;border-radius:14px;padding:16px;' +
+      'border:2px solid #e8e0d0;text-align:left;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+      '<div>' +
+      '<div style="font-size:15px;font-weight:800;">🔬 1 Extra Scan</div>' +
+      '<div style="font-size:12px;color:#888;margin-top:2px;">Single scan credit</div>' +
+      '</div>' +
+      '<div style="font-size:20px;font-weight:900;color:#1a6e35;">₹29</div>' +
+      '</div>' +
+      '<button onclick="buyScanPlan(\'pay_per_scan\')" style="' +
+      'width:100%;margin-top:12px;padding:12px;background:#1a6e35;color:white;' +
+      'border:none;border-radius:10px;font-size:14px;font-weight:800;' +
+      'font-family:Nunito,sans-serif;cursor:pointer;">Buy 1 Scan — ₹29</button>' +
+      '</div>' +
+
+      // 5 scan pack
+      '<div style="background:white;border-radius:14px;padding:16px;' +
+      'border:2px solid #1a6e35;text-align:left;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+      '<div>' +
+      '<div style="font-size:15px;font-weight:800;">🔬 5 Scan Pack</div>' +
+      '<div style="font-size:12px;color:#1a6e35;margin-top:2px;">Best value! ₹19.8/scan</div>' +
+      '</div>' +
+      '<div style="font-size:20px;font-weight:900;color:#1a6e35;">₹99</div>' +
+      '</div>' +
+      '<button onclick="buyScanPlan(\'scan_pack_5\')" style="' +
+      'width:100%;margin-top:12px;padding:12px;background:#1a6e35;color:white;' +
+      'border:none;border-radius:10px;font-size:14px;font-weight:800;' +
+      'font-family:Nunito,sans-serif;cursor:pointer;">Buy 5 Scans — ₹99</button>' +
+      '</div>' +
+
+      // Unlimited
+      '<div style="background:linear-gradient(135deg,#0d3d1e,#1a6e35);' +
+      'border-radius:14px;padding:16px;text-align:left;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+      '<div>' +
+      '<div style="font-size:15px;font-weight:800;color:white;">⭐ Unlimited Monthly</div>' +
+      '<div style="font-size:12px;color:#a8e6bc;margin-top:2px;">Unlimited scans for 30 days</div>' +
+      '</div>' +
+      '<div style="font-size:20px;font-weight:900;color:#f5a623;">₹99</div>' +
+      '</div>' +
+      '<button onclick="buyScanPlan(\'unlimited\')" style="' +
+      'width:100%;margin-top:12px;padding:12px;background:#f5a623;color:#0d3d1e;' +
+      'border:none;border-radius:10px;font-size:14px;font-weight:800;' +
+      'font-family:Nunito,sans-serif;cursor:pointer;">Go Unlimited — ₹99/month</button>' +
+      '</div>' +
+
+      '</div>' +
+
+      '<button onclick="resetAndScan()" style="' +
+      'width:100%;padding:12px;background:#f0f0f0;color:#555;' +
+      'border:none;border-radius:10px;font-size:13px;font-weight:700;' +
+      'font-family:Nunito,sans-serif;cursor:pointer;">← Back</button>' +
+
+      '</div>'
+  }
+}
+
+// ── BUY SCAN PLAN ──
+async function buyScanPlan(plan) {
+  var farmerData = localStorage.getItem('rytuai_farmer')
+  if (!farmerData) { showToast('Please login again', 'error'); return }
+  var farmer = JSON.parse(farmerData)
+
+  try {
+    var loaded = await loadRazorpayScript()
+    if (!loaded) { showToast('Payment service unavailable', 'error'); return }
+
+    var response = await fetch(API + '/payment/subscribe', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token')
+      },
+      body: JSON.stringify({ farmer_id: farmer.phone, plan })
+    })
+
+    var data = await response.json()
+    if (!response.ok) { showToast(data.message || 'Failed', 'error'); return }
+
+    var options = {
+      key: data.key_id,
+      amount: data.amount,
+      currency: data.currency,
+      name: 'RytuAI',
+      description: data.label,
+      order_id: data.razorpay_order_id,
+      prefill: {
+        name: farmer.name,
+        contact: farmer.phone
+      },
+      theme: { color: '#1a6e35' },
+      handler: async function(paymentResponse) {
+        // Verify subscription payment
+        var verifyRes = await fetch(API + '/payment/subscribe/verify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token')
+          },
+          body: JSON.stringify({
+            razorpay_order_id: paymentResponse.razorpay_order_id,
+            razorpay_payment_id: paymentResponse.razorpay_payment_id,
+            razorpay_signature: paymentResponse.razorpay_signature,
+            farmer_id: farmer.phone,
+            plan
+          })
+        })
+        var verifyData = await verifyRes.json()
+        if (verifyData.success) {
+          showToast('✅ Plan activated! You can scan now.', 'success')
+          setTimeout(function() { resetAndScan() }, 1500)
+        }
+      }
+    }
+
+    var rzp = new window.Razorpay(options)
+    rzp.open()
+
+  } catch(err) {
+    showToast('Payment failed. Try again.', 'error')
   }
 }
 
