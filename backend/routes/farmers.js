@@ -143,20 +143,7 @@ router.post('/',async(req,res)=>{
 
 
 
-// Get all pending farmers
-router.get('/farmers/pending', async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('farmers')
-      .select('phone, name, village, district, land_acres, crop_type, created_at, is_approved')
-      .order('created_at', { ascending: false })
 
-    if (error) return res.status(400).json({ message: error.message })
-    res.status(200).json({ farmers: data })
-  } catch(err) {
-    res.status(500).json({ message: err.message })
-  }
-})
 
 //PUT/Method
 router.put('/:phone',async(req,res)=>{
@@ -197,6 +184,20 @@ router.put('/:phone',async(req,res)=>{
             error:err.message
         })
     }
+})
+// Get all pending farmers
+router.get('/pending', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('farmers')
+      .select('phone, name, village, district, land_acres, crop_type, created_at, is_approved')
+      .order('created_at', { ascending: false })
+
+    if (error) return res.status(400).json({ message: error.message })
+    res.status(200).json({ farmers: data })
+  } catch(err) {
+    res.status(500).json({ message: err.message })
+  }
 })
 
 // Approve or reject farmer
