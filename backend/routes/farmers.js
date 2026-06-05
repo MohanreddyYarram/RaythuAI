@@ -144,7 +144,7 @@ router.post('/',async(req,res)=>{
 
 
 // Get all pending farmers
-router.get('/pending', async (req, res) => {
+router.get('/farmers/pending', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('farmers')
