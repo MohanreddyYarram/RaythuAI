@@ -192,6 +192,8 @@ router.get('/farmers/pending', async (req, res) => {
       .from('farmers')
       .select('phone, name, village, district, land_acres, crop_type, created_at, is_approved')
       .order('created_at', { ascending: false })
+      .eq('is_approved',false)
+      .single()
 
     if (error) return res.status(400).json({ message: error.message })
     res.status(200).json({ farmers: data })
