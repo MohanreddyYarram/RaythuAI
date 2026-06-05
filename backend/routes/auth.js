@@ -33,7 +33,7 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({ message: 'Valid 10-digit phone number required' })
   }
   if (!password || password.length < 8) {
-    return res.status(400).json({ message: 'Password must be at least 6 characters' })
+    return res.status(400).json({ message: 'Password must be at least 8 characters' })
 
   }
   if(!/[0-9]/.test(password)){
@@ -65,7 +65,8 @@ router.post('/register', async (req, res) => {
         phone, name, village, district,
         land_acres: parseFloat(land_acres) || 0,
         crop_type, sowing_date,
-        password_hash
+        password_hash,
+        is_approved:false
       })
       .select()
 
@@ -77,9 +78,9 @@ router.post('/register', async (req, res) => {
     var farmerData = data[0]
     delete farmerData.password_hash
     res.status(201).json({
-      message: 'Registration successful!',
-      token,
-      farmer: farmerData
+      message: 'Registration successful! Your account is oending approval. we will contact you within 24 hours.',
+      pending: true,
+      
     })
   } catch(err) {
     console.log('Register error:', err.message)
@@ -120,6 +121,13 @@ router.post('/login', async (req, res) => {
     const isValid = await bcrypt.compare(password, farmer.password_hash)
     if (!isValid) {
       return res.status(400).json({ message: 'Incorrect password. Please try again.' })
+    }
+    // After bcrypt.compare succeeds
+   if (!farmer.is_approved) {
+    return res.status(403).json({
+    message: 'Your account is pending approval. We will call you within 24 hours.',
+    pending: true
+     })
     }
 
     // Generate token

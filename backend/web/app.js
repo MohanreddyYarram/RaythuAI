@@ -262,6 +262,13 @@ async function loginWithPassword() {
     hideLoginLoading()
 
     if (response.ok) {
+      if (data.pending) {
+      hideLoginLoading()
+      showStep('step-login')
+      showLoginError('⏳ Account pending approval. We will call you within 24 hours.')
+      return
+      }
+
       localStorage.setItem('rytuai_token', data.token)
       localStorage.setItem('rytuai_phone', phone)
       localStorage.setItem('rytuai_farmer', JSON.stringify(data.farmer))
@@ -291,7 +298,7 @@ async function registerWithPassword() {
 
   if (phone.length !== 10) { showLoginError('Please enter valid 10-digit number'); return }
   if (!name || !village || !district) { showLoginError('Please fill name, village and district'); return }
-  if (!password || password.length < 6) { showLoginError('Password must be at least 6 characters'); return }
+  if (!password || password.length < 6) { showLoginError('Password must be at least 8 characters'); return }
   if (password !== confirmPassword) { showLoginError('Passwords do not match'); return }
 
   showLoginLoading('Creating account...')
@@ -311,10 +318,29 @@ async function registerWithPassword() {
     hideLoginLoading()
 
     if (response.ok) {
-      localStorage.setItem('rytuai_token', data.token)
-      localStorage.setItem('rytuai_phone', phone)
-      localStorage.setItem('rytuai_farmer', JSON.stringify(data.farmer))
-      showApp()
+      
+      hideLoginLoading()
+      showStep('step-login')
+      
+      document.getElementById('reg-phone').value = ''
+      document.getElementById('reg-name').value = ''
+      document.getElementById('reg-village').value = ''
+      document.getElementById('reg-district').value = ''
+      document.getElementById('reg-password').value = ''
+      document.getElementById('reg-confirm-password').value = ''
+      var errEl = document.getElementById('login-error')
+     if (errEl) {
+      errEl.style.background = '#d4edda'
+      errEl.style.color = '#155724'
+      errEl.style.border = '1px solid #c8ddc8'
+      errEl.textContent = '✅ Registration received! We will call you on ' +
+      document.getElementById('reg-phone').value +
+      ' within 24 hours to activate your account.'
+      errEl.style.display = 'block'
+     }
+      
+      
+      
     } else {
       showStep('step-signup')
       showLoginError(data.message || 'Registration failed')
