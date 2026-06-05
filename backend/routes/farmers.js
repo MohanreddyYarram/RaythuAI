@@ -186,7 +186,7 @@ router.put('/:phone',async(req,res)=>{
     }
 })
 // Get all pending farmers
-router.get('/pending', async (req, res) => {
+router.get('/farmers/pending', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('farmers')
@@ -201,7 +201,7 @@ router.get('/pending', async (req, res) => {
 })
 
 // Approve or reject farmer
-router.put('/approve/:phone', async (req, res) => {
+router.put('/farmers/approve/:phone', async (req, res) => {
   const { phone } = req.params
   const { is_approved } = req.body
 
