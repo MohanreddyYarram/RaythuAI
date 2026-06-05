@@ -254,6 +254,7 @@ html,body{height:100%;font-family:'Nunito',sans-serif;background:#f0f7f2;color:#
     <div class="nav-tab" onclick="showTab('orders', event)">📦 Orders</div>
     <div class="nav-tab" onclick="showTab('products', event)">🧴 Products</div>
     <div class="nav-tab" onclick="showTab('add-product', event)">➕ Add Product</div>
+    <div class="nav-tab" onclick="showTab('farmers', event)">👨‍🌾 Farmers</div>
   </div>
 
   <div class="content">
@@ -333,6 +334,49 @@ html,body{height:100%;font-family:'Nunito',sans-serif;background:#f0f7f2;color:#
           </div>
         </div>
         <button class="btn-add" onclick="addProduct()">✅ Add Product</button>
+      </div>
+    </div>
+
+    <!-- FARMERS TAB -->
+      <div id="tab-farmers" style="display:none;">
+
+    <!-- Filter buttons -->
+   <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+    <button class="action-btn btn-confirm" 
+      onclick="filterFarmers('all')" id="filter-all">
+      All Farmers
+    </button>
+    <button class="action-btn" 
+      style="background:#fff3cd;color:#856404;" 
+      onclick="filterFarmers('pending')" id="filter-pending">
+      ⏳ Pending
+    </button>
+    <button class="action-btn" 
+      style="background:#d4edda;color:#155724;" 
+      onclick="filterFarmers('approved')" id="filter-approved">
+      ✅ Approved
+    </button>
+  </div>
+
+  <!-- Stats row -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">
+    <div class="stat-card">
+      <div class="stat-val" id="total-farmers-count">0</div>
+      <div class="stat-label">Total Farmers</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="pending-farmers-count">0</div>
+      <div class="stat-label">Pending</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="approved-farmers-count">0</div>
+      <div class="stat-label">Approved</div>
+    </div>
+  </div>
+
+  <!-- Farmers list -->
+  <div id="farmers-list">
+    <div class="loader"></div>
       </div>
     </div>
 
@@ -489,6 +533,7 @@ function showTab(name, e) {
   if (name === 'dashboard') loadDashboard()
   if (name === 'orders') loadAllOrders()
   if (name === 'products') loadProducts()
+  if (name === 'farmers')loadFarmers()
 }
 
 /* ── DASHBOARD ── */
@@ -744,6 +789,177 @@ function showConfirm(msg) {
   })
 }
 
+var allFarmers = []
+var currentFarmerFilter = 'all'
+
+// Load farmers
+async function loadFarmers() {
+  var listEl = document.getElementById('farmers-list')
+  listEl.innerHTML = '<div class="loader"></div>'
+
+  try {
+    var res = await fetch(API + '/farmers/pending', {
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('owner_token') }
+    })
+    var data = await res.json()
+    allFarmers = data.farmers || []
+    updateFarmerStats()
+    renderFarmers(allFarmers)
+  } catch(e) {
+    listEl.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Cannot load farmers</div></div>'
+  }
+}
+
+// Update stats
+function updateFarmerStats() {
+  var total = allFarmers.length
+  var pending = allFarmers.filter(function(f) { return !f.is_approved }).length
+  var approved = allFarmers.filter(function(f) { return f.is_approved }).length
+
+  document.getElementById('total-farmers-count').textContent = total
+  document.getElementById('pending-farmers-count').textContent = pending
+  document.getElementById('approved-farmers-count').textContent = approved
+}
+
+// Filter farmers
+function filterFarmers(filter) {
+  currentFarmerFilter = filter
+
+  // Update active button
+  document.querySelectorAll('[id^="filter-"]').forEach(function(btn) {
+    btn.style.background = '#f0f0f0'
+    btn.style.color = '#555'
+  })
+
+  if (filter === 'all') {
+    document.getElementById('filter-all').style.background = '#1a6e35'
+    document.getElementById('filter-all').style.color = 'white'
+    renderFarmers(allFarmers)
+  } else if (filter === 'pending') {
+    document.getElementById('filter-pending').style.background = '#f5a623'
+    document.getElementById('filter-pending').style.color = 'white'
+    renderFarmers(allFarmers.filter(function(f) { return !f.is_approved }))
+  } else if (filter === 'approved') {
+    document.getElementById('filter-approved').style.background = '#1a6e35'
+    document.getElementById('filter-approved').style.color = 'white'
+    renderFarmers(allFarmers.filter(function(f) { return f.is_approved }))
+  }
+}
+
+// Render farmer cards
+function renderFarmers(farmers) {
+  var listEl = document.getElementById('farmers-list')
+
+  if (farmers.length === 0) {
+    listEl.innerHTML = '<div class="empty"><div class="empty-icon">👨‍🌾</div><div class="empty-title">No farmers found</div></div>'
+    return
+  }
+
+  listEl.innerHTML = farmers.map(function(farmer) {
+    var isPending = !farmer.is_approved
+    var regDate = farmer.created_at
+      ? new Date(farmer.created_at).toLocaleDateString('en-IN', {
+          day: 'numeric', month: 'short', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        })
+      : '—'
+
+    return '<div style="background:white;border-radius:14px;padding:16px;' +
+      'margin-bottom:12px;border:1.5px solid ' + (isPending ? '#ffe082' : '#c8ddc8') + ';' +
+      'border-left:4px solid ' + (isPending ? '#f5a623' : '#1a6e35') + ';">' +
+
+      // Header
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">' +
+      '<div>' +
+      '<div style="font-size:15px;font-weight:800;">👨‍🌾 ' + farmer.name + '</div>' +
+      '<div style="font-size:12px;color:#888;margin-top:2px;">📱 ' + farmer.phone + '</div>' +
+      '</div>' +
+      '<span style="background:' + (isPending ? '#fff3cd' : '#d4edda') + ';' +
+      'color:' + (isPending ? '#856404' : '#155724') + ';' +
+      'font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;">' +
+      (isPending ? '⏳ Pending' : '✅ Approved') +
+      '</span>' +
+      '</div>' +
+
+      // Details
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">' +
+      '<div style="font-size:12px;color:#555;">📍 ' + (farmer.village || '—') + ', ' + (farmer.district || '—') + '</div>' +
+      '<div style="font-size:12px;color:#555;">🌶️ ' + (farmer.crop_type || '—') + ' · ' + (farmer.land_acres || '—') + ' acres</div>' +
+      '<div style="font-size:11px;color:#888;">🕐 Registered: ' + regDate + '</div>' +
+      '</div>' +
+
+      // Action buttons
+      '<div style="display:flex;gap:8px;">' +
+
+      // Call button
+      '<button onclick="window.open(\'tel:' + farmer.phone + '\')" ' +
+      'style="flex:1;padding:10px;background:#e8f5ee;color:#1a6e35;' +
+      'border:1.5px solid #c8ddc8;border-radius:8px;font-size:13px;' +
+      'font-weight:700;font-family:Nunito,sans-serif;cursor:pointer;">' +
+      '📞 Call' +
+      '</button>' +
+
+      // Approve/Reject based on status
+      (isPending ?
+        '<button onclick="approveFarmer(\'' + farmer.phone + '\', true)" ' +
+        'style="flex:2;padding:10px;background:#1a6e35;color:white;' +
+        'border:none;border-radius:8px;font-size:13px;' +
+        'font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;">' +
+        '✅ Approve' +
+        '</button>' +
+        '<button onclick="approveFarmer(\'' + farmer.phone + '\', false)" ' +
+        'style="flex:1;padding:10px;background:#ffeaea;color:#e74c3c;' +
+        'border:1.5px solid #ffb3b3;border-radius:8px;font-size:13px;' +
+        'font-weight:700;font-family:Nunito,sans-serif;cursor:pointer;">' +
+        '❌ Reject' +
+        '</button>'
+        :
+        '<button onclick="approveFarmer(\'' + farmer.phone + '\', false)" ' +
+        'style="flex:1;padding:10px;background:#ffeaea;color:#e74c3c;' +
+        'border:1.5px solid #ffb3b3;border-radius:8px;font-size:13px;' +
+        'font-weight:700;font-family:Nunito,sans-serif;cursor:pointer;">' +
+        '🚫 Revoke' +
+        '</button>'
+      ) +
+      '</div>' +
+      '</div>'
+  }).join('')
+}
+
+// Approve or reject farmer
+async function approveFarmer(phone, approve) {
+  var action = approve ? 'Approve' : 'Reject'
+  var confirmed = await showConfirm(action + ' farmer ' + phone + '?')
+  if (!confirmed) return
+
+  try {
+    var res = await fetch(API + '/farmers/approve/' + phone, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('owner_token')
+      },
+      body: JSON.stringify({ is_approved: approve })
+    })
+    var data = await res.json()
+
+    if (res.ok) {
+      toast(approve ? '✅ Farmer approved!' : '❌ Farmer rejected', approve ? 'success' : 'error')
+      // Update local array
+      allFarmers = allFarmers.map(function(f) {
+        if (f.phone === phone) f.is_approved = approve
+        return f
+      })
+      updateFarmerStats()
+      filterFarmers(currentFarmerFilter)
+    } else {
+      toast(data.message || 'Failed', 'error')
+    }
+  } catch(e) {
+    toast('Cannot connect to server', 'error')
+  }
+}
+
 window.onload = function() {
   var token = localStorage.getItem('owner_token')
   var data = localStorage.getItem('owner_data')
@@ -752,6 +968,7 @@ window.onload = function() {
     showAdminApp()
   }
 }
+
 </script>
 </body>
 </html>
