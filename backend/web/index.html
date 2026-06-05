@@ -66,7 +66,13 @@
       <option value="Groundnut">🥜 Groundnut — వేరుశెనగ</option>
       <option value="Maize">🌽 Maize — మొక్కజొన్న</option>
     </select>
-    <input type="date" id="reg-sowing" class="login-input" placeholder="Select Sowing Date">
+    <input type="date" id="reg-sowing" class="login-input" >
+
+    <input type="text" id ="reg-sowing" class="login-input"
+    placeholder="Sowing Date (DD/MM/YYYY)"
+    onfocus="this.type='date'"
+    onblur="if(!this.value)this.type='text'"
+    onchange="this.type='date'">
     <div class="login-field-label">🔒 Create Password</div>
     <div style="position:relative;">
       <input type="password" id="reg-password" class="login-input"
@@ -859,6 +865,11 @@
     <div class="form-group">
       <label class="form-label">Sowing Date</label>
       <input type="date" id="edit-sowing" class="form-input">
+      <input type="text" id ="edit-sowing" class="form-input"
+      placeholder="Sowing Date (DD/MM/YYYY)"
+      onfocus="this.type='date'"
+      onblur="if(!this.value)this.type='text'"
+      onchange="this.type='date'">
     </div>
     <button class="btn-primary" onclick="saveProfile()" style="margin-bottom:12px;">✅ Save Changes</button>
     <button class="btn-danger" onclick="localStorage.clear();window.location.replace('/');">🚪 Logout</button>
