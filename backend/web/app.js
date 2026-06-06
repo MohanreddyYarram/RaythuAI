@@ -657,6 +657,13 @@ async function analyzeImages() {
     var data = await response.json()
     if (loading) loading.style.display = 'none'
 
+    if (response.status === 429) {
+     if (error) error.style.display = 'none'
+      if (content) content.style.display = 'none'
+      showScanUpgradeUI()
+    return  // ← important — stop here
+    }
+
     if (response.ok) {
 
       cachedScans = null
@@ -1183,6 +1190,7 @@ async function addShopActivityToTracker(item, price) {
 ══════════════════════════════════════ */
 ;(function() {
   var startY = 0, threshold = 80, refreshing = false, indicator = null
+  var swipeStartx = 0
   function getActiveScreen() { return document.querySelector('.screen.active') }
   function getActiveScreenName() { var s = getActiveScreen(); return s ? s.id.replace('screen-', '') : 'home' }
   function showIndicator() {
@@ -2239,9 +2247,7 @@ function orderPesticidesFromScan(pesticides) {
 }
 
 
-setInterval(function() {
-  fetch('/auth/ping').catch(function() {})
-}, 10 * 60 * 1000) // 10 minute
+
 
 /* ══════════════════════════════════════
    SWIPE NAVIGATION
@@ -2265,41 +2271,45 @@ setInterval(function() {
   }
 
   document.addEventListener('touchstart', function(e) {
-    touchStartX = e.changedTouches[0].screenX
-    touchStartY = e.changedTouches[0].screenY
+    swipeStartx = e.touches[0].clientX
+    var s = getActiveScreen()
+    if (!s) return
+    if (s.scrollTop === 0) startY = e.touches[0].clientY
+     else startY = 0
   }, { passive: true })
 
   document.addEventListener('touchend', function(e) {
-    var touchEndX = e.changedTouches[0].screenX
-    var touchEndY = e.changedTouches[0].screenY
+  var swipeEndX = e.changedTouches[0].clientX
+  var swipeDistX = swipeEndX - swipeStartX
+  var swipeDistY = Math.abs(e.changedTouches[0].clientY - startY)
 
-    var distX = touchEndX - touchStartX
-    var distY = Math.abs(touchEndY - touchStartY)
-
-    // Only swipe right counts
-    if (distX < threshold) return
-    if (distY > restraint) return
-
-    // Don't go back from home
-    if (currentScreen === 'home') return
-
-    // Don't swipe inside overlays
+  // ── Swipe right → go back ──
+  if (swipeDistX > 80 && swipeDistY < 100) {
     var t = e.target
+    // Don't swipe inside overlays
     if (t.closest) {
-      if (t.closest('#cart-screen')) return
-      if (t.closest('#activity-screen')) return
-      if (t.closest('#profile-screen')) return
-      if (t.closest('#my-orders-screen')) return
-      if (t.closest('#order-success-screen')) return
+      if (t.closest('#cart-screen')) { startY = 0; return }
+      if (t.closest('#activity-screen')) { startY = 0; return }
+      if (t.closest('#profile-screen')) { startY = 0; return }
+      if (t.closest('#my-orders-screen')) { startY = 0; return }
+      if (t.closest('#order-success-screen')) { startY = 0; return }
     }
+    // Don't swipe back from home
+    if (currentScreen !== 'home') {
+      switchScreen('home')
+      startY = 0
+      return
+    }
+  }
 
-    // Go to previous screen
-    screenHistory.pop()
-    var previous = screenHistory[screenHistory.length - 1] || 'home'
-    originalSwitchScreen(previous)
-    currentScreen = previous
-
-  }, { passive: true })
+  // ── existing pull to refresh code below ──
+  if (!startY || refreshing) {
+    hideIndicator()
+    startY = 0
+    return
+  }
+  // ... rest of existing code
+}, { passive: true })
 
   // Also track when switchScreen is called
   var _orig = switchScreen
@@ -2310,3 +2320,134 @@ setInterval(function() {
   }
 
 })()
+
+/* ══════════════════════════════════════
+   SCAN UPGRADE UI
+══════════════════════════════════════ */
+function showScanUpgradeUI() {
+  switchScreen('result')
+  var content = document.getElementById('result-content')
+  var loading = document.getElementById('result-loading')
+  var error = document.getElementById('result-error')
+  if (loading) loading.style.display = 'none'
+  if (error) error.style.display = 'none'
+  if (!content) return
+
+  content.style.display = 'block'
+  content.innerHTML =
+    '<div style="text-align:center;padding:32px 24px;">' +
+    '<div style="font-size:56px;margin-bottom:12px;">🔬</div>' +
+    '<div style="font-size:20px;font-weight:900;color:#1a2e1e;margin-bottom:6px;">' +
+    'Free Scans Finished!</div>' +
+    '<div style="font-size:13px;color:#888;margin-bottom:4px;">' +
+    'You have used all 5 free scans this month.</div>' +
+    '<div style="font-size:12px;color:#1a6e35;font-family:Tiro Telugu,serif;margin-bottom:24px;">' +
+    'ఈ నెల మీ 5 ఉచిత స్కాన్‌లు పూర్తయ్యాయి</div>' +
+
+    '<div style="background:white;border-radius:14px;padding:16px;' +
+    'border:2px solid #e8e0d0;text-align:left;margin-bottom:12px;">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+    '<div><div style="font-size:15px;font-weight:800;">🔬 1 Extra Scan</div>' +
+    '<div style="font-size:12px;color:#888;margin-top:2px;">Single scan credit</div></div>' +
+    '<div style="font-size:22px;font-weight:900;color:#1a6e35;">₹29</div></div>' +
+    '<button onclick="buyScanPlan(\'pay_per_scan\')" style="width:100%;padding:12px;' +
+    'background:#1a6e35;color:white;border:none;border-radius:10px;font-size:14px;' +
+    'font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;">' +
+    'Buy 1 Scan — ₹29</button></div>' +
+
+    '<div style="background:white;border-radius:14px;padding:16px;' +
+    'border:2px solid #1a6e35;text-align:left;margin-bottom:12px;">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+    '<div><div style="font-size:15px;font-weight:800;">🔬 5 Scan Pack</div>' +
+    '<div style="font-size:12px;color:#1a6e35;margin-top:2px;">Best value — ₹19.8 per scan</div></div>' +
+    '<div style="font-size:22px;font-weight:900;color:#1a6e35;">₹99</div></div>' +
+    '<button onclick="buyScanPlan(\'scan_pack_5\')" style="width:100%;padding:12px;' +
+    'background:#1a6e35;color:white;border:none;border-radius:10px;font-size:14px;' +
+    'font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;">' +
+    'Buy 5 Scans — ₹99</button></div>' +
+
+    '<div style="background:linear-gradient(135deg,#0d3d1e,#1a6e35);' +
+    'border-radius:14px;padding:16px;text-align:left;margin-bottom:20px;">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+    '<div><div style="font-size:15px;font-weight:800;color:white;">⭐ Unlimited Monthly</div>' +
+    '<div style="font-size:12px;color:#a8e6bc;margin-top:2px;">Unlimited scans for 30 days</div></div>' +
+    '<div style="font-size:22px;font-weight:900;color:#f5a623;">₹99</div></div>' +
+    '<button onclick="buyScanPlan(\'unlimited\')" style="width:100%;padding:12px;' +
+    'background:#f5a623;color:#0d3d1e;border:none;border-radius:10px;font-size:14px;' +
+    'font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;">' +
+    'Go Unlimited — ₹99/month</button></div>' +
+
+    '<button onclick="resetAndScan()" style="width:100%;padding:12px;' +
+    'background:#f0f0f0;color:#555;border:none;border-radius:10px;font-size:13px;' +
+    'font-weight:700;font-family:Nunito,sans-serif;cursor:pointer;">' +
+    '← Back to Detect</button></div>'
+}
+
+async function buyScanPlan(plan) {
+  var farmerData = localStorage.getItem('rytuai_farmer')
+  if (!farmerData) { showToast('Please login again', 'error'); return }
+  var farmer = JSON.parse(farmerData)
+
+  try {
+    var loaded = await loadRazorpayScript()
+    if (!loaded) { showToast('Payment service unavailable', 'error'); return }
+
+    var response = await fetch(API + '/payment/subscribe', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token')
+      },
+      body: JSON.stringify({ farmer_id: farmer.phone, plan })
+    })
+
+    var data = await response.json()
+    if (!response.ok) { showToast(data.message || 'Failed', 'error'); return }
+
+    var options = {
+      key: data.key_id,
+      amount: data.amount,
+      currency: data.currency,
+      name: 'RytuAI',
+      description: data.label,
+      order_id: data.razorpay_order_id,
+      prefill: { name: farmer.name, contact: farmer.phone },
+      theme: { color: '#1a6e35' },
+      handler: async function(paymentResponse) {
+        var verifyRes = await fetch(API + '/payment/subscribe/verify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token')
+          },
+          body: JSON.stringify({
+            razorpay_order_id: paymentResponse.razorpay_order_id,
+            razorpay_payment_id: paymentResponse.razorpay_payment_id,
+            razorpay_signature: paymentResponse.razorpay_signature,
+            farmer_id: farmer.phone,
+            plan
+          })
+        })
+        var verifyData = await verifyRes.json()
+        if (verifyData.success) {
+          showToast('✅ Plan activated! You can scan now.', 'success')
+          setTimeout(function() { resetAndScan() }, 1500)
+        } else {
+          showToast('Payment verification failed', 'error')
+        }
+      }
+    }
+
+    var rzp = new window.Razorpay(options)
+    rzp.open()
+
+  } catch(err) {
+    console.log('buyScanPlan error:', err)
+    showToast('Payment failed. Try again.', 'error')
+  }
+}
+
+// Keep server alive
+setInterval(function() {
+  fetch('/auth/ping').catch(function() {})
+}, 10 * 60 * 1000)
