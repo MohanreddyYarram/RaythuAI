@@ -1,6 +1,5 @@
 // ══════════════════════════════════════
 // backend/routes/detection.js
-// Replace your existing detection.js
 // ══════════════════════════════════════
 
 const jwt = require('jsonwebtoken')
@@ -11,14 +10,14 @@ const claude = require('../services/claude')
 const supabase = require('../services/supabase')
 
 const upload = multer({ storage: multer.memoryStorage() })
+
 function sanitizePhone(phone) {
   return phone ? phone.replace(/[^0-9]/g, '').substring(0, 10) : ''
 }
 
-function sanitizeText(text) {
-  return text ? text.replace(/<[^>]*>/g, '').trim().substring(0, 500) : ''
-}
-
+// ══════════════════════════════════════
+// POST /detect — AI Disease Detection
+// ══════════════════════════════════════
 router.post('/', upload.array('photos', 4), async (req, res) => {
   console.log('=== DETECT ROUTE HIT ===')
 
@@ -34,72 +33,71 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
     farmerPhone = decoded.phone
-  } catch (err) {
+  } catch(err) {
     return res.status(401).json({ message: 'Session expired. Please login again' })
   }
 
-  //Limit Code Block
-
-
   try {
-   
-
+    // ── Check Monthly Scan Limit ──
     var startOfMonth = new Date()
     startOfMonth.setDate(1)
-    startOfMonth.setHours(0,0,0,0)
+    startOfMonth.setHours(0, 0, 0, 0)
 
-    const {data:scanCount, error:countError} = await supabase
+    const { data: scanCount } = await supabase
       .from('scans')
       .select('id')
-      .eq('farmer_id',farmerPhone)
-      .gte('created_at',startOfMonth.toISOString())
-    
-    const freeScansUsed = scanCount ? scanCount.length :0
-   //Checking if farmers has active subscription
-    const {data:subscription} = await supabase
+      .eq('farmer_id', farmerPhone)
+      .gte('created_at', startOfMonth.toISOString())
+
+    const freeScansUsed = scanCount ? scanCount.length : 0
+
+    // BUG FIX 1: 'Plan' → 'plan' (lowercase)
+    const { data: subscription } = await supabase
       .from('subscriptions')
       .select('*')
-      .eq('farmer_id',farmerPhone)
-      .eq('Plan','unlimited')
-      .gte('valid_until',new Date().toISOString())
-      .single()
-   // Check pay per scan credits
-   const {data:payPerScan} = await supabase
-    .from('subscriptions')
-    .select('*')
-    .eq('farmer_id',farmerPhone)
-    .gt('scans_purchased',0)
-    .order('created_at',{ascending:false})
-    .limit(1)
-    .single()
+      .eq('farmer_id', farmerPhone)
+      .eq('plan', 'unlimited')
+      .gte('valid_until', new Date().toISOString())
+      .maybeSingle() // BUG FIX 2: maybeSingle() instead of single() — no error if not found
 
-   //Decision logic
-   if(subscription){
-    console.log('Unlimited plan active for:',farmerPhone)
-   }else if(payPerScan && payPerScan.scans_purchased>payPerScan.scans_used){
-    // Has paid scan credit -deduct one
-    await supabase
+    // BUG FIX 3: maybeSingle() for pay per scan too
+    const { data: payPerScan } = await supabase
       .from('subscriptions')
-      .update({scans_used:payPerScan.scans_used+1})
-      .eq('id',payPerScan.id)
-    console.log('Pay per scan credit used for:',farmerPhone)
-   }else if(freeScansUsed >=5){
-    return res.status(429).json({
-        message : 'Monthly scan limit reached',
-        limit:5,
-        used: scanCount.length,
-        resets:'Next month'
+      .select('*')
+      .eq('farmer_id', farmerPhone)
+      .in('plan', ['pay_per_scan', 'scan_pack_5'])
+      .gt('scans_purchased', 0)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    // Decision logic
+    if (subscription) {
+      console.log('Unlimited plan active for:', farmerPhone)
+    } else if (payPerScan && payPerScan.scans_purchased > payPerScan.scans_used) {
+      // Deduct one paid scan credit
+      await supabase
+        .from('subscriptions')
+        .update({ scans_used: payPerScan.scans_used + 1 })
+        .eq('id', payPerScan.id)
+      console.log('Pay per scan credit used for:', farmerPhone)
+    } else if (freeScansUsed >= 5) {
+      // Limit reached — show upgrade UI
+      return res.status(429).json({
+        message: 'Monthly free scans used',
+        limit: 5,
+        used: freeScansUsed,
+        upgrade: true,
+        resets: 'Next month'
       })
+    }
 
-   }
-
-
-  
+    // ── Check Images ──
     if (!req.files || req.files.length < 1) {
       return res.status(400).json({ message: 'Please upload at least one image' })
     }
 
-    // Build image blocks for Claude
+    // ── Build Image Blocks for Claude ──
     const imageBlocks = req.files.map(file => ({
       type: 'image',
       source: {
@@ -109,13 +107,11 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
       }
     }))
 
-
-
     console.log('Calling Claude with', imageBlocks.length, 'images...')
     const result = await claude.detectDisease(imageBlocks)
     console.log('Claude result:', result.disease)
 
-    // Auto save scan to database
+    // ── Save Scan to Database ──
     try {
       const { error: scanError } = await supabase.from('scans').insert({
         farmer_id: farmerPhone,
@@ -142,7 +138,7 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
       } else {
         console.log('Scan saved for farmer:', farmerPhone)
       }
-    } catch (scanErr) {
+    } catch(scanErr) {
       console.log('Scan save exception:', scanErr.message)
     }
 
@@ -151,7 +147,7 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
       result: result
     })
 
-  } catch (err) {
+  } catch(err) {
     console.log('Detection ERROR:', err.message)
     res.status(500).json({
       message: 'Detection failed',
@@ -160,7 +156,9 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
   }
 })
 
-// Search products by pesticide name across all shops
+// ══════════════════════════════════════
+// POST /detect/search-pesticides
+// ══════════════════════════════════════
 router.post('/search-pesticides', async (req, res) => {
   const { pesticide_names } = req.body
   if (!pesticide_names || !pesticide_names.length) {
@@ -175,7 +173,6 @@ router.post('/search-pesticides', async (req, res) => {
 
     if (error) return res.status(400).json({ message: error.message })
 
-    // Match products to pesticide names
     var matched = {}
 
     pesticide_names.forEach(function(pestName) {
@@ -187,19 +184,20 @@ router.post('/search-pesticides', async (req, res) => {
                pName.includes(searchName) ||
                searchName.includes(pName)
       })
-
       if (matches.length > 0) {
         matched[pestName] = matches
       }
     })
 
     res.status(200).json({ matched })
-  } catch (err) {
+  } catch(err) {
     res.status(500).json({ message: err.message })
   }
 })
 
-// GET scan history
+// ══════════════════════════════════════
+// GET /detect/history/:phone
+// ══════════════════════════════════════
 router.get('/history/:phone', async (req, res) => {
   const { phone } = req.params
   try {
@@ -211,11 +209,14 @@ router.get('/history/:phone', async (req, res) => {
 
     if (error) return res.status(400).json({ message: error.message })
     res.status(200).json({ scans: data })
-  } catch (err) {
+  } catch(err) {
     res.status(500).json({ message: err.message })
   }
 })
 
+// ══════════════════════════════════════
+// GET /detect/scan-count/:phone
+// ══════════════════════════════════════
 router.get('/scan-count/:phone', async (req, res) => {
   const { phone } = req.params
   try {
@@ -236,4 +237,5 @@ router.get('/scan-count/:phone', async (req, res) => {
   }
 })
 
+// BUG FIX 4: 'route' → 'router'
 module.exports = router
