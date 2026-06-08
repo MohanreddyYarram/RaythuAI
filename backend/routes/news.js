@@ -21,3 +21,5 @@ app.get('/feed/news', async (req, res) => {
     res.status(200).json({ articles: [] })
   }
 })
+
+module.exports = router
