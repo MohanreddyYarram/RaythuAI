@@ -2085,3 +2085,7 @@ html, body {
   animation: spin 0.8s linear infinite;
   margin: 20px auto;
 }
+#field-selector {
+  min-height: 40px;
+  display: block !important;
+}

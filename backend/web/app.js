@@ -147,9 +147,12 @@ function showApp() {
   if (loginScreen) loginScreen.style.display = 'none'
   var app = document.getElementById('app')
   if (app) app.style.display = 'block'
-  currentFieldId = parseInt(localStorage.getItem('rytuai_current_fields'))
+
+  // BUG FIX: correct localStorage key
+  currentFieldId = parseInt(localStorage.getItem('rytuai_current_field')) || null
+
   applyLanguage()
-  setTimeout(function() {loadFields()},200)
+  setTimeout(function() { loadFields() }, 300)  // ← slightly longer delay
   setTimeout(loadFarmerData, 100)
   setTimeout(loadGreetingAndWeather, 500)
   var lastScreen = localStorage.getItem('rytuai_screen') || 'home'
@@ -1486,24 +1489,34 @@ async function loadFields() {
 }
 
 function updateFieldSelector() {
+  // Try both mobile and desktop selectors
   var selector = document.getElementById('field-selector')
-  if (!selector || allFields.length === 0) return
+  var selectorDesktop = document.getElementById('field-selector-desktop')
+
+  if (allFields.length === 0) return
 
   var currentField = allFields.find(function(f) {
     return f.id === currentFieldId
   }) || allFields[0]
 
-  selector.innerHTML =
+  var html =
     '<div style="display:flex;align-items:center;gap:8px;' +
-    'background:#e8f5ee;border-radius:20px;padding:6px 12px;' +
-    'cursor:pointer;" onclick="openFieldPicker()">' +
-    '<span>🌾</span>' +
-    '<span style="font-size:13px;font-weight:800;color:#1a6e35;">' +
-    currentField.field_name + '</span>' +
-    '<span style="font-size:11px;color:#888;">' +
-    currentField.crop_type + ' · ' + currentField.land_acres + ' acres</span>' +
-    '<span style="font-size:12px;color:#1a6e35;">▾</span>' +
+    'background:#e8f5ee;border-radius:20px;padding:6px 14px;' +
+    'cursor:pointer;width:fit-content;" onclick="openFieldPicker()">' +
+    '<span style="font-size:16px;">🌾</span>' +
+    '<div>' +
+    '<div style="font-size:13px;font-weight:800;color:#1a6e35;">' +
+    currentField.field_name + '</div>' +
+    '<div style="font-size:11px;color:#888;">' +
+    currentField.crop_type + ' · ' + currentField.land_acres + ' acres' +
+    (currentField.village ? ' · ' + currentField.village : '') +
+    '</div>' +
+    '</div>' +
+    '<span style="font-size:12px;color:#1a6e35;margin-left:4px;">▾</span>' +
     '</div>'
+
+  if (selector) selector.innerHTML = html
+  if (selectorDesktop) selectorDesktop.innerHTML = html
 }
 
 function openFieldPicker() {
