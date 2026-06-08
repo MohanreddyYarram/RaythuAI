@@ -41,6 +41,15 @@ app.use(cors({
 app.use(helmet({
     contentSecurityPolicy:false
 }))
+// Prevent caching of HTML and JS files
+app.use(function(req, res, next) {
+  if (req.path.endsWith('.html') || req.path.endsWith('.js') || req.path === '/') {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+    res.setHeader('Pragma', 'no-cache')
+    res.setHeader('Expires', '0')
+  }
+  next()
+})
 
 app.use(compression())
 
@@ -94,6 +103,7 @@ const activitiesRoute = require('./routes/activities')
 const shopRoute = require('./routes/shop')
 const paymentRoute = require('./routes/payment')
 const fieldsRoute = require('./routes/fields')
+const newsRoute = require('./routes/news')
 
 //Detect limit for detect route
 const detectLimiter = rateLimit({
@@ -135,6 +145,7 @@ app.use('/activities',activitiesRoute)
 app.use('/shop',shopRoute)
 app.use('/payment',paymentRoute)
 app.use('/fields',fieldsRoute)
+app.use('/news',newsRoute)
 // Home Route
 app.get('/',(req,res)=>{
     res.sendFile(path.join(__dirname,'web','index.html'))
@@ -146,23 +157,7 @@ app.get('/shop-admin',(req,res)=>{
 })
 
 // Feed news route
-app.get('/feed/news', async (req, res) => {
-  try {
-    const NEWS_API_KEY = process.env.NEWS_API_KEY
-    if (!NEWS_API_KEY) {
-      return res.status(200).json({ articles: [] })
-    }
-    const url = `https://newsapi.org/v2/everything?q=andhra+pradesh+agriculture+chilli+farmer&language=te&sortBy=publishedAt&pageSize=8&apiKey=${NEWS_API_KEY}`
-    const response = await fetch(url)
-    const data = await response.json()
-    if (data.articles) {
-      return res.status(200).json({ articles: data.articles })
-    }
-    res.status(200).json({ articles: [] })
-  } catch(err) {
-    res.status(200).json({ articles: [] })
-  }
-})
+
 
 
 // Start the server on port 3000
