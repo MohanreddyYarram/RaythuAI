@@ -8,6 +8,7 @@ var lastScanResult = null
 var currentScreen = 'home'
 var screenHistory = ['home']
 var currentField = null
+var currentFieldId = null
 var allFields = []
 
 /* ══════════════════════════════════════
@@ -543,17 +544,21 @@ async function analyzeImages() {
     
   try {
     var compressedImages = []
-    // Add field_id to FormData
-    var formData = new FormData()
-   compressedImages.forEach(function(img, i) {
-   formData.append('photos', img)
-   })
-
-    // Add current field ID
-    if (currentFieldId) {
-    formData.append('field_id', currentFieldId)
-   }
     var imagesToProcess = Object.values(uploadedImages).filter(function(v) { return v !== null })
+    for (var i = 0; i < imagesToProcess.length; i++) {
+    compressedImages.push(await compressImage(imagesToProcess[i], 0.7))
+   }
+   var formData = new FormData()
+   compressedImages.forEach(function(base64, index) {
+    var byteStr = atob(base64.split(',')[1])
+    var ab = new ArrayBuffer(byteStr.length)
+    var ia = new Uint8Array(ab)
+    for (var j = 0; j < byteStr.length; j++) ia[j] = byteStr.charCodeAt(j)
+    formData.append('photos', new Blob([ab], { type: 'image/jpeg' }), 'photo' + index + '.jpg')
+    })
+    if (currentFieldId) {
+     formData.append('field_id', currentFieldId)
+    }
     for (var i = 0; i < imagesToProcess.length; i++) compressedImages.push(await compressImage(imagesToProcess[i], 0.7))
     var formData = new FormData()
     compressedImages.forEach(function(base64, index) {
