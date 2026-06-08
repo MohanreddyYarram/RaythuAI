@@ -146,7 +146,7 @@ function showApp() {
   var loginScreen = document.getElementById('login-screen')
   if (loginScreen) loginScreen.style.display = 'none'
   var app = document.getElementById('app')
-  if (app) app.style.display = 'block'
+  if (app) app.style.display = 'flex'
 
   // BUG FIX: correct localStorage key
   currentFieldId = parseInt(localStorage.getItem('rytuai_current_field')) || null
