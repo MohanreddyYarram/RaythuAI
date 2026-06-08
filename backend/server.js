@@ -145,6 +145,25 @@ app.get('/shop-admin',(req,res)=>{
     res.sendFile(path.join(__dirname,'web','shop-admin.html'))
 })
 
+// Feed news route
+app.get('/feed/news', async (req, res) => {
+  try {
+    const NEWS_API_KEY = process.env.NEWS_API_KEY
+    if (!NEWS_API_KEY) {
+      return res.status(200).json({ articles: [] })
+    }
+    const url = `https://newsapi.org/v2/everything?q=andhra+pradesh+agriculture+chilli+farmer&language=te&sortBy=publishedAt&pageSize=8&apiKey=${NEWS_API_KEY}`
+    const response = await fetch(url)
+    const data = await response.json()
+    if (data.articles) {
+      return res.status(200).json({ articles: data.articles })
+    }
+    res.status(200).json({ articles: [] })
+  } catch(err) {
+    res.status(200).json({ articles: [] })
+  }
+})
+
 
 // Start the server on port 3000
 const PORT = process.env.PORT || 3000
