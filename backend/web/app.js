@@ -158,7 +158,7 @@ function showApp() {
 /* ══════════════════════════════════════
    FARMER DATA — BUG FIXED
 ══════════════════════════════════════ */
-function loadFarmerData() {
+/**function loadFarmerData() {
   var farmerData = localStorage.getItem('rytuai_farmer')
   if (!farmerData) return
   try {
@@ -203,6 +203,53 @@ function loadFarmerData() {
       var progressLabel = document.querySelector('.crop-progress-label'); if (progressLabel) progressLabel.textContent = t('season_progress') + ' — ' + progress + '%'
     }
   } catch(e) { console.log('loadFarmerData error:', e) }
+}*/
+function loadFarmerData() {
+  var farmerStr = localStorage.getItem('rytuai_farmer')
+  if (!farmerStr) return
+  var farmer = JSON.parse(farmerStr)
+
+  // Get current field data
+  var currentField = allFields.find(function(f) {
+    return f.id === currentFieldId
+  }) || allFields[0] || farmer
+
+  var hour = new Date().getHours()
+  var greeting = hour < 12 ? t('good_morning') :
+                 hour < 17 ? t('good_afternoon') : t('good_evening')
+
+  var greetEl = document.getElementById('farmer-greeting')
+  if (greetEl) greetEl.textContent = greeting + ', ' + farmer.name + t('greeting_suffix')
+
+  // Use field data for crop info
+  var cropEl = document.querySelector('.crop-name')
+  if (cropEl) cropEl.textContent = '🌾 ' + (currentField.crop_type || farmer.crop_type || 'Chilli')
+
+  var metaEl = document.querySelector('.crop-meta')
+  if (metaEl) metaEl.textContent =
+    (currentField.sowing_date || farmer.sowing_date || '') +
+    ' · ' + (currentField.land_acres || farmer.land_acres || '0') + ' acres' +
+    (currentField.village ? ' · ' + currentField.village : '')
+
+  // Calculate growth stage from field sowing date
+  var sowingDate = currentField.sowing_date || farmer.sowing_date
+  if (sowingDate) {
+    var days = Math.floor((new Date() - new Date(sowingDate)) / (1000 * 60 * 60 * 24))
+    var stage, progress
+
+    if (days < 30) { stage = 'Seedling Stage'; progress = 10 }
+    else if (days < 60) { stage = 'Vegetative Stage'; progress = 25 }
+    else if (days < 90) { stage = 'Flowering Stage'; progress = 50 }
+    else if (days < 120) { stage = 'Fruit Development'; progress = 75 }
+    else if (days < 150) { stage = 'Harvest Ready'; progress = 90 }
+    else { stage = 'Season Complete'; progress = 100 }
+
+    var stageEl = document.querySelector('.crop-stage')
+    if (stageEl) stageEl.textContent = stage
+
+    var progressEl = document.querySelector('.crop-progress-fill')
+    if (progressEl) progressEl.style.width = progress + '%'
+  }
 }
 
 /* ══════════════════════════════════════
