@@ -770,255 +770,6 @@ function showConfirm(msg) {
 // FIELD MANAGEMENT
 // ══════════════════════════════════════
 
-async function loadFields() {
-  var farmer = JSON.parse(localStorage.getItem('rytuai_farmer'))
-  if (!farmer) return
-
-  try {
-    var res = await fetch(API + '/fields/' + farmer.phone, {
-      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
-    })
-    var data = await res.json()
-    allFields = data.fields || []
-
-    // Set first field as active if none selected
-    if (!currentFieldId && allFields.length > 0) {
-      currentFieldId = allFields[0].id
-      localStorage.setItem('rytuai_current_field', currentFieldId)
-    }
-
-    updateFieldSelector()
-    loadFarmerData()
-  } catch(e) {
-    console.log('Fields load error:', e)
-  }
-}
-
-function updateFieldSelector() {
-  var selector = document.getElementById('field-selector')
-  if (!selector || allFields.length === 0) return
-
-  var currentField = allFields.find(function(f) {
-    return f.id === currentFieldId
-  }) || allFields[0]
-
-  selector.innerHTML =
-    '<div style="display:flex;align-items:center;gap:8px;' +
-    'background:#e8f5ee;border-radius:20px;padding:6px 12px;' +
-    'cursor:pointer;" onclick="openFieldPicker()">' +
-    '<span>🌾</span>' +
-    '<span style="font-size:13px;font-weight:800;color:#1a6e35;">' +
-    currentField.field_name + '</span>' +
-    '<span style="font-size:11px;color:#888;">' +
-    currentField.crop_type + ' · ' + currentField.land_acres + ' acres</span>' +
-    '<span style="font-size:12px;color:#1a6e35;">▾</span>' +
-    '</div>'
-}
-
-function openFieldPicker() {
-  var existing = document.getElementById('field-picker-overlay')
-  if (existing) existing.remove()
-
-  var overlay = document.createElement('div')
-  overlay.id = 'field-picker-overlay'
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;' +
-    'background:rgba(0,0,0,0.5);z-index:9000;display:flex;' +
-    'align-items:flex-end;'
-
-  var sheet = document.createElement('div')
-  sheet.style.cssText = 'background:white;border-radius:24px 24px 0 0;' +
-    'width:100%;padding:20px;max-height:70vh;overflow-y:auto;'
-
-  var html = '<div style="text-align:center;margin-bottom:16px;">' +
-    '<div style="width:40px;height:4px;background:#e0e0e0;' +
-    'border-radius:2px;margin:0 auto 16px;"></div>' +
-    '<div style="font-size:16px;font-weight:900;color:#1a2e1e;">Select Field</div>' +
-    '</div>'
-
-  allFields.forEach(function(field) {
-    var isActive = field.id === currentFieldId
-    var daysOld = field.sowing_date ?
-      Math.floor((new Date() - new Date(field.sowing_date)) / (1000 * 60 * 60 * 24)) : null
-
-    html += '<div onclick="selectField(' + field.id + ')" style="' +
-      'padding:16px;border-radius:14px;margin-bottom:10px;cursor:pointer;' +
-      'border:2px solid ' + (isActive ? '#1a6e35' : '#e8e0d0') + ';' +
-      'background:' + (isActive ? '#e8f5ee' : 'white') + ';">' +
-
-      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
-      '<div>' +
-      '<div style="font-size:15px;font-weight:800;color:#1a2e1e;">🌾 ' + field.field_name + '</div>' +
-      '<div style="font-size:12px;color:#888;margin-top:2px;">' +
-      field.crop_type + ' · ' + field.land_acres + ' acres' +
-      (field.village ? ' · ' + field.village : '') + '</div>' +
-      (daysOld !== null ? '<div style="font-size:11px;color:#1a6e35;margin-top:2px;">' +
-      daysOld + ' days since sowing</div>' : '') +
-      '</div>' +
-      (isActive ? '<span style="color:#1a6e35;font-size:20px;">✓</span>' : '') +
-      '</div>' +
-      '</div>'
-  })
-
-  // Add new field button
-  html += '<button onclick="openAddField()" style="' +
-    'width:100%;padding:14px;margin-top:8px;' +
-    'background:#1a6e35;color:white;border:none;' +
-    'border-radius:12px;font-size:14px;font-weight:800;' +
-    'font-family:Nunito,sans-serif;cursor:pointer;">' +
-    '+ Add New Field' +
-    '</button>'
-
-  html += '<button onclick="closeFieldPicker()" style="' +
-    'width:100%;padding:12px;margin-top:8px;' +
-    'background:#f0f0f0;color:#555;border:none;' +
-    'border-radius:12px;font-size:13px;font-weight:700;' +
-    'font-family:Nunito,sans-serif;cursor:pointer;">' +
-    'Cancel' +
-    '</button>'
-
-  sheet.innerHTML = html
-  overlay.appendChild(sheet)
-  document.body.appendChild(overlay)
-  overlay.onclick = function(e) {
-    if (e.target === overlay) closeFieldPicker()
-  }
-}
-
-function closeFieldPicker() {
-  var overlay = document.getElementById('field-picker-overlay')
-  if (overlay) overlay.remove()
-}
-
-function selectField(fieldId) {
-  currentFieldId = fieldId
-  localStorage.setItem('rytuai_current_field', fieldId)
-  closeFieldPicker()
-  updateFieldSelector()
-  loadFarmerData()
-  showToast('Field changed!')
-}
-
-function openAddField() {
-  closeFieldPicker()
-
-  var existing = document.getElementById('add-field-overlay')
-  if (existing) existing.remove()
-
-  var overlay = document.createElement('div')
-  overlay.id = 'add-field-overlay'
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;' +
-    'background:rgba(0,0,0,0.5);z-index:9001;display:flex;' +
-    'align-items:flex-end;'
-
-  overlay.innerHTML =
-    '<div style="background:white;border-radius:24px 24px 0 0;' +
-    'width:100%;padding:24px;max-height:85vh;overflow-y:auto;">' +
-
-    '<div style="font-size:18px;font-weight:900;color:#1a2e1e;margin-bottom:20px;">' +
-    '🌾 Add New Field</div>' +
-
-    '<label style="font-size:12px;font-weight:700;color:#555;">Field Name *</label>' +
-    '<input id="new-field-name" class="login-input" ' +
-    'placeholder="e.g. North Field, Field 2" style="margin-bottom:12px;">' +
-
-    '<label style="font-size:12px;font-weight:700;color:#555;">Crop Type *</label>' +
-    '<select id="new-field-crop" class="login-input" style="margin-bottom:12px;">' +
-    '<option value="">Select Crop</option>' +
-    '<option value="Chilli">🌶️ Chilli</option>' +
-    '<option value="Paddy">🌾 Paddy</option>' +
-    '<option value="Cotton">Cotton</option>' +
-    '<option value="Maize">🌽 Maize</option>' +
-    '<option value="Groundnut">Groundnut</option>' +
-    '<option value="Sunflower">🌻 Sunflower</option>' +
-    '<option value="Tobacco">Tobacco</option>' +
-    '<option value="Other">Other</option>' +
-    '</select>' +
-
-    '<label style="font-size:12px;font-weight:700;color:#555;">Land Area (Acres) *</label>' +
-    '<input id="new-field-acres" type="number" class="login-input" ' +
-    'placeholder="e.g. 5.5" style="margin-bottom:12px;">' +
-
-    '<label style="font-size:12px;font-weight:700;color:#555;">Village</label>' +
-    '<input id="new-field-village" class="login-input" ' +
-    'placeholder="Village name" style="margin-bottom:12px;">' +
-
-    '<label style="font-size:12px;font-weight:700;color:#555;">Sowing Date</label>' +
-    '<input id="new-field-sowing" type="text" class="login-input" ' +
-    'placeholder="🌱 Sowing Date" ' +
-    'onfocus="this.type=\'date\'" ' +
-    'onblur="if(!this.value)this.type=\'text\'" ' +
-    'style="margin-bottom:20px;">' +
-
-    '<button onclick="saveNewField()" style="width:100%;padding:14px;' +
-    'background:#1a6e35;color:white;border:none;border-radius:12px;' +
-    'font-size:15px;font-weight:800;font-family:Nunito,sans-serif;' +
-    'cursor:pointer;margin-bottom:10px;">Save Field</button>' +
-
-    '<button onclick="closeAddField()" style="width:100%;padding:12px;' +
-    'background:#f0f0f0;color:#555;border:none;border-radius:12px;' +
-    'font-size:13px;font-weight:700;font-family:Nunito,sans-serif;' +
-    'cursor:pointer;">Cancel</button>' +
-
-    '</div>'
-
-  document.body.appendChild(overlay)
-}
-
-function closeAddField() {
-  var overlay = document.getElementById('add-field-overlay')
-  if (overlay) overlay.remove()
-}
-
-async function saveNewField() {
-  var fieldName = document.getElementById('new-field-name').value.trim()
-  var cropType = document.getElementById('new-field-crop').value
-  var landAcres = document.getElementById('new-field-acres').value
-  var village = document.getElementById('new-field-village').value.trim()
-  var sowingDate = document.getElementById('new-field-sowing').value
-
-  if (!fieldName || !cropType || !landAcres) {
-    showToast('Please fill field name, crop and acres', 'error')
-    return
-  }
-
-  var farmer = JSON.parse(localStorage.getItem('rytuai_farmer'))
-  if (!farmer) return
-
-  try {
-    var res = await fetch(API + '/fields', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token')
-      },
-      body: JSON.stringify({
-        farmer_id: farmer.phone,
-        field_name: fieldName,
-        crop_type: cropType,
-        land_acres: parseFloat(landAcres),
-        village: village,
-        district: farmer.district,
-        sowing_date: sowingDate || null
-      })
-    })
-
-    var data = await res.json()
-    if (res.ok) {
-      allFields.push(data.field)
-      currentFieldId = data.field.id
-      localStorage.setItem('rytuai_current_field', currentFieldId)
-      closeAddField()
-      updateFieldSelector()
-      loadFarmerData()
-      showToast('Field added successfully!')
-    } else {
-      showToast(data.message || 'Failed to add field', 'error')
-    }
-  } catch(e) {
-    showToast('Cannot connect to server', 'error')
-  }
-}
-
 /* ══════════════════════════════════════
    PULL TO REFRESH + SWIPE NAV (combined)
 ══════════════════════════════════════ */
@@ -1702,6 +1453,257 @@ async function buyScanPlan(plan) {
     var rzp = new window.Razorpay(options); rzp.open()
   } catch(err) { showToast('Payment failed. Try again.', 'error') }
 }
+
+
+async function loadFields() {
+  var farmer = JSON.parse(localStorage.getItem('rytuai_farmer'))
+  if (!farmer) return
+
+  try {
+    var res = await fetch(API + '/fields/' + farmer.phone, {
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
+    })
+    var data = await res.json()
+    allFields = data.fields || []
+
+    // Set first field as active if none selected
+    if (!currentFieldId && allFields.length > 0) {
+      currentFieldId = allFields[0].id
+      localStorage.setItem('rytuai_current_field', currentFieldId)
+    }
+
+    updateFieldSelector()
+    loadFarmerData()
+  } catch(e) {
+    console.log('Fields load error:', e)
+  }
+}
+
+function updateFieldSelector() {
+  var selector = document.getElementById('field-selector')
+  if (!selector || allFields.length === 0) return
+
+  var currentField = allFields.find(function(f) {
+    return f.id === currentFieldId
+  }) || allFields[0]
+
+  selector.innerHTML =
+    '<div style="display:flex;align-items:center;gap:8px;' +
+    'background:#e8f5ee;border-radius:20px;padding:6px 12px;' +
+    'cursor:pointer;" onclick="openFieldPicker()">' +
+    '<span>🌾</span>' +
+    '<span style="font-size:13px;font-weight:800;color:#1a6e35;">' +
+    currentField.field_name + '</span>' +
+    '<span style="font-size:11px;color:#888;">' +
+    currentField.crop_type + ' · ' + currentField.land_acres + ' acres</span>' +
+    '<span style="font-size:12px;color:#1a6e35;">▾</span>' +
+    '</div>'
+}
+
+function openFieldPicker() {
+  var existing = document.getElementById('field-picker-overlay')
+  if (existing) existing.remove()
+
+  var overlay = document.createElement('div')
+  overlay.id = 'field-picker-overlay'
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;' +
+    'background:rgba(0,0,0,0.5);z-index:9000;display:flex;' +
+    'align-items:flex-end;'
+
+  var sheet = document.createElement('div')
+  sheet.style.cssText = 'background:white;border-radius:24px 24px 0 0;' +
+    'width:100%;padding:20px;max-height:70vh;overflow-y:auto;'
+
+  var html = '<div style="text-align:center;margin-bottom:16px;">' +
+    '<div style="width:40px;height:4px;background:#e0e0e0;' +
+    'border-radius:2px;margin:0 auto 16px;"></div>' +
+    '<div style="font-size:16px;font-weight:900;color:#1a2e1e;">Select Field</div>' +
+    '</div>'
+
+  allFields.forEach(function(field) {
+    var isActive = field.id === currentFieldId
+    var daysOld = field.sowing_date ?
+      Math.floor((new Date() - new Date(field.sowing_date)) / (1000 * 60 * 60 * 24)) : null
+
+    html += '<div onclick="selectField(' + field.id + ')" style="' +
+      'padding:16px;border-radius:14px;margin-bottom:10px;cursor:pointer;' +
+      'border:2px solid ' + (isActive ? '#1a6e35' : '#e8e0d0') + ';' +
+      'background:' + (isActive ? '#e8f5ee' : 'white') + ';">' +
+
+      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+      '<div>' +
+      '<div style="font-size:15px;font-weight:800;color:#1a2e1e;">🌾 ' + field.field_name + '</div>' +
+      '<div style="font-size:12px;color:#888;margin-top:2px;">' +
+      field.crop_type + ' · ' + field.land_acres + ' acres' +
+      (field.village ? ' · ' + field.village : '') + '</div>' +
+      (daysOld !== null ? '<div style="font-size:11px;color:#1a6e35;margin-top:2px;">' +
+      daysOld + ' days since sowing</div>' : '') +
+      '</div>' +
+      (isActive ? '<span style="color:#1a6e35;font-size:20px;">✓</span>' : '') +
+      '</div>' +
+      '</div>'
+  })
+
+  // Add new field button
+  html += '<button onclick="openAddField()" style="' +
+    'width:100%;padding:14px;margin-top:8px;' +
+    'background:#1a6e35;color:white;border:none;' +
+    'border-radius:12px;font-size:14px;font-weight:800;' +
+    'font-family:Nunito,sans-serif;cursor:pointer;">' +
+    '+ Add New Field' +
+    '</button>'
+
+  html += '<button onclick="closeFieldPicker()" style="' +
+    'width:100%;padding:12px;margin-top:8px;' +
+    'background:#f0f0f0;color:#555;border:none;' +
+    'border-radius:12px;font-size:13px;font-weight:700;' +
+    'font-family:Nunito,sans-serif;cursor:pointer;">' +
+    'Cancel' +
+    '</button>'
+
+  sheet.innerHTML = html
+  overlay.appendChild(sheet)
+  document.body.appendChild(overlay)
+  overlay.onclick = function(e) {
+    if (e.target === overlay) closeFieldPicker()
+  }
+}
+
+function closeFieldPicker() {
+  var overlay = document.getElementById('field-picker-overlay')
+  if (overlay) overlay.remove()
+}
+
+function selectField(fieldId) {
+  currentFieldId = fieldId
+  localStorage.setItem('rytuai_current_field', fieldId)
+  closeFieldPicker()
+  updateFieldSelector()
+  loadFarmerData()
+  showToast('Field changed!')
+}
+
+function openAddField() {
+  closeFieldPicker()
+
+  var existing = document.getElementById('add-field-overlay')
+  if (existing) existing.remove()
+
+  var overlay = document.createElement('div')
+  overlay.id = 'add-field-overlay'
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;' +
+    'background:rgba(0,0,0,0.5);z-index:9001;display:flex;' +
+    'align-items:flex-end;'
+
+  overlay.innerHTML =
+    '<div style="background:white;border-radius:24px 24px 0 0;' +
+    'width:100%;padding:24px;max-height:85vh;overflow-y:auto;">' +
+
+    '<div style="font-size:18px;font-weight:900;color:#1a2e1e;margin-bottom:20px;">' +
+    '🌾 Add New Field</div>' +
+
+    '<label style="font-size:12px;font-weight:700;color:#555;">Field Name *</label>' +
+    '<input id="new-field-name" class="login-input" ' +
+    'placeholder="e.g. North Field, Field 2" style="margin-bottom:12px;">' +
+
+    '<label style="font-size:12px;font-weight:700;color:#555;">Crop Type *</label>' +
+    '<select id="new-field-crop" class="login-input" style="margin-bottom:12px;">' +
+    '<option value="">Select Crop</option>' +
+    '<option value="Chilli">🌶️ Chilli</option>' +
+    '<option value="Paddy">🌾 Paddy</option>' +
+    '<option value="Cotton">Cotton</option>' +
+    '<option value="Maize">🌽 Maize</option>' +
+    '<option value="Groundnut">Groundnut</option>' +
+    '<option value="Sunflower">🌻 Sunflower</option>' +
+    '<option value="Tobacco">Tobacco</option>' +
+    '<option value="Other">Other</option>' +
+    '</select>' +
+
+    '<label style="font-size:12px;font-weight:700;color:#555;">Land Area (Acres) *</label>' +
+    '<input id="new-field-acres" type="number" class="login-input" ' +
+    'placeholder="e.g. 5.5" style="margin-bottom:12px;">' +
+
+    '<label style="font-size:12px;font-weight:700;color:#555;">Village</label>' +
+    '<input id="new-field-village" class="login-input" ' +
+    'placeholder="Village name" style="margin-bottom:12px;">' +
+
+    '<label style="font-size:12px;font-weight:700;color:#555;">Sowing Date</label>' +
+    '<input id="new-field-sowing" type="text" class="login-input" ' +
+    'placeholder="🌱 Sowing Date" ' +
+    'onfocus="this.type=\'date\'" ' +
+    'onblur="if(!this.value)this.type=\'text\'" ' +
+    'style="margin-bottom:20px;">' +
+
+    '<button onclick="saveNewField()" style="width:100%;padding:14px;' +
+    'background:#1a6e35;color:white;border:none;border-radius:12px;' +
+    'font-size:15px;font-weight:800;font-family:Nunito,sans-serif;' +
+    'cursor:pointer;margin-bottom:10px;">Save Field</button>' +
+
+    '<button onclick="closeAddField()" style="width:100%;padding:12px;' +
+    'background:#f0f0f0;color:#555;border:none;border-radius:12px;' +
+    'font-size:13px;font-weight:700;font-family:Nunito,sans-serif;' +
+    'cursor:pointer;">Cancel</button>' +
+
+    '</div>'
+
+  document.body.appendChild(overlay)
+}
+
+function closeAddField() {
+  var overlay = document.getElementById('add-field-overlay')
+  if (overlay) overlay.remove()
+}
+
+async function saveNewField() {
+  var fieldName = document.getElementById('new-field-name').value.trim()
+  var cropType = document.getElementById('new-field-crop').value
+  var landAcres = document.getElementById('new-field-acres').value
+  var village = document.getElementById('new-field-village').value.trim()
+  var sowingDate = document.getElementById('new-field-sowing').value
+
+  if (!fieldName || !cropType || !landAcres) {
+    showToast('Please fill field name, crop and acres', 'error')
+    return
+  }
+
+  var farmer = JSON.parse(localStorage.getItem('rytuai_farmer'))
+  if (!farmer) return
+
+  try {
+    var res = await fetch(API + '/fields', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token')
+      },
+      body: JSON.stringify({
+        farmer_id: farmer.phone,
+        field_name: fieldName,
+        crop_type: cropType,
+        land_acres: parseFloat(landAcres),
+        village: village,
+        district: farmer.district,
+        sowing_date: sowingDate || null
+      })
+    })
+
+    var data = await res.json()
+    if (res.ok) {
+      allFields.push(data.field)
+      currentFieldId = data.field.id
+      localStorage.setItem('rytuai_current_field', currentFieldId)
+      closeAddField()
+      updateFieldSelector()
+      loadFarmerData()
+      showToast('Field added successfully!')
+    } else {
+      showToast(data.message || 'Failed to add field', 'error')
+    }
+  } catch(e) {
+    showToast('Cannot connect to server', 'error')
+  }
+}
+
 
 // Keep server alive
 setInterval(function() { fetch('/auth/ping').catch(function() {}) }, 10 * 60 * 1000)
