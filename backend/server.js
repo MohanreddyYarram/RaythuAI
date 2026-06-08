@@ -93,6 +93,7 @@ const detectionRoute = require('./routes/detection')
 const activitiesRoute = require('./routes/activities')
 const shopRoute = require('./routes/shop')
 const paymentRoute = require('./routes/payment')
+const fieldsRoute = require('./routes/fields')
 
 //Detect limit for detect route
 const detectLimiter = rateLimit({
@@ -133,6 +134,7 @@ app.use('/activities',activitiesRoute)
 
 app.use('/shop',shopRoute)
 app.use('/payment',paymentRoute)
+app.use('/fields',fieldsRoute)
 // Home Route
 app.get('/',(req,res)=>{
     res.sendFile(path.join(__dirname,'web','index.html'))
