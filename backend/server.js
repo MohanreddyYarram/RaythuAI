@@ -124,7 +124,7 @@ const authLimiter = rateLimit({
 })
 
 
-app.use('/detect',detectLimiter)
+app.post('/detect',detectLimiter)
 app.use('/auth/send-otp',authLimiter)
 
 
