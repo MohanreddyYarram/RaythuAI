@@ -88,24 +88,275 @@ function updateLangToggleBtn() {
 }
 
 function applyLanguage() {
+  var te = currentLang === 'te'
+
+  // ── TOPBAR ──
+  var subtitle = document.querySelector('.topbar-subtitle')
+  if (subtitle) subtitle.textContent = te ? 'స్మార్ట్ వ్యవసాయం — ఆంధ్రప్రదేశ్' : 'Smart Farming — Andhra Pradesh'
+
+  // ── BOTTOM NAV ──
+  var navHome = document.getElementById('nav-home')
+  var navDetect = document.getElementById('nav-detect')
+  var navShop = document.getElementById('nav-shop')
+  var navFeed = document.getElementById('nav-feed')
+  var navTracker = document.getElementById('nav-tracker')
+  if (navHome) navHome.textContent = t('nav_home')
+  if (navDetect) navDetect.textContent = t('nav_detect')
+  if (navShop) navShop.textContent = t('nav_shop')
+  if (navFeed) navFeed.textContent = t('nav_feed')
+  if (navTracker) navTracker.textContent = t('nav_tracker')
+
+  // ── SIDEBAR ──
+  var sbHome = document.getElementById('sb-home')
+  var sbDetect = document.getElementById('sb-detect')
+  var sbShop = document.getElementById('sb-shop')
+  var sbFeed = document.getElementById('sb-feed')
+  var sbTracker = document.getElementById('sb-tracker')
+  if (sbHome) sbHome.textContent = te ? 'హోమ్' : 'Home'
+  if (sbDetect) sbDetect.textContent = te ? 'తెగులు గుర్తించు' : 'Detect Disease'
+  if (sbShop) sbShop.textContent = te ? 'రైతు షాప్' : 'Rytu Shop'
+  if (sbFeed) sbFeed.textContent = te ? 'వ్యవసాయ వార్తలు' : 'Crop Feed'
+  if (sbTracker) sbTracker.textContent = te ? 'నా ట్రాకర్' : 'My Tracker'
+
+  // ── HOME SCREEN ──
+  var quickLabel = document.getElementById('quick-actions-label')
+  if (quickLabel) quickLabel.textContent = te ? '⚡ త్వరిత చర్యలు' : '⚡ Quick Actions'
+
+  var acDetect = document.getElementById('ac-detect')
+  var acDetectSub = document.getElementById('ac-detect-sub')
+  if (acDetect) acDetect.textContent = te ? 'తెగులు గుర్తించు' : 'Detect Disease'
+  if (acDetectSub) acDetectSub.textContent = te ? 'AI తో పంట స్కాన్ చేయి' : 'Scan your crop with AI'
+
+  var acShop = document.getElementById('ac-shop')
+  var acShopSub = document.getElementById('ac-shop-sub')
+  if (acShop) acShop.textContent = te ? 'రైతు షాప్' : 'Rytu Shop'
+  if (acShopSub) acShopSub.textContent = te ? 'నేరుగా షాపుల నుండి' : 'Order pesticides direct'
+
+  var acFeed = document.getElementById('ac-feed')
+  var acFeedSub = document.getElementById('ac-feed-sub')
+  if (acFeed) acFeed.textContent = te ? 'వ్యవసాయ వార్తలు' : 'Farm Feed'
+  if (acFeedSub) acFeedSub.textContent = te ? 'వార్తలు · ధరలు · చిట్కాలు' : 'Weather · Prices · News'
+
+  var acTracker = document.getElementById('ac-tracker')
+  var acTrackerSub = document.getElementById('ac-tracker-sub')
+  if (acTracker) acTracker.textContent = te ? 'పొలం ట్రాకర్' : 'Farm Tracker'
+  if (acTrackerSub) acTrackerSub.textContent = te ? 'రోజువారీ పని రికార్డ్' : 'Log daily activities'
+
+  var alertLabel = document.getElementById('alert-label')
+  var alertTitle = document.getElementById('alert-title')
+  var alertDesc = document.getElementById('alert-desc')
+  if (alertLabel) alertLabel.textContent = te ? '⚠️ తాజా హెచ్చరిక' : '⚠️ Latest Alert'
+  if (alertTitle) alertTitle.textContent = te ? 'మీ ప్రాంతంలో త్రిప్స్ హెచ్చరిక' : 'Thrips Alert in Your Area'
+  if (alertDesc) alertDesc.textContent = te ? 'మీ దగ్గర 3 మంది రైతులు త్రిప్స్ నివేదించారు. నేడే మీ పంటను తనిఖీ చేయండి.' : '3 farmers near you reported thrips. Check your crop today.'
+
+  var cropStatusLabel = document.getElementById('crop-status-label')
+  if (cropStatusLabel) cropStatusLabel.textContent = te ? '🌶️ నా పంట స్థితి' : '🌶️ My Crop Status'
+
+  var homeSub = document.getElementById('home-subtext')
+  if (homeSub) homeSub.textContent = t('home_sub')
+
+  // ── DETECT SCREEN ──
+  var detectTitle = document.getElementById('detect-title')
+  var detectSub = document.getElementById('detect-sub')
+  if (detectTitle) detectTitle.textContent = te ? 'పంట స్కాన్ చేయి' : 'Scan Your Crop'
+  if (detectSub) detectSub.textContent = te ? 'AI తెగులు గుర్తింపు కోసం ఫోటోలు అప్‌లోడ్ చేయండి' : 'Upload photos for AI disease detection'
+
+  var uploadTip = document.getElementById('upload-tip')
+  if (uploadTip) uploadTip.textContent = te
+    ? '📸 అత్యంత ఖచ్చితమైన AI నిర్ధారణ కోసం వివిధ కోణాల నుండి స్పష్టమైన క్లోజప్ ఫోటోలు తీయండి'
+    : '📸 Take clear close-up photos from different angles for the most accurate AI diagnosis'
+
+  // Slot labels
   for (var i = 0; i < 4; i++) {
-    var lbl = document.querySelector('#slot-' + i + ' .slot-label')
+    var lbl = document.getElementById('slot-label-' + i)
     if (lbl) lbl.textContent = t('slot_' + i)
   }
-  var statLabels = document.querySelectorAll('.stat-box .stat-label')
-  var statKeys = ['stat_days', 'stat_tasks', 'stat_cost']
-  statLabels.forEach(function(el, i) { if (statKeys[i]) el.textContent = t(statKeys[i]) })
-  var addBtn = document.querySelector('[onclick="openAddActivity()"]')
-  if (addBtn && addBtn.tagName === 'BUTTON') addBtn.textContent = t('add_activity')
-  document.querySelectorAll('.feed-section-title').forEach(function(el) {
-    var txt = el.textContent
-    if (txt.includes('Weather') || txt.includes('వాతావరణం')) el.textContent = t('feed_weather')
-    if (txt.includes('Market') || txt.includes('మార్కెట్')) el.textContent = t('feed_prices')
-    if (txt.includes('News') || txt.includes('వార్తలు')) el.textContent = t('feed_news')
-    if (txt.includes('Tips') || txt.includes('చిట్కాలు')) el.textContent = t('feed_tips')
-    if (txt.includes('Schemes') || txt.includes('పథకాలు')) el.textContent = t('feed_schemes')
-  })
+
+  var analyzeBtn = document.getElementById('analyze-btn')
+  if (analyzeBtn) analyzeBtn.textContent = t('analyze_btn')
+
+  var uploadMsg = document.getElementById('upload-count-msg')
+  if (uploadMsg && uploadMsg.textContent.includes('Tap') || (uploadMsg && uploadMsg.textContent.includes('ట్యాప్'))) {
+    uploadMsg.textContent = te ? 'ఫోటో అప్‌లోడ్ చేయడానికి ట్యాప్ చేయండి' : 'Tap any slot to upload a photo'
+  }
+
+  // ── RESULT SCREEN ──
+  var loaderText = document.getElementById('loader-text')
+  var loaderSub = document.getElementById('loader-sub')
+  if (loaderText) loaderText.textContent = te ? 'మీ పంటను విశ్లేషిస్తున్నాం...' : 'Analyzing your crop...'
+  if (loaderSub) loaderSub.textContent = te ? 'AI మీ ఫోటోలను పరిశీలిస్తోంది' : 'AI is examining your photos'
+
+  var errorTitle = document.getElementById('error-title')
+  if (errorTitle) errorTitle.textContent = te ? 'విశ్లేషణ విఫలమైంది' : 'Analysis Failed'
+
+  var tryAgainBtn = document.getElementById('try-again-btn')
+  if (tryAgainBtn) tryAgainBtn.textContent = te ? 'మళ్ళీ ప్రయత్నించు' : 'Try Again'
+
+  var chipSev = document.getElementById('chip-sev')
+  var chipSpread = document.getElementById('chip-spread')
+  var chipTreat = document.getElementById('chip-treat')
+  if (chipSev) chipSev.textContent = te ? 'తీవ్రత' : 'Severity'
+  if (chipSpread) chipSpread.textContent = te ? 'వ్యాప్తి' : 'Spread'
+  if (chipTreat) chipTreat.textContent = te ? 'చికిత్స చేయండి' : 'Treat Within'
+
+  var whatTitle = document.getElementById('what-title')
+  var symptomsTitle = document.getElementById('symptoms-title')
+  var pesticidesTitle = document.getElementById('pesticides-title')
+  var preventionTitle = document.getElementById('prevention-title')
+  if (whatTitle) whatTitle.textContent = te ? 'ఇది ఏమిటి? — What Is This?' : 'What Is This? — ఏమిటిది?'
+  if (symptomsTitle) symptomsTitle.textContent = te ? 'లక్షణాలు — Symptoms Found' : 'Symptoms Found — లక్షణాలు'
+  if (pesticidesTitle) pesticidesTitle.textContent = te ? '💊 సూచించిన మందులు' : '💊 Recommended Pesticides'
+  if (preventionTitle) preventionTitle.textContent = te ? 'నివారణ చర్యలు — Prevention Tips' : 'Prevention Tips — నివారణ చర్యలు'
+
+  var orderShopBtn = document.getElementById('order-shop-btn')
+  var scanAgainBtn = document.getElementById('scan-again-btn')
+  if (orderShopBtn) orderShopBtn.textContent = te ? '🛒 షాపులో ఆర్డర్ చేయి' : '🛒 Order from Shop'
+  if (scanAgainBtn) scanAgainBtn.textContent = te ? '🔄 మళ్ళీ స్కాన్ చేయి' : '🔄 Scan Again'
+
+  // ── SHOP SCREEN ──
+  var shopTitle = document.getElementById('shop-title')
+  var shopSub = document.getElementById('shop-sub')
+  if (shopTitle) shopTitle.textContent = te ? '🏪 రైతు షాప్' : '🏪 Rytu Shop'
+  if (shopSub) shopSub.textContent = te ? 'నేరుగా షాపుల నుండి · మధ్యవర్తులు లేరు' : 'Direct from franchise stores · No middlemen'
+
+  // ── FEED SCREEN ──
+  var feedHeroTitle = document.getElementById('feed-hero-title')
+  var feedHeroSub = document.getElementById('feed-hero-sub')
+  if (feedHeroTitle) feedHeroTitle.textContent = te ? '🌾 వ్యవసాయ వార్తలు' : '🌾 Farm Feed'
+  if (feedHeroSub) feedHeroSub.textContent = te ? 'వాతావరణం · ధరలు · వార్తలు · చిట్కాలు' : 'Weather · Prices · News · Tips'
+
+  var feedWeatherTitle = document.getElementById('feed-weather-title')
+  var feedPricesTitle = document.getElementById('feed-prices-title')
+  var feedTipsTitle = document.getElementById('feed-tips-title')
+  var feedNewsTitle = document.getElementById('feed-news-title')
+  var feedSchemesTitle = document.getElementById('feed-schemes-title')
+  if (feedWeatherTitle) feedWeatherTitle.textContent = t('feed_weather')
+  if (feedPricesTitle) feedPricesTitle.textContent = t('feed_prices')
+  if (feedTipsTitle) feedTipsTitle.textContent = t('feed_tips')
+  if (feedNewsTitle) feedNewsTitle.textContent = t('feed_news')
+  if (feedSchemesTitle) feedSchemesTitle.textContent = t('feed_schemes')
+
+  // ── TRACKER SCREEN ──
+  var trackerTitle = document.getElementById('tracker-title')
+  var trackerSub = document.getElementById('tracker-sub')
+  if (trackerTitle) trackerTitle.textContent = te ? '📋 పొలం ట్రాకర్' : '📋 Farm Tracker'
+  if (trackerSub) trackerSub.textContent = te ? 'మీ పని రికార్డ్ — రోజువారీ పొలం పనులు' : 'మీ పని రికార్డ్ — Daily farm activities'
+
+  var statDaysLabel = document.getElementById('stat-days-label')
+  var statTasksLabel = document.getElementById('stat-tasks-label')
+  var statCostLabel = document.getElementById('stat-cost-label')
+  if (statDaysLabel) statDaysLabel.textContent = t('stat_days')
+  if (statTasksLabel) statTasksLabel.textContent = t('stat_tasks')
+  if (statCostLabel) statCostLabel.textContent = t('stat_cost')
+
+  var addActivityBtn = document.getElementById('add-activity-btn')
+  if (addActivityBtn) addActivityBtn.textContent = t('add_activity')
+
+  var scanHistoryLabel = document.getElementById('scan-history-label')
+  var activityHistoryLabel = document.getElementById('activity-history-label')
+  if (scanHistoryLabel) scanHistoryLabel.textContent = t('scan_history')
+  if (activityHistoryLabel) activityHistoryLabel.textContent = t('activity_history')
+
+  // ── ACTIVITY SCREEN ──
+  var activityTypeLabel = document.getElementById('activity-type-label')
+  if (activityTypeLabel) activityTypeLabel.textContent = te ? 'పని రకం' : 'Activity Type'
+
+  var dateLabel = document.getElementById('date-label')
+  var titleLabel = document.getElementById('title-label')
+  var descLabel = document.getElementById('desc-label')
+  var costLabel = document.getElementById('cost-label')
+  var qtyLabel = document.getElementById('qty-label')
+  var unitLabel = document.getElementById('unit-label')
+  if (dateLabel) dateLabel.textContent = te ? 'తేది' : 'Date'
+  if (titleLabel) titleLabel.textContent = te ? 'శీర్షిక' : 'Title'
+  if (descLabel) descLabel.textContent = te ? 'వివరణ (ఐచ్ఛికం)' : 'Description (optional)'
+  if (costLabel) costLabel.textContent = te ? 'ఖర్చు (₹)' : 'Cost (₹)'
+  if (qtyLabel) qtyLabel.textContent = te ? 'పరిమాణం' : 'Quantity'
+  if (unitLabel) unitLabel.textContent = te ? 'యూనిట్' : 'Unit'
+
+  var saveActivityBtn = document.getElementById('save-activity-btn')
+  if (saveActivityBtn) saveActivityBtn.textContent = te ? '✅ పని సేవ్ చేయి' : '✅ Save Activity'
+
+  // Activity type chips
+  var typeIrrigation = document.getElementById('type-irrigation')
+  var typeSpray = document.getElementById('type-spray')
+  var typeFertilizer = document.getElementById('type-fertilizer')
+  var typeHarvest = document.getElementById('type-harvest')
+  var typeLabour = document.getElementById('type-labour')
+  var typeOther = document.getElementById('type-other')
+  if (typeIrrigation) typeIrrigation.textContent = te ? 'నీటిపారుదల' : 'Irrigation'
+  if (typeSpray) typeSpray.textContent = te ? 'పిచికారీ' : 'Spray'
+  if (typeFertilizer) typeFertilizer.textContent = te ? 'ఎరువు' : 'Fertilizer'
+  if (typeHarvest) typeHarvest.textContent = te ? 'కోత' : 'Harvest'
+  if (typeLabour) typeLabour.textContent = te ? 'కూలీ పని' : 'Labour'
+  if (typeOther) typeOther.textContent = te ? 'ఇతర' : 'Other'
+
+  // ── CART SCREEN ──
+  var cartScreenTitle = document.getElementById('cart-screen-title')
+  if (cartScreenTitle) cartScreenTitle.textContent = te ? 'నా కార్ట్' : 'My Cart'
+
+  var deliveryLabel = document.getElementById('delivery-address-label')
+  if (deliveryLabel) deliveryLabel.textContent = te ? '📍 డెలివరీ చిరునామా' : '📍 Delivery Address'
+
+  var notesLabel = document.getElementById('notes-label')
+  if (notesLabel) notesLabel.textContent = te ? '📝 గమనికలు (ఐచ్ఛికం)' : '📝 Notes (optional)'
+
+  var placeOrderBtn = document.getElementById('place-order-btn')
+  if (placeOrderBtn && !placeOrderBtn.disabled) {
+    placeOrderBtn.textContent = te ? '🛒 ఆర్డర్ చేయి' : '🛒 Place Order'
+  }
+
+  // ── PROFILE MENU ──
+  var menuEditProfile = document.getElementById('menu-edit-profile')
+  var menuSettings = document.getElementById('menu-settings')
+  var menuOrders = document.getElementById('menu-orders')
+  var menuLogout = document.getElementById('menu-logout')
+  if (menuEditProfile) menuEditProfile.textContent = te ? 'ప్రొఫైల్ సవరించు' : 'Edit Profile'
+  if (menuSettings) menuSettings.textContent = te ? 'సెట్టింగులు' : 'Settings'
+  if (menuOrders) menuOrders.textContent = te ? 'నా ఆర్డర్లు' : 'My Orders'
+  if (menuLogout) menuLogout.textContent = te ? 'లాగ్అవుట్' : 'Logout'
+
+  // ── PROFILE SCREEN ──
+  var profileScreenTitle = document.getElementById('profile-screen-title')
+  if (profileScreenTitle) profileScreenTitle.textContent = te ? 'ప్రొఫైల్ సవరించు' : 'Edit Profile'
+
+  var profileSaveBtn = document.getElementById('profile-save-btn')
+  if (profileSaveBtn) profileSaveBtn.textContent = te ? '✅ మార్పులు సేవ్ చేయి' : '✅ Save Changes'
+
+  var logoutBtn = document.getElementById('logout-btn')
+  if (logoutBtn) logoutBtn.textContent = te ? '🚪 లాగ్అవుట్' : '🚪 Logout'
+
+  // ── MY ORDERS SCREEN ──
+  var myOrdersTitle = document.getElementById('my-orders-title')
+  if (myOrdersTitle) myOrdersTitle.textContent = te ? 'నా ఆర్డర్లు' : 'My Orders'
+
+  // ── ORDER SUCCESS ──
+  var orderPlacedTitle = document.getElementById('order-placed-title')
+  var backHomeBtn = document.getElementById('back-home-btn')
+  var viewOrdersBtn = document.getElementById('view-orders-btn')
+  if (orderPlacedTitle) orderPlacedTitle.textContent = te ? 'ఆర్డర్ చేయబడింది!' : 'Order Placed!'
+  if (backHomeBtn) backHomeBtn.textContent = te ? '🏠 హోమ్‌కి వెళ్ళు' : '🏠 Back to Home'
+  if (viewOrdersBtn) viewOrdersBtn.textContent = te ? '📦 నా ఆర్డర్లు చూడు' : '📦 View My Orders'
+
+  // ── TOPBAR TITLE ──
+  var titleEl = document.getElementById('topbar-title')
+  if (titleEl && currentScreen) {
+    var titleMap = {
+      home: t('title_home'), detect: t('title_detect'),
+      result: t('title_result'), shop: t('title_shop'),
+      feed: t('title_feed'), tracker: t('title_tracker')
+    }
+    titleEl.textContent = titleMap[currentScreen] || ''
+  }
+
+  // ── LANG TOGGLE BTN ──
+  updateLangToggleBtn()
+
+  // ── RELOAD FARMER DATA ──
   loadFarmerData()
+
+  // ── RELOAD FEED IF ON FEED SCREEN ──
+  if (currentScreen === 'feed') loadFeed()
 }
 
 /* ══════════════════════════════════════
@@ -1568,34 +1819,40 @@ async function loadFields() {
 }
 
 function updateFieldSelector() {
-  // Try both mobile and desktop selectors
-  var selector = document.getElementById('field-selector')
-  var selectorDesktop = document.getElementById('field-selector-desktop')
-
   if (allFields.length === 0) return
 
   var currentField = allFields.find(function(f) {
     return f.id === currentFieldId
   }) || allFields[0]
 
+  var daysOld = currentField.sowing_date
+    ? Math.floor((new Date() - new Date(currentField.sowing_date)) / (1000 * 60 * 60 * 24))
+    : null
+
   var html =
-    '<div style="display:flex;align-items:center;gap:8px;' +
-    'background:#e8f5ee;border-radius:20px;padding:6px 14px;' +
-    'cursor:pointer;width:fit-content;" onclick="openFieldPicker()">' +
-    '<span style="font-size:16px;">🌾</span>' +
+    '<div style="display:inline-flex;align-items:center;gap:8px;' +
+    'background:#e8f5ee;border-radius:20px;padding:8px 16px;' +
+    'cursor:pointer;border:1.5px solid #1a6e35;" onclick="openFieldPicker()">' +
+    '<span style="font-size:18px;">🌾</span>' +
     '<div>' +
-    '<div style="font-size:13px;font-weight:800;color:#1a6e35;">' +
+    '<div style="font-size:13px;font-weight:800;color:#1a6e35;line-height:1.2;">' +
     currentField.field_name + '</div>' +
-    '<div style="font-size:11px;color:#888;">' +
-    currentField.crop_type + ' · ' + currentField.land_acres + ' acres' +
+    '<div style="font-size:11px;color:#555;">' +
+    currentField.crop_type + ' · ' + currentField.land_acres + ' ' + t('acres') +
     (currentField.village ? ' · ' + currentField.village : '') +
+    (daysOld !== null ? ' · ' + daysOld + ' days' : '') +
     '</div>' +
     '</div>' +
-    '<span style="font-size:12px;color:#1a6e35;margin-left:4px;">▾</span>' +
+    '<span style="font-size:12px;color:#1a6e35;font-weight:800;">▾</span>' +
     '</div>'
 
-  if (selector) selector.innerHTML = html
-  if (selectorDesktop) selectorDesktop.innerHTML = html
+  // Update mobile selector
+  var mobile = document.getElementById('field-selector')
+  if (mobile) mobile.innerHTML = html
+
+  // Update desktop selector
+  var desktop = document.getElementById('field-selector-desktop')
+  if (desktop) desktop.innerHTML = html
 }
 
 function openFieldPicker() {
