@@ -512,7 +512,7 @@ function loadFarmerData() {
 
     var progressEl = document.querySelector('.crop-progress-fill')
     if (progressEl) progressEl.style.width = progress + '%'
-    var progressLabel = d0cument.querySelector('.crop-progress-label')
+    var progressLabel = document.querySelector('.crop-progress-label')
     if(progressLabel) progressLabel.textContent = t('season_progress')+ ' - ' + progress + '%'
     
    // Greeting
