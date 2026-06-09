@@ -1749,20 +1749,55 @@ function goToShopWithSelectedPesticides() {
 }
 
 async function loadScanHistory() {
-  var container = document.getElementById('scan-history-list'); if (!container) return
-  var farmerData = localStorage.getItem('rytuai_farmer'); if (!farmerData) return
+  var container = document.getElementById('scan-history-list')
+  if (!container) return
+  var farmerData = localStorage.getItem('rytuai_farmer')
+  if (!farmerData) return
   var farmer = JSON.parse(farmerData)
+
   var now = Date.now()
-  if (cachedScans && (now - lastScanLoadTime) < 60000) { renderScanHistory(cachedScans); return }
+  if (cachedScans && (now - lastScanLoadTime) < 60000) {
+    renderScanHistory(cachedScans)
+    return
+  }
+
   container.innerHTML = '<div style="text-align:center;padding:20px;"><div class="loader-sm"></div></div>'
+
   try {
+    // Only filter by field if field has scans
     var fieldParam = currentFieldId ? '?field_id=' + currentFieldId : ''
     var res = await fetch(API + '/detect/history/' + farmer.phone + fieldParam, {
-    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
-   })
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
+    })
     var data = await res.json()
-    if (res.ok && data.scans && data.scans.length > 0) { cachedScans = data.scans; lastScanLoadTime = Date.now(); renderScanHistory(data.scans) }
-    else { cachedScans = []; container.innerHTML = '<div style="text-align:center;padding:32px;color:#888;"><div style="font-size:32px;margin-bottom:8px;">🔬</div><div style="font-size:13px;font-weight:700;">No scans yet</div></div>' }
+
+    if (res.ok && data.scans && data.scans.length > 0) {
+      cachedScans = data.scans
+      lastScanLoadTime = Date.now()
+      renderScanHistory(data.scans)
+    } else {
+      // If no scans for this field — try without field filter
+      if (currentFieldId && fieldParam) {
+        console.log('No scans for field', currentFieldId, '— loading all scans')
+        var res2 = await fetch(API + '/detect/history/' + farmer.phone, {
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
+        })
+        var data2 = await res2.json()
+        if (res2.ok && data2.scans && data2.scans.length > 0) {
+          cachedScans = data2.scans
+          lastScanLoadTime = Date.now()
+          renderScanHistory(data2.scans)
+          return
+        }
+      }
+      cachedScans = []
+      container.innerHTML =
+        '<div style="text-align:center;padding:32px;color:#888;">' +
+        '<div style="font-size:32px;margin-bottom:8px;">🔬</div>' +
+        '<div style="font-size:13px;font-weight:700;">' +
+        (currentLang === 'te' ? 'ఇంకా స్కాన్‌లు లేవు' : 'No scans yet') +
+        '</div></div>'
+    }
   } catch(e) {
     if (cachedScans && cachedScans.length > 0) renderScanHistory(cachedScans)
     else container.innerHTML = '<div style="text-align:center;padding:20px;color:#888;font-weight:700;">Cannot load scan history</div>'

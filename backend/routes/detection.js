@@ -115,7 +115,7 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
     try {
       const { error: scanError } = await supabase.from('scans').insert({
         farmer_id: farmerPhone,
-        field_id:req.body.field_id ? parseInt(req.body.field_id) : null,
+        field_id: req.body.field_id ? parseInt(req.body.field_id) : null,
         disease: result.disease || 'Unknown',
         telugu_name: result.teluguName || '',
         confidence: result.confidence || '',
