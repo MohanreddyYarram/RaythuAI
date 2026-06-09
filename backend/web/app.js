@@ -230,16 +230,23 @@ function loadFarmerData() {
   var cropEl = document.querySelector('.crop-name')
   if (cropEl) cropEl.textContent = '🌾 ' + (currentField.crop_type || farmer.crop_type || 'Chilli')
 
-  var metaEl = document.querySelector('.crop-meta')
-  if (metaEl) metaEl.textContent =
-    (currentField.sowing_date || farmer.sowing_date || '') +
-    ' · ' + (currentField.land_acres || farmer.land_acres || '0') + ' acres' +
-    (currentField.village ? ' · ' + currentField.village : '')
-
+  var cropMetaEl = document.querySelector('.crop-meta')
+  if(cropMetaEl){
+    var parts = []
+    if (currentField.sowing_date){
+      var sowDate = new Date(currentField.sowing_date + 'T00:00:00')
+      var sowFormatted = sowDate.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'2-digit'})
+      parts.push(t('sowed')+':'+sowFormatted)
+    }
+    parts.push((currentField.land_acres ||'0')+' '+t('acres'))
+    if(currentField.village) parts.push(currentField.village)
+    cropMetaEl.textContent = parts.join(' . ')
+  }
+  
   // Calculate growth stage from field sowing date
-  var sowingDate = currentField.sowing_date || farmer.sowing_date
+  var sowingDate = currentField.sowing_date
   if (sowingDate) {
-    var days = Math.floor((new Date() - new Date(sowingDate)) / (1000 * 60 * 60 * 24))
+    var days = Math.floor((new Date() - new Date(sowingDate+'T00:00:00')) / (1000 * 60 * 60 * 24))
     var stage, progress
 
     if (days < 30) { stage = 'Seedling Stage'; progress = 10 }
@@ -249,12 +256,26 @@ function loadFarmerData() {
     else if (days < 150) { stage = 'Harvest Ready'; progress = 90 }
     else { stage = 'Season Complete'; progress = 100 }
 
-    var stageEl = document.querySelector('.crop-stage')
+    var stageEl = document.querySelector('.crop-stage, .crop-badge')
     if (stageEl) stageEl.textContent = stage
 
     var progressEl = document.querySelector('.crop-progress-fill')
     if (progressEl) progressEl.style.width = progress + '%'
-  }
+    var progressLabel = d0cument.querySelector('.crop-progress-label')
+    if(progressLabel) progressLabel.textContent = t('season_progress')+ ' - ' + progress + '%'
+    
+   // Greeting
+    var greetEl = document.getElementById('farmer-greeting')
+    if (greetEl) greetEl.textContent = greeting + ', ' + farmer.name + t('greeting_suffix')
+    var greetDesktop = document.getElementById('farmer-greeting-desktop')
+    if (greetDesktop) greetDesktop.textContent = greeting + ', ' + farmer.name + t('greeting_suffix')
+
+   // Topbar name
+   var topEl = document.getElementById('topbar-farmer-name')
+   if (topEl) topEl.textContent = farmer.name
+   var sbEl = document.getElementById('sidebar-farmer-name')
+    if (sbEl) sbEl.textContent = farmer.name
+    }
 }
 
 /* ══════════════════════════════════════
@@ -653,10 +674,24 @@ var typeConfig = {
 async function loadActivities() {
   var farmerData = localStorage.getItem('rytuai_farmer'); if (!farmerData) return
   var farmer = JSON.parse(farmerData)
+  var trackerSub = document.getElementById('tracker-sub')
+  if (trackerSub && currentFieldId) {
+    var activeField = allFields.find(function(f) { return f.id === currentFieldId })
+    if (activeField) {
+      trackerSub.textContent = currentLang === 'te'
+        ? '🌾 ' + activeField.field_name + ' — ' + activeField.crop_type
+        : '🌾 ' + activeField.field_name + ' — ' + activeField.crop_type
+    }
+  }
+
   var listEl = document.getElementById('activities-list'); if (!listEl) return
   listEl.innerHTML = '<div style="padding:16px;">' + [1,2,3].map(function() { return '<div style="background:#f0f0f0;border-radius:12px;height:80px;margin-bottom:10px;animation:pulse 1.5s infinite;"></div>' }).join('') + '</div><style>@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}</style>'
   try {
-    var response = await fetch(API + '/activities/' + farmer.phone, { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') } })
+    // Add field_id to request if field is selected
+   var fieldParam = currentFieldId ? '?field_id=' + currentFieldId : ''
+   var response = await fetch(API + '/activities/' + farmer.phone + fieldParam, {
+   headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
+})
     var data = await response.json()
     if (response.ok) { allActivities = data.activities || []; renderActivities(allActivities); updateTrackerStats(allActivities) }
     else listEl.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;font-weight:700;">Error loading activities</div>'
@@ -736,27 +771,64 @@ function selectType(type) {
 function closeActivityScreen() { var screen = document.getElementById('activity-screen'); if (screen) screen.style.display = 'none' }
 
 async function saveActivity() {
-  var type = document.getElementById('activity-type').value; var date = document.getElementById('activity-date').value
-  var title = document.getElementById('activity-title').value.trim(); var desc = document.getElementById('activity-desc').value.trim()
-  var cost = document.getElementById('activity-cost').value; var quantity = document.getElementById('activity-quantity').value.trim()
+  var type = document.getElementById('activity-type').value
+  var date = document.getElementById('activity-date').value
+  var title = document.getElementById('activity-title').value.trim()
+  var desc = document.getElementById('activity-desc').value.trim()
+  var cost = document.getElementById('activity-cost').value
+  var quantity = document.getElementById('activity-quantity').value.trim()
   var unit = document.getElementById('activity-unit').value
+
   if (!type) { showToast('Please select activity type', 'error'); return }
   if (!title) { showToast('Please enter a title', 'error'); return }
   if (!date) { showToast('Please select a date', 'error'); return }
-  var farmerData = localStorage.getItem('rytuai_farmer'); if (!farmerData) { showToast('Please login again', 'error'); return }
-  var farmer = JSON.parse(farmerData)
-  var saveBtn = document.getElementById('activity-save-btn'); if (saveBtn) { saveBtn.textContent = 'Saving...'; saveBtn.disabled = true }
-  try {
-    var url = API + '/activities', method = 'POST'
-    if (currentEditActivityId) { url = API + '/activities/' + currentEditActivityId; method = 'PUT' }
-    var response = await fetch(url, { method: method, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }, body: JSON.stringify({ farmer_id: farmer.phone, date, type, title, description: desc, cost: parseFloat(cost) || 0, quantity, unit, source: 'manual' }) })
-    var data = await response.json()
-    if (response.ok) { showToast(currentEditActivityId ? 'Activity updated!' : 'Activity added!'); closeActivityScreen(); loadActivities() }
-    else showToast(data.message || 'Failed to save', 'error')
-  } catch(err) { showToast('Cannot connect to server', 'error') }
-  finally { if (saveBtn) { saveBtn.textContent = 'Save'; saveBtn.disabled = false } }
-}
 
+  var farmerData = localStorage.getItem('rytuai_farmer')
+  if (!farmerData) { showToast('Please login again', 'error'); return }
+  var farmer = JSON.parse(farmerData)
+
+  var saveBtn = document.getElementById('activity-save-btn')
+  if (saveBtn) { saveBtn.textContent = 'Saving...'; saveBtn.disabled = true }
+
+  try {
+    var url = API + '/activities'
+    var method = 'POST'
+    if (currentEditActivityId) {
+      url = API + '/activities/' + currentEditActivityId
+      method = 'PUT'
+    }
+
+    var response = await fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token')
+      },
+      body: JSON.stringify({
+        farmer_id: farmer.phone,
+        date, type, title,
+        description: desc,
+        cost: parseFloat(cost) || 0,
+        quantity, unit,
+        source: 'manual',
+        field_id: currentFieldId || null
+      })
+    })
+
+    var data = await response.json()
+    if (response.ok) {
+      showToast(currentEditActivityId ? 'Activity updated!' : 'Activity added!')
+      closeActivityScreen()
+      loadActivities()
+    } else {
+      showToast(data.message || 'Failed to save', 'error')
+    }
+  } catch(err) {
+    showToast('Cannot connect to server', 'error')
+  } finally {
+    if (saveBtn) { saveBtn.textContent = 'Save'; saveBtn.disabled = false }
+  }
+}
 async function deleteActivity(id) {
   var confirmed = await showConfirm('Delete this activity'); if (!confirmed) return
   try {
@@ -1404,7 +1476,10 @@ async function loadScanHistory() {
   if (cachedScans && (now - lastScanLoadTime) < 60000) { renderScanHistory(cachedScans); return }
   container.innerHTML = '<div style="text-align:center;padding:20px;"><div class="loader-sm"></div></div>'
   try {
-    var res = await fetch(API + '/detect/history/' + farmer.phone, { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') } })
+    var fieldParam = currentFieldId ? '?field_id=' + currentFieldId : ''
+    var res = await fetch(API + '/detect/history/' + farmer.phone + fieldParam, {
+    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
+   })
     var data = await res.json()
     if (res.ok && data.scans && data.scans.length > 0) { cachedScans = data.scans; lastScanLoadTime = Date.now(); renderScanHistory(data.scans) }
     else { cachedScans = []; container.innerHTML = '<div style="text-align:center;padding:32px;color:#888;"><div style="font-size:32px;margin-bottom:8px;">🔬</div><div style="font-size:13px;font-weight:700;">No scans yet</div></div>' }
@@ -1467,7 +1542,6 @@ async function buyScanPlan(plan) {
 async function loadFields() {
   var farmer = JSON.parse(localStorage.getItem('rytuai_farmer'))
   if (!farmer) return
-
   try {
     var res = await fetch(API + '/fields/' + farmer.phone, {
       headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
@@ -1475,10 +1549,15 @@ async function loadFields() {
     var data = await res.json()
     allFields = data.fields || []
 
-    // Set first field as active if none selected
-    if (!currentFieldId && allFields.length > 0) {
-      currentFieldId = allFields[0].id
-      localStorage.setItem('rytuai_current_field', currentFieldId)
+    // Restore saved field or default to first
+    var savedFieldId = parseInt(localStorage.getItem('rytuai_current_field'))
+    var savedExists = allFields.find(function(f) { return f.id === savedFieldId })
+
+    if (savedExists) {
+      currentFieldId = savedFieldId  // restore previously selected field
+    } else if (allFields.length > 0) {
+      currentFieldId = allFields[0].id  // default to first field
+      localStorage.setItem('rytuai_current_field', String(currentFieldId))
     }
 
     updateFieldSelector()
@@ -1595,11 +1674,22 @@ function closeFieldPicker() {
 
 function selectField(fieldId) {
   currentFieldId = fieldId
-  localStorage.setItem('rytuai_current_field', fieldId)
+  localStorage.setItem('rytuai_current_field', String(fieldId))
   closeFieldPicker()
   updateFieldSelector()
   loadFarmerData()
-  showToast('Field changed!')
+
+  // Reset scan cache so it reloads for new field
+  cachedScans = null
+  lastScanLoadTime = 0
+
+  // If currently on tracker — reload immediately
+  if (currentScreen === 'tracker') {
+    loadActivities()
+    loadScanHistory()
+  }
+
+  showToast(currentLang === 'te' ? '🌾 పొలం మార్చబడింది!' : '🌾 Field changed!')
 }
 
 function openAddField() {

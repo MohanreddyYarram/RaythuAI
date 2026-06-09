@@ -115,6 +115,7 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
     try {
       const { error: scanError } = await supabase.from('scans').insert({
         farmer_id: farmerPhone,
+        field_id:req.body.field_id ? parseInt(req.body.field_id) : null,
         disease: result.disease || 'Unknown',
         telugu_name: result.teluguName || '',
         confidence: result.confidence || '',
@@ -200,12 +201,18 @@ router.post('/search-pesticides', async (req, res) => {
 // ══════════════════════════════════════
 router.get('/history/:phone', async (req, res) => {
   const { phone } = req.params
+  const {field_id} = req.query
   try {
-    const { data, error } = await supabase
+
+    let query = supabase
       .from('scans')
       .select('*')
-      .eq('farmer_id', phone)
-      .order('created_at', { ascending: false })
+      .eq('farmer_id',phone)
+      .order('created_at',{ascending:false})
+    if(field_id){
+      query = query.eq('field_id',parseInt(field_id))
+    }
+    const { data, error } = await query
 
     if (error) return res.status(400).json({ message: error.message })
     res.status(200).json({ scans: data })
