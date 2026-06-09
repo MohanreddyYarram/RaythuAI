@@ -814,48 +814,77 @@ function compressImage(base64, quality) {
 async function analyzeImages() {
   if (countUploaded() < 1) { showToast('Please upload at least 1 photo', 'error'); return }
   switchScreen('result')
-  var loading = document.getElementById('result-loading'); var error = document.getElementById('result-error'); var content = document.getElementById('result-content')
-  if (loading) loading.style.display = 'flex'; if (error) error.style.display = 'none'; if (content) content.style.display = 'none'
-  var loaderText = document.querySelector('.loader-text'); if (loaderText) loaderText.textContent = t('analyzing')
-    
+  var loading = document.getElementById('result-loading')
+  var error = document.getElementById('result-error')
+  var content = document.getElementById('result-content')
+  if (loading) loading.style.display = 'flex'
+  if (error) error.style.display = 'none'
+  if (content) content.style.display = 'none'
+  var loaderText = document.querySelector('.loader-text')
+  if (loaderText) loaderText.textContent = t('analyzing')
+
   try {
+    // ── Step 1: Compress images ──
     var compressedImages = []
     var imagesToProcess = Object.values(uploadedImages).filter(function(v) { return v !== null })
     for (var i = 0; i < imagesToProcess.length; i++) {
-    compressedImages.push(await compressImage(imagesToProcess[i], 0.7))
-   }
-   var formData = new FormData()
-   compressedImages.forEach(function(base64, index) {
-    var byteStr = atob(base64.split(',')[1])
-    var ab = new ArrayBuffer(byteStr.length)
-    var ia = new Uint8Array(ab)
-    for (var j = 0; j < byteStr.length; j++) ia[j] = byteStr.charCodeAt(j)
-    formData.append('photos', new Blob([ab], { type: 'image/jpeg' }), 'photo' + index + '.jpg')
-    })
-    if (currentFieldId) {
-     formData.append('field_id', currentFieldId)
+      compressedImages.push(await compressImage(imagesToProcess[i], 0.7))
     }
-    for (var i = 0; i < imagesToProcess.length; i++) compressedImages.push(await compressImage(imagesToProcess[i], 0.7))
+
+    // ── Step 2: Build FormData ONCE ──
     var formData = new FormData()
     compressedImages.forEach(function(base64, index) {
-      var byteStr = atob(base64.split(',')[1]); var ab = new ArrayBuffer(byteStr.length); var ia = new Uint8Array(ab)
+      var byteStr = atob(base64.split(',')[1])
+      var ab = new ArrayBuffer(byteStr.length)
+      var ia = new Uint8Array(ab)
       for (var j = 0; j < byteStr.length; j++) ia[j] = byteStr.charCodeAt(j)
       formData.append('photos', new Blob([ab], { type: 'image/jpeg' }), 'photo' + index + '.jpg')
     })
-    var response = await fetch(API + '/detect', { method: 'POST', headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }, body: formData })
+
+    // ── Step 3: Add field_id ──
+    if (currentFieldId) {
+      formData.append('field_id', currentFieldId)
+    }
+
+    // ── Step 4: Send to API ──
+    var response = await fetch(API + '/detect', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') },
+      body: formData
+    })
     var data = await response.json()
     if (loading) loading.style.display = 'none'
-    if (response.status === 429) { if (error) error.style.display = 'none'; if (content) content.style.display = 'none'; showScanUpgradeUI(); return }
+
+    if (response.status === 429) {
+      if (error) error.style.display = 'none'
+      if (content) content.style.display = 'none'
+      showScanUpgradeUI()
+      return
+    }
+
     if (response.ok) {
-      cachedScans = null; lastScanLoadTime = 0; lastScanResult = data.result
+      cachedScans = null
+      lastScanLoadTime = 0
+      lastScanResult = data.result
       uploadedImages = { 0: null, 1: null, 2: null, 3: null }
-      for (var i = 0; i < 4; i++) { var slot = document.getElementById('slot-' + i); if (slot) { slot.classList.remove('filled'); slot.innerHTML = '<div class="slot-plus">+</div><div class="slot-label">' + t('slot_' + i) + '</div>' } }
-      updateUploadCount(); updateAnalyzeBtn(); renderResult(data.result)
-    } else throw new Error(data.message || 'Detection failed')
+      for (var i = 0; i < 4; i++) {
+        var slot = document.getElementById('slot-' + i)
+        if (slot) {
+          slot.classList.remove('filled')
+          slot.innerHTML = '<div class="slot-plus">+</div><div class="slot-label">' + t('slot_' + i) + '</div>'
+        }
+      }
+      updateUploadCount()
+      updateAnalyzeBtn()
+      renderResult(data.result)
+    } else {
+      throw new Error(data.message || 'Detection failed')
+    }
   } catch(err) {
     if (loading) loading.style.display = 'none'
     if (error) { error.style.display = 'flex'; error.style.flexDirection = 'column' }
-    var errMsg = document.getElementById('error-msg'); if (errMsg) errMsg.textContent = err.message || 'Something went wrong'
+    var errMsg = document.getElementById('error-msg')
+    if (errMsg) errMsg.textContent = err.message || 'Something went wrong'
   }
 }
 
