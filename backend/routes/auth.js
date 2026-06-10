@@ -8,6 +8,7 @@ const router = express.Router()
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const supabase = require('../services/supabase')
+const { sendOTPEmail } = require('../services/email')
 
 const JWT_SECRET = process.env.JWT_SECRET || 'rytuai2024secret'
 const SALT_ROUNDS = 10
