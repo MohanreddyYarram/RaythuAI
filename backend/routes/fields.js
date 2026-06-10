@@ -101,4 +101,18 @@ router.delete('/:id', auth, async (req, res) => {
   }
 })
 
+// DELETE field — soft delete
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from('fields')
+      .update({ is_active: false })
+      .eq('id', req.params.id)
+
+    if (error) return res.status(400).json({ message: error.message })
+    res.status(200).json({ message: 'Field deleted' })
+  } catch(err) {
+    res.status(500).json({ message: err.message })
+  }
+})
 module.exports = router

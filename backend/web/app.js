@@ -84,7 +84,14 @@ function toggleLanguage() {
 
 function updateLangToggleBtn() {
   var btn = document.getElementById('lang-toggle-btn')
-  if (btn) btn.textContent = currentLang === 'te' ? 'EN' : 'తె'
+  if (!btn) return
+  if (currentLang === 'te') {
+    btn.textContent = '🇮🇳 తెలుగు'
+    btn.title = 'Switch to English'
+  } else {
+    btn.textContent = '🇬🇧 English'
+    btn.title = 'తెలుగుకు మార్చు'
+  }
 }
 
 function applyLanguage() {
@@ -619,20 +626,158 @@ async function registerWithPassword() {
   var sowing_date = document.getElementById('reg-sowing').value
   var password = document.getElementById('reg-password').value
   var confirmPassword = document.getElementById('reg-confirm-password').value
-  if (phone.length !== 10) { showLoginError('Please enter valid 10-digit number'); return }
-  if (!name || !village || !district) { showLoginError('Please fill name, village and district'); return }
-  if (!password || password.length < 8) { showLoginError('Password must be at least 8 characters'); return }
-  if (password !== confirmPassword) { showLoginError('Passwords do not match'); return }
-  showLoginLoading('Creating account...')
+
+  // ── VALIDATE EACH FIELD WITH SPECIFIC MESSAGE ──
+
+  if (!phone || phone.length !== 10 || isNaN(phone)) {
+    showLoginError(currentLang === 'te'
+      ? '📱 సరైన 10 అంకెల మొబైల్ నంబర్ నమోదు చేయండి'
+      : '📱 Please enter a valid 10-digit mobile number')
+    document.getElementById('reg-phone').focus()
+    return
+  }
+
+  if (!name || name.length < 2) {
+    showLoginError(currentLang === 'te'
+      ? '👤 మీ పూర్తి పేరు నమోదు చేయండి'
+      : '👤 Please enter your full name')
+    document.getElementById('reg-name').focus()
+    return
+  }
+
+  if (!village || village.length < 2) {
+    showLoginError(currentLang === 'te'
+      ? '🏘️ మీ గ్రామం పేరు నమోదు చేయండి'
+      : '🏘️ Please enter your village name')
+    document.getElementById('reg-village').focus()
+    return
+  }
+
+  if (!district || district.length < 2) {
+    showLoginError(currentLang === 'te'
+      ? '📍 మీ జిల్లా పేరు నమోదు చేయండి'
+      : '📍 Please enter your district name')
+    document.getElementById('reg-district').focus()
+    return
+  }
+
+  if (!land_acres || parseFloat(land_acres) <= 0) {
+    showLoginError(currentLang === 'te'
+      ? '🌾 ఎకరాల సంఖ్య నమోదు చేయండి'
+      : '🌾 Please enter your land area in acres')
+    document.getElementById('reg-acres').focus()
+    return
+  }
+
+  if (!crop_type) {
+    showLoginError(currentLang === 'te'
+      ? '🌱 పంట రకం ఎంచుకోండి'
+      : '🌱 Please select your crop type')
+    document.getElementById('reg-crop').focus()
+    return
+  }
+
+  // ── PASSWORD VALIDATION — SPECIFIC MESSAGES ──
+
+  if (!password) {
+    showLoginError(currentLang === 'te'
+      ? '🔒 పాస్‌వర్డ్ నమోదు చేయండి'
+      : '🔒 Please enter a password')
+    document.getElementById('reg-password').focus()
+    return
+  }
+
+  if (password.length < 8) {
+    showLoginError(currentLang === 'te'
+      ? '🔒 పాస్‌వర్డ్ కనీసం 8 అక్షరాలు ఉండాలి'
+      : '🔒 Password must be at least 8 characters')
+    document.getElementById('reg-password').focus()
+    return
+  }
+
+  if (!/[A-Z]/.test(password)) {
+    showLoginError(currentLang === 'te'
+      ? '🔒 పాస్‌వర్డ్‌లో కనీసం ఒక పెద్ద అక్షరం (A-Z) ఉండాలి'
+      : '🔒 Password must have at least one capital letter (A-Z)')
+    document.getElementById('reg-password').focus()
+    return
+  }
+
+  if (!/[0-9]/.test(password)) {
+    showLoginError(currentLang === 'te'
+      ? '🔒 పాస్‌వర్డ్‌లో కనీసం ఒక సంఖ్య (0-9) ఉండాలి'
+      : '🔒 Password must have at least one number (0-9)')
+    document.getElementById('reg-password').focus()
+    return
+  }
+
+  if (!/[!@#$%^&*]/.test(password)) {
+    showLoginError(currentLang === 'te'
+      ? '🔒 పాస్‌వర్డ్‌లో కనీసం ఒక స్పెషల్ అక్షరం (!@#$%^&*) ఉండాలి'
+      : '🔒 Password must have at least one special character (!@#$%^&*)')
+    document.getElementById('reg-password').focus()
+    return
+  }
+
+  if (!confirmPassword) {
+    showLoginError(currentLang === 'te'
+      ? '🔒 పాస్‌వర్డ్ మళ్ళీ నమోదు చేయండి'
+      : '🔒 Please confirm your password')
+    document.getElementById('reg-confirm-password').focus()
+    return
+  }
+
+  if (password !== confirmPassword) {
+    showLoginError(currentLang === 'te'
+      ? '🔒 పాస్‌వర్డ్‌లు సరిపోలడం లేదు'
+      : '🔒 Passwords do not match')
+    document.getElementById('reg-confirm-password').focus()
+    return
+  }
+
+  // ── ALL VALID — CALL API ──
+  showLoginLoading(currentLang === 'te'
+    ? 'ఖాతా తయారు చేస్తున్నాం...'
+    : 'Creating account...')
+
   try {
-    var response = await fetch(API + '/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone, name, village, district, land_acres: parseFloat(land_acres) || 0, crop_type, sowing_date, password }) })
-    var data = await response.json(); hideLoginLoading()
+    var response = await fetch(API + '/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone, name, village, district,
+        land_acres: parseFloat(land_acres) || 0,
+        crop_type, sowing_date, password
+      })
+    })
+    var data = await response.json()
+    hideLoginLoading()
+
     if (response.ok) {
       showStep('step-login')
       var errEl = document.getElementById('login-error')
-      if (errEl) { errEl.style.background = '#d4edda'; errEl.style.color = '#155724'; errEl.style.border = '1px solid #c8ddc8'; errEl.textContent = '✅ Registration received! We will call you on ' + phone + ' within 24 hours.'; errEl.style.display = 'block' }
-    } else { showStep('step-signup'); showLoginError(data.message || 'Registration failed') }
-  } catch(err) { hideLoginLoading(); showStep('step-signup'); showLoginError('Cannot connect to server') }
+      if (errEl) {
+        errEl.style.background = '#d4edda'
+        errEl.style.color = '#155724'
+        errEl.style.border = '1px solid #c8ddc8'
+        errEl.textContent = currentLang === 'te'
+          ? '✅ నమోదు అయింది! 24 గంటల్లో మీకు కాల్ చేస్తాం — ' + phone
+          : '✅ Registration received! We will call you on ' + phone + ' within 24 hours.'
+        errEl.style.display = 'block'
+      }
+    } else {
+      showStep('step-signup')
+      showLoginError(data.message || (currentLang === 'te'
+        ? 'నమోదు విఫలమైంది. మళ్ళీ ప్రయత్నించండి.'
+        : 'Registration failed. Please try again.'))
+    }
+  } catch(err) {
+    hideLoginLoading()
+    showStep('step-signup')
+    showLoginError(currentLang === 'te'
+      ? '❌ సర్వర్‌కు కనెక్ట్ అవడం సాధ్యం కాలేదు. Internet తనిఖీ చేయండి.'
+      : '❌ Cannot connect to server. Please check your internet connection.')
+  }
 }
 
 var forgotPhone = ''
@@ -1940,28 +2085,40 @@ function openFieldPicker() {
     '</div>'
 
   allFields.forEach(function(field) {
-    var isActive = field.id === currentFieldId
-    var daysOld = field.sowing_date ?
-      Math.floor((new Date() - new Date(field.sowing_date)) / (1000 * 60 * 60 * 24)) : null
+  var isActive = field.id === currentFieldId
+  var daysOld = field.sowing_date ?
+    Math.floor((new Date() - new Date(field.sowing_date)) / (1000 * 60 * 60 * 24)) : null
 
-    html += '<div onclick="selectField(' + field.id + ')" style="' +
-      'padding:16px;border-radius:14px;margin-bottom:10px;cursor:pointer;' +
-      'border:2px solid ' + (isActive ? '#1a6e35' : '#e8e0d0') + ';' +
-      'background:' + (isActive ? '#e8f5ee' : 'white') + ';">' +
+  html += '<div style="' +
+    'padding:16px;border-radius:14px;margin-bottom:10px;' +
+    'border:2px solid ' + (isActive ? '#1a6e35' : '#e8e0d0') + ';' +
+    'background:' + (isActive ? '#e8f5ee' : 'white') + ';">' +
 
-      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
-      '<div>' +
-      '<div style="font-size:15px;font-weight:800;color:#1a2e1e;">🌾 ' + field.field_name + '</div>' +
-      '<div style="font-size:12px;color:#888;margin-top:2px;">' +
-      field.crop_type + ' · ' + field.land_acres + ' acres' +
-      (field.village ? ' · ' + field.village : '') + '</div>' +
-      (daysOld !== null ? '<div style="font-size:11px;color:#1a6e35;margin-top:2px;">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+    '<div onclick="selectField(' + field.id + ')" style="flex:1;cursor:pointer;">' +
+    '<div style="font-size:15px;font-weight:800;color:#1a2e1e;">🌾 ' + field.field_name + '</div>' +
+    '<div style="font-size:12px;color:#888;margin-top:2px;">' +
+    field.crop_type + ' · ' + field.land_acres + ' acres' +
+    (field.village ? ' · ' + field.village : '') + '</div>' +
+    (daysOld !== null ?
+      '<div style="font-size:11px;color:#1a6e35;margin-top:2px;">' +
       daysOld + ' days since sowing</div>' : '') +
-      '</div>' +
-      (isActive ? '<span style="color:#1a6e35;font-size:20px;">✓</span>' : '') +
-      '</div>' +
-      '</div>'
-  })
+    '</div>' +
+
+    '<div style="display:flex;align-items:center;gap:8px;">' +
+    (isActive ? '<span style="color:#1a6e35;font-size:20px;">✓</span>' : '') +
+
+    // ── DELETE BUTTON ──
+    (allFields.length > 1 ?
+      '<button onclick="deleteField(' + field.id + ', \'' + field.field_name + '\')" style="' +
+      'background:#ffeaea;border:none;border-radius:8px;' +
+      'padding:6px 10px;font-size:12px;cursor:pointer;color:#e74c3c;' +
+      'font-weight:700;font-family:Nunito,sans-serif;">🗑️</button>' : '') +
+    '</div>' +
+
+    '</div>' +
+    '</div>'
+})
 
   // Add new field button
   html += '<button onclick="openAddField()" style="' +
@@ -1985,6 +2142,50 @@ function openFieldPicker() {
   document.body.appendChild(overlay)
   overlay.onclick = function(e) {
     if (e.target === overlay) closeFieldPicker()
+  }
+}
+async function deleteField(fieldId, fieldName) {
+  // Confirm before deleting
+  var confirmed = await showConfirm(
+    currentLang === 'te'
+      ? fieldName + ' పొలం తొలగించాలా?'
+      : 'Delete field "' + fieldName + '"?'
+  )
+  if (!confirmed) return
+
+  try {
+    var res = await fetch(API + '/fields/' + fieldId, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token')
+      }
+    })
+
+    var data = await res.json()
+
+    if (res.ok) {
+      // Remove from local array
+      allFields = allFields.filter(function(f) { return f.id !== fieldId })
+
+      // If deleted field was active — switch to first field
+      if (currentFieldId === fieldId && allFields.length > 0) {
+        currentFieldId = allFields[0].id
+        localStorage.setItem('rytuai_current_field', String(currentFieldId))
+      }
+
+      closeFieldPicker()
+      updateFieldSelector()
+      loadFarmerData()
+      showToast(
+        currentLang === 'te'
+          ? 'పొలం తొలగించబడింది!'
+          : 'Field deleted!'
+      )
+    } else {
+      showToast(data.message || 'Failed to delete', 'error')
+    }
+  } catch(e) {
+    showToast('Cannot connect to server', 'error')
   }
 }
 
@@ -2091,8 +2292,18 @@ async function saveNewField() {
   var village = document.getElementById('new-field-village').value.trim()
   var sowingDate = document.getElementById('new-field-sowing').value
 
+
   if (!fieldName || !cropType || !landAcres) {
     showToast('Please fill field name, crop and acres', 'error')
+    return
+  }
+  var duplicate = allFields.find(function(f) {
+    return f.field_name.toLowerCase() === fieldName.toLowerCase()
+  })
+  if (duplicate) {
+    showToast(currentLang === 'te'
+      ? 'ఈ పేరుతో పొలం ఇప్పటికే ఉంది!'
+      : 'Field with this name already exists!', 'error')
     return
   }
 
