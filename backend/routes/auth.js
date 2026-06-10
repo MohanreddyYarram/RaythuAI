@@ -23,69 +23,8 @@ function sanitizeText(text) {
 
 
 
-// ── REGISTER ──
-const nodemailer = require('nodemailer')
 
-// ── EMAIL TRANSPORTER ──
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,  // true for 465, false for 587
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-  tls: {
-    rejectUnauthorized: false
-  }
-})
 
-// ── SEND OTP EMAIL ──
-async function sendOTPEmail(email, otp, name) {
-  try {
-    await transporter.sendMail({
-      from: '"RytuAI 🌶️" <' + process.env.EMAIL_USER + '>',
-      to: email,
-      subject: 'RytuAI — Your Verification OTP',
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:400px;
-          margin:0 auto;padding:24px;background:#f5f5f5;border-radius:12px;">
-          <div style="text-align:center;margin-bottom:20px;">
-            <div style="font-size:48px;">🌶️</div>
-            <div style="font-size:22px;font-weight:900;color:#1a2e1e;">RytuAI</div>
-            <div style="font-size:13px;color:#888;">రైతు AI అప్లికేషన్</div>
-          </div>
-          <div style="background:white;border-radius:12px;padding:20px;
-            text-align:center;border:1.5px solid #e8e0d0;">
-            <div style="font-size:14px;color:#555;margin-bottom:8px;">
-              నమస్కారం ${name} గారు,
-            </div>
-            <div style="font-size:13px;color:#555;margin-bottom:16px;">
-              Your RytuAI verification OTP:
-            </div>
-            <div style="font-size:48px;font-weight:900;color:#1a6e35;
-              letter-spacing:10px;margin:12px 0;">
-              ${otp}
-            </div>
-            <div style="font-size:12px;color:#888;">
-              Valid for 10 minutes only<br>
-              10 నిమిషాల వరకు మాత్రమే చెల్లుతుంది
-            </div>
-          </div>
-          <div style="text-align:center;margin-top:16px;
-            font-size:11px;color:#aaa;">
-            Do not share this OTP with anyone.<br>
-            మీ OTP ని ఎవరికీ చెప్పకండి.
-          </div>
-        </div>
-      `
-    })
-    return true
-  } catch(err) {
-    console.log('Email error:', err.message)
-    return false
-  }
-}
 
 // ══════════════════════════════════════
 // STEP 1 — REGISTER (Save details + Send OTP)
