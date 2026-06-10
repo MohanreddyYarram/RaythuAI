@@ -616,9 +616,13 @@ async function loginWithPassword() {
   } catch(err) { hideLoginLoading(); showStep('step-login'); showLoginError('Cannot connect to server') }
 }
 
+var registrationPhone = ''
+var registrationEmail = ''
+
 async function registerWithPassword() {
   var phone = document.getElementById('reg-phone').value.trim()
   var name = document.getElementById('reg-name').value.trim()
+  var email = document.getElementById('reg-email').value.trim()
   var village = document.getElementById('reg-village').value.trim()
   var district = document.getElementById('reg-district').value.trim()
   var land_acres = document.getElementById('reg-acres').value
@@ -627,125 +631,80 @@ async function registerWithPassword() {
   var password = document.getElementById('reg-password').value
   var confirmPassword = document.getElementById('reg-confirm-password').value
 
-  // ── VALIDATE EACH FIELD WITH SPECIFIC MESSAGE ──
-
+  // Validate
   if (!phone || phone.length !== 10 || isNaN(phone)) {
-    showLoginError(currentLang === 'te'
-      ? '📱 సరైన 10 అంకెల మొబైల్ నంబర్ నమోదు చేయండి'
-      : '📱 Please enter a valid 10-digit mobile number')
+    showLoginError('📱 Please enter valid 10-digit mobile number')
     document.getElementById('reg-phone').focus()
     return
   }
-
   if (!name || name.length < 2) {
-    showLoginError(currentLang === 'te'
-      ? '👤 మీ పూర్తి పేరు నమోదు చేయండి'
-      : '👤 Please enter your full name')
+    showLoginError('👤 Please enter your full name')
     document.getElementById('reg-name').focus()
     return
   }
-
-  if (!village || village.length < 2) {
-    showLoginError(currentLang === 'te'
-      ? '🏘️ మీ గ్రామం పేరు నమోదు చేయండి'
-      : '🏘️ Please enter your village name')
+  if (!email || !email.includes('@')) {
+    showLoginError('📧 Please enter valid Gmail address')
+    document.getElementById('reg-email').focus()
+    return
+  }
+  if (!village) {
+    showLoginError('🏘️ Please enter your village')
     document.getElementById('reg-village').focus()
     return
   }
-
-  if (!district || district.length < 2) {
-    showLoginError(currentLang === 'te'
-      ? '📍 మీ జిల్లా పేరు నమోదు చేయండి'
-      : '📍 Please enter your district name')
+  if (!district) {
+    showLoginError('📍 Please enter your district')
     document.getElementById('reg-district').focus()
     return
   }
-
   if (!land_acres || parseFloat(land_acres) <= 0) {
-    showLoginError(currentLang === 'te'
-      ? '🌾 ఎకరాల సంఖ్య నమోదు చేయండి'
-      : '🌾 Please enter your land area in acres')
+    showLoginError('🌾 Please enter land area in acres')
     document.getElementById('reg-acres').focus()
     return
   }
-
   if (!crop_type) {
-    showLoginError(currentLang === 'te'
-      ? '🌱 పంట రకం ఎంచుకోండి'
-      : '🌱 Please select your crop type')
-    document.getElementById('reg-crop').focus()
+    showLoginError('🌱 Please select crop type')
     return
   }
-
-  // ── PASSWORD VALIDATION — SPECIFIC MESSAGES ──
-
-  if (!password) {
-    showLoginError(currentLang === 'te'
-      ? '🔒 పాస్‌వర్డ్ నమోదు చేయండి'
-      : '🔒 Please enter a password')
+  if (!password || password.length < 8) {
+    showLoginError('🔒 Password must be at least 8 characters')
     document.getElementById('reg-password').focus()
     return
   }
-
-  if (password.length < 8) {
-    showLoginError(currentLang === 'te'
-      ? '🔒 పాస్‌వర్డ్ కనీసం 8 అక్షరాలు ఉండాలి'
-      : '🔒 Password must be at least 8 characters')
-    document.getElementById('reg-password').focus()
-    return
-  }
-
   if (!/[A-Z]/.test(password)) {
-    showLoginError(currentLang === 'te'
-      ? '🔒 పాస్‌వర్డ్‌లో కనీసం ఒక పెద్ద అక్షరం (A-Z) ఉండాలి'
-      : '🔒 Password must have at least one capital letter (A-Z)')
+    showLoginError('🔒 Password must have at least one capital letter')
     document.getElementById('reg-password').focus()
     return
   }
-
   if (!/[0-9]/.test(password)) {
-    showLoginError(currentLang === 'te'
-      ? '🔒 పాస్‌వర్డ్‌లో కనీసం ఒక సంఖ్య (0-9) ఉండాలి'
-      : '🔒 Password must have at least one number (0-9)')
+    showLoginError('🔒 Password must have at least one number')
     document.getElementById('reg-password').focus()
     return
   }
-
   if (!/[!@#$%^&*]/.test(password)) {
-    showLoginError(currentLang === 'te'
-      ? '🔒 పాస్‌వర్డ్‌లో కనీసం ఒక స్పెషల్ అక్షరం (!@#$%^&*) ఉండాలి'
-      : '🔒 Password must have at least one special character (!@#$%^&*)')
+    showLoginError('🔒 Password must have at least one special character')
     document.getElementById('reg-password').focus()
     return
   }
-
-  if (!confirmPassword) {
-    showLoginError(currentLang === 'te'
-      ? '🔒 పాస్‌వర్డ్ మళ్ళీ నమోదు చేయండి'
-      : '🔒 Please confirm your password')
-    document.getElementById('reg-confirm-password').focus()
-    return
-  }
-
   if (password !== confirmPassword) {
-    showLoginError(currentLang === 'te'
-      ? '🔒 పాస్‌వర్డ్‌లు సరిపోలడం లేదు'
-      : '🔒 Passwords do not match')
+    showLoginError('🔒 Passwords do not match')
     document.getElementById('reg-confirm-password').focus()
     return
   }
 
-  // ── ALL VALID — CALL API ──
+  registrationPhone = phone
+  registrationEmail = email
+
   showLoginLoading(currentLang === 'te'
-    ? 'ఖాతా తయారు చేస్తున్నాం...'
-    : 'Creating account...')
+    ? 'OTP పంపుతున్నాం...'
+    : 'Sending OTP to your Gmail...')
 
   try {
     var response = await fetch(API + '/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        phone, name, village, district,
+        phone, name, email, village, district,
         land_acres: parseFloat(land_acres) || 0,
         crop_type, sowing_date, password
       })
@@ -754,29 +713,172 @@ async function registerWithPassword() {
     hideLoginLoading()
 
     if (response.ok) {
-      showStep('step-login')
-      var errEl = document.getElementById('login-error')
-      if (errEl) {
-        errEl.style.background = '#d4edda'
-        errEl.style.color = '#155724'
-        errEl.style.border = '1px solid #c8ddc8'
-        errEl.textContent = currentLang === 'te'
-          ? '✅ నమోదు అయింది! 24 గంటల్లో మీకు కాల్ చేస్తాం — ' + phone
-          : '✅ Registration received! We will call you on ' + phone + ' within 24 hours.'
-        errEl.style.display = 'block'
-      }
+      // Show OTP verification step
+      showStep('step-verify-otp')
+      var emailDisplay = document.getElementById('verify-email-display')
+      if (emailDisplay) emailDisplay.textContent = email
     } else {
       showStep('step-signup')
-      showLoginError(data.message || (currentLang === 'te'
-        ? 'నమోదు విఫలమైంది. మళ్ళీ ప్రయత్నించండి.'
-        : 'Registration failed. Please try again.'))
+      showLoginError(data.message || 'Registration failed')
     }
   } catch(err) {
     hideLoginLoading()
     showStep('step-signup')
     showLoginError(currentLang === 'te'
-      ? '❌ సర్వర్‌కు కనెక్ట్ అవడం సాధ్యం కాలేదు. Internet తనిఖీ చేయండి.'
-      : '❌ Cannot connect to server. Please check your internet connection.')
+      ? '❌ సర్వర్‌కు కనెక్ట్ అవడం సాధ్యం కాలేదు'
+      : '❌ Cannot connect to server')
+  }
+}
+
+// Verify registration OTP
+async function verifyRegistrationOTP() {
+  var otp = document.getElementById('verify-otp-code').value.trim()
+
+  if (otp.length !== 6) {
+    showLoginError(currentLang === 'te'
+      ? '6 అంకెల OTP నమోదు చేయండి'
+      : 'Please enter 6-digit OTP')
+    return
+  }
+
+  showLoginLoading(currentLang === 'te'
+    ? 'OTP నిర్ధారిస్తున్నాం...'
+    : 'Verifying OTP...')
+
+  try {
+    var response = await fetch(API + '/auth/verify-registration-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: registrationPhone,
+        otp: otp
+      })
+    })
+    var data = await response.json()
+    hideLoginLoading()
+
+    if (response.ok) {
+      // Auto login after verification
+      localStorage.setItem('rytuai_token', data.token)
+      localStorage.setItem('rytuai_phone', registrationPhone)
+      localStorage.setItem('rytuai_farmer', JSON.stringify(data.farmer))
+      showApp()
+      showToast(currentLang === 'te'
+        ? '✅ ఖాతా విజయవంతంగా తయారైంది!'
+        : '✅ Account created successfully!')
+    } else {
+      showLoginError(data.message || 'Invalid OTP')
+    }
+  } catch(err) {
+    hideLoginLoading()
+    showLoginError(currentLang === 'te'
+      ? 'సర్వర్‌కు కనెక్ట్ అవడం సాధ్యం కాలేదు'
+      : 'Cannot connect to server')
+  }
+}
+
+async function resendRegistrationOTP() {
+  showLoginLoading('Resending OTP...')
+  try {
+    await fetch(API + '/auth/resend-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: registrationPhone,
+        email: registrationEmail,
+        type: 'registration'
+      })
+    })
+    hideLoginLoading()
+    showToast('OTP resent to ' + registrationEmail)
+  } catch(err) {
+    hideLoginLoading()
+    showLoginError('Cannot resend OTP')
+  }
+}
+
+// ── EMAIL OTP LOGIN ──
+var loginOTPPhone = ''
+
+async function sendLoginOTP() {
+  var email = document.getElementById('login-email-input').value.trim()
+
+  if (!email || !email.includes('@')) {
+    showLoginError(currentLang === 'te'
+      ? 'సరైన Gmail చిరునామా నమోదు చేయండి'
+      : 'Please enter valid Gmail address')
+    return
+  }
+
+  showLoginLoading(currentLang === 'te'
+    ? 'OTP పంపుతున్నాం...'
+    : 'Sending OTP...')
+
+  try {
+    var response = await fetch(API + '/auth/send-login-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    })
+    var data = await response.json()
+    hideLoginLoading()
+
+    if (response.ok) {
+      loginOTPPhone = data.phone
+      document.getElementById('email-otp-send-section').style.display = 'none'
+      document.getElementById('email-otp-verify-section').style.display = 'block'
+      var display = document.getElementById('login-otp-email-display')
+      if (display) display.textContent = email
+      showToast(currentLang === 'te'
+        ? '✅ OTP Gmail కి పంపబడింది!'
+        : '✅ OTP sent to your Gmail!')
+    } else {
+      showLoginError(data.message || 'Failed to send OTP')
+    }
+  } catch(err) {
+    hideLoginLoading()
+    showLoginError(currentLang === 'te'
+      ? 'సర్వర్‌కు కనెక్ట్ అవడం సాధ్యం కాలేదు'
+      : 'Cannot connect to server')
+  }
+}
+
+async function verifyLoginOTP() {
+  var otp = document.getElementById('login-otp-code').value.trim()
+
+  if (otp.length !== 6) {
+    showLoginError(currentLang === 'te'
+      ? '6 అంకెల OTP నమోదు చేయండి'
+      : 'Please enter 6-digit OTP')
+    return
+  }
+
+  showLoginLoading(currentLang === 'te'
+    ? 'లాగిన్ అవుతున్నాం...'
+    : 'Logging in...')
+
+  try {
+    var response = await fetch(API + '/auth/verify-login-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: loginOTPPhone, otp })
+    })
+    var data = await response.json()
+    hideLoginLoading()
+
+    if (response.ok) {
+      localStorage.setItem('rytuai_token', data.token)
+      localStorage.setItem('rytuai_phone', loginOTPPhone)
+      localStorage.setItem('rytuai_farmer', JSON.stringify(data.farmer))
+      showApp()
+    } else {
+      showLoginError(data.message || 'Invalid OTP')
+    }
+  } catch(err) {
+    hideLoginLoading()
+    showLoginError(currentLang === 'te'
+      ? 'సర్వర్‌కు కనెక్ట్ అవడం సాధ్యం కాలేదు'
+      : 'Cannot connect to server')
   }
 }
 

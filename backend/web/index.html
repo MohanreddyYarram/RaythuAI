@@ -110,6 +110,8 @@
       style="margin-bottom:14px;width:auto;">← Back to Login</button>
     <input type="tel" id="reg-phone" class="login-input" placeholder="📱 Mobile Number" maxlength="10">
     <input type="text" id="reg-name" class="login-input" placeholder="Full Name — మీ పేరు">
+    <input type="email" id="reg-email" class="login-input"
+    placeholder="📧 Gmail Address — OTP వస్తుంది">
     <input type="text" id="reg-village" class="login-input" placeholder="Village — మీ గ్రామం">
     <input type="text" id="reg-district" class="login-input" placeholder="District — జిల్లా">
     <input type="number" id="reg-acres" class="login-input" placeholder="Land in Acres — ఎకరాలు">
@@ -146,6 +148,78 @@
         background:none;border:none;cursor:pointer;font-size:16px;color:#888;">👁️</button>
     </div>
     <button class="btn-primary" onclick="registerWithPassword()">Create Account →</button>
+    <!-- Add inside step-login after existing buttons -->
+<div style="display:flex;align-items:center;gap:10px;margin:12px 0;">
+  <div style="flex:1;height:1px;background:#e0e0e0;"></div>
+  <div style="font-size:12px;color:#888;font-weight:700;">OR</div>
+  <div style="flex:1;height:1px;background:#e0e0e0;"></div>
+</div>
+<button class="btn-ghost" onclick="showStep('step-email-otp-login')"
+  style="width:100%;padding:12px;border:1.5px solid #e0e0e0;border-radius:12px;">
+  📧 Login with Email OTP
+</button>
+
+<!-- ── EMAIL OTP LOGIN STEP ── -->
+<div id="step-email-otp-login" class="login-card" style="display:none;">
+  <div class="login-field-label">📧 Login with Email OTP</div>
+  <button class="btn-ghost btn-sm" onclick="showStep('step-login')"
+    style="margin-bottom:14px;width:auto;">← Back</button>
+
+  <div id="email-otp-send-section">
+    <input type="email" id="login-email-input" class="login-input"
+      placeholder="📧 Enter your Gmail address">
+    <button class="btn-primary" onclick="sendLoginOTP()">
+      Send OTP →
+    </button>
+  </div>
+
+  <div id="email-otp-verify-section" style="display:none;">
+    <div style="text-align:center;padding:12px;background:#e8f5ee;
+      border-radius:10px;margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:700;color:#1a6e35;"
+        id="login-otp-email-display"></div>
+      <div style="font-size:11px;color:#888;margin-top:2px;">
+        Check your Gmail for OTP
+      </div>
+    </div>
+    <input type="tel" id="login-otp-code" class="login-input otp-input"
+      placeholder="• • • • • •" maxlength="6"
+      style="text-align:center;font-size:28px;letter-spacing:8px;font-weight:900;">
+    <button class="btn-primary" onclick="verifyLoginOTP()">
+      Login →
+    </button>
+    <button class="btn-ghost" onclick="sendLoginOTP()"
+      style="font-size:12px;margin-top:8px;">
+      📧 Resend OTP
+    </button>
+  </div>
+   </div>
+  </div>
+  <div id="step-verify-otp" class="login-card" style="display:none;">
+  <div class="login-field-label">📧 Verify Your Email</div>
+  <div style="text-align:center;padding:16px;background:#e8f5ee;
+    border-radius:12px;margin-bottom:16px;">
+    <div style="font-size:32px;margin-bottom:8px;">📬</div>
+    <div style="font-size:14px;font-weight:800;color:#1a2e1e;">
+      OTP sent to your Gmail!
+    </div>
+    <div style="font-size:13px;color:#1a6e35;font-weight:700;
+      margin-top:4px;" id="verify-email-display"></div>
+    <div style="font-size:11px;color:#888;margin-top:4px;
+      font-family:'Tiro Telugu',serif;">
+      మీ Gmail లో OTP చెక్ చేయండి
+    </div>
+  </div>
+  <input type="tel" id="verify-otp-code" class="login-input otp-input"
+    placeholder="• • • • • •" maxlength="6"
+    style="text-align:center;font-size:28px;letter-spacing:8px;font-weight:900;">
+  <button class="btn-primary" onclick="verifyRegistrationOTP()">
+    ✅ Verify & Activate Account →
+  </button>
+  <button class="btn-ghost" onclick="resendRegistrationOTP()"
+    style="font-size:12px;margin-top:8px;">
+    📧 Resend OTP
+  </button>
   </div>
 
   <!-- ── FORGOT PASSWORD STEP ── -->

@@ -23,65 +23,378 @@ function sanitizeText(text) {
 
 
 // ── REGISTER ──
+const nodemailer = require('nodemailer')
+
+// ── EMAIL TRANSPORTER ──
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+})
+
+// ── SEND OTP EMAIL ──
+async function sendOTPEmail(email, otp, name) {
+  try {
+    await transporter.sendMail({
+      from: '"RytuAI 🌶️" <' + process.env.EMAIL_USER + '>',
+      to: email,
+      subject: 'RytuAI — Your Verification OTP',
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:400px;
+          margin:0 auto;padding:24px;background:#f5f5f5;border-radius:12px;">
+          <div style="text-align:center;margin-bottom:20px;">
+            <div style="font-size:48px;">🌶️</div>
+            <div style="font-size:22px;font-weight:900;color:#1a2e1e;">RytuAI</div>
+            <div style="font-size:13px;color:#888;">రైతు AI అప్లికేషన్</div>
+          </div>
+          <div style="background:white;border-radius:12px;padding:20px;
+            text-align:center;border:1.5px solid #e8e0d0;">
+            <div style="font-size:14px;color:#555;margin-bottom:8px;">
+              నమస్కారం ${name} గారు,
+            </div>
+            <div style="font-size:13px;color:#555;margin-bottom:16px;">
+              Your RytuAI verification OTP:
+            </div>
+            <div style="font-size:48px;font-weight:900;color:#1a6e35;
+              letter-spacing:10px;margin:12px 0;">
+              ${otp}
+            </div>
+            <div style="font-size:12px;color:#888;">
+              Valid for 10 minutes only<br>
+              10 నిమిషాల వరకు మాత్రమే చెల్లుతుంది
+            </div>
+          </div>
+          <div style="text-align:center;margin-top:16px;
+            font-size:11px;color:#aaa;">
+            Do not share this OTP with anyone.<br>
+            మీ OTP ని ఎవరికీ చెప్పకండి.
+          </div>
+        </div>
+      `
+    })
+    return true
+  } catch(err) {
+    console.log('Email error:', err.message)
+    return false
+  }
+}
+
+// ══════════════════════════════════════
+// STEP 1 — REGISTER (Save details + Send OTP)
+// ══════════════════════════════════════
 router.post('/register', async (req, res) => {
-  const phone = sanitizePhone(req.body.phone)
-  const name = sanitizeText(req.body.name)
-  const village = sanitizeText(req.body.village)
-  const district = sanitizeText(req.body.district)
-  const crop_type = sanitizeText(req.body.crop_type)
-  const {  password,land_acres, sowing_date } = req.body
-  const passwordError = validatePassword(password)
-  if (!phone || phone.length !== 10) {
-    return res.status(400).json({ message: 'Valid 10-digit phone number required' })
+  const {
+    phone, name, village, district,
+    land_acres, crop_type, sowing_date,
+    password, email
+  } = req.body
+
+  // Validate required fields
+  if (!phone || !name || !village || !district) {
+    return res.status(400).json({
+      message: 'Please fill all required fields'
+    })
   }
-  if (passwordError){
-   return res.status(400).json({message:passwordError})
+
+  if (!email || !email.includes('@')) {
+    return res.status(400).json({
+      message: 'Please enter valid Gmail address'
+    })
   }
-  if (!name || !village || !district) {
-    return res.status(400).json({ message: 'Name, village and district are required' })
+
+  if (!password || password.length < 8) {
+    return res.status(400).json({
+      message: 'Password must be at least 8 characters'
+    })
   }
 
   try {
-    // Check if farmer already exists
-    const { data: existing } = await supabase
+    // Check phone already exists
+    const { data: existingPhone } = await supabase
       .from('farmers')
       .select('phone')
       .eq('phone', phone)
-      .single()
+      .maybeSingle()
 
-    if (existing) {
-      return res.status(400).json({ message: 'Phone number already registered. Please login.' })
+    if (existingPhone) {
+      return res.status(400).json({
+        message: 'This phone number is already registered'
+      })
+    }
+
+    // Check email already exists
+    const { data: existingEmail } = await supabase
+      .from('farmers')
+      .select('email')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (existingEmail) {
+      return res.status(400).json({
+        message: 'This email is already registered'
+      })
     }
 
     // Hash password
-    const password_hash = await bcrypt.hash(password, SALT_ROUNDS)
+    const bcrypt = require('bcrypt')
+    const password_hash = await bcrypt.hash(password, 10)
 
-    // Create farmer
-    const { data, error } = await supabase
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
+
+    // Save farmer with email_verified = false
+    const { data: farmer, error } = await supabase
       .from('farmers')
       .insert({
         phone, name, village, district,
         land_acres: parseFloat(land_acres) || 0,
-        crop_type, sowing_date,
+        crop_type, sowing_date: sowing_date || null,
         password_hash,
-        is_approved:false
+        email,
+        email_verified: false,
+        is_approved: false  // will be set true after OTP verify
       })
       .select()
+      .single()
 
-    if (error) return res.status(400).json({ message: error.message })
+    if (error) {
+      return res.status(400).json({ message: error.message })
+    }
 
-    // Generate token
-    const token = jwt.sign({ phone }, JWT_SECRET, { expiresIn: '30d' })
-    
-    var farmerData = data[0]
-    delete farmerData.password_hash
-    res.status(201).json({
-      message: 'Registration successful! Your account is oending approval. we will contact you within 24 hours.',
-      pending: true,
-      
+    // Save OTP
+    await supabase.from('otp_store').upsert({
+      phone,
+      otp,
+      expires_at: expiresAt.toISOString(),
+      type: 'registration'
     })
+
+    // Send OTP email
+    const sent = await sendOTPEmail(email, otp, name)
+
+    if (!sent) {
+      return res.status(500).json({
+        message: 'Could not send OTP email. Check your Gmail address.'
+      })
+    }
+
+    res.status(200).json({
+      message: 'OTP sent to ' + email,
+      phone: phone,
+      requires_otp: true
+    })
+
   } catch(err) {
     console.log('Register error:', err.message)
+    res.status(500).json({ message: 'Server error' })
+  }
+})
+
+// ══════════════════════════════════════
+// STEP 2 — VERIFY OTP (Auto approve)
+// ══════════════════════════════════════
+router.post('/verify-registration-otp', async (req, res) => {
+  const { phone, otp } = req.body
+
+  if (!phone || !otp) {
+    return res.status(400).json({ message: 'Phone and OTP required' })
+  }
+
+  try {
+    // Get OTP record
+    const { data: otpRecord } = await supabase
+      .from('otp_store')
+      .select('*')
+      .eq('phone', phone)
+      .eq('type', 'registration')
+      .maybeSingle()
+
+    if (!otpRecord) {
+      return res.status(400).json({
+        message: 'OTP not found. Please register again.'
+      })
+    }
+
+    // Check expiry
+    if (new Date() > new Date(otpRecord.expires_at)) {
+      return res.status(400).json({
+        message: 'OTP expired. Please register again.'
+      })
+    }
+
+    // Check OTP
+    if (otpRecord.otp !== otp.toString()) {
+      return res.status(400).json({
+        message: 'Invalid OTP. Please try again.'
+      })
+    }
+
+    // Auto approve farmer
+    const { data: farmer, error } = await supabase
+      .from('farmers')
+      .update({
+        is_approved: true,
+        email_verified: true
+      })
+      .eq('phone', phone)
+      .select()
+      .single()
+
+    if (error) {
+      return res.status(400).json({ message: error.message })
+    }
+
+    // Delete used OTP
+    await supabase
+      .from('otp_store')
+      .delete()
+      .eq('phone', phone)
+      .eq('type', 'registration')
+
+    // Generate login token
+    const token = jwt.sign(
+      { phone },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    )
+
+    res.status(200).json({
+      message: 'Account verified successfully!',
+      token,
+      farmer
+    })
+
+  } catch(err) {
+    console.log('OTP verify error:', err.message)
+    res.status(500).json({ message: 'Server error' })
+  }
+})
+
+// ══════════════════════════════════════
+// LOGIN WITH EMAIL OTP
+// ══════════════════════════════════════
+router.post('/send-login-otp', async (req, res) => {
+  const { email } = req.body
+
+  if (!email) {
+    return res.status(400).json({ message: 'Email required' })
+  }
+
+  try {
+    // Find farmer by email
+    const { data: farmer } = await supabase
+      .from('farmers')
+      .select('name, phone, is_approved, email_verified')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (!farmer) {
+      return res.status(404).json({
+        message: 'No account found with this email'
+      })
+    }
+
+    if (!farmer.is_approved) {
+      return res.status(403).json({
+        message: 'Account not verified yet'
+      })
+    }
+
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
+
+    // Save OTP
+    await supabase.from('otp_store').upsert({
+      phone: farmer.phone,
+      otp,
+      expires_at: expiresAt.toISOString(),
+      type: 'login'
+    })
+
+    // Send OTP
+    const sent = await sendOTPEmail(email, otp, farmer.name)
+
+    if (!sent) {
+      return res.status(500).json({
+        message: 'Could not send OTP email'
+      })
+    }
+
+    res.status(200).json({
+      message: 'OTP sent to ' + email,
+      phone: farmer.phone
+    })
+
+  } catch(err) {
+    res.status(500).json({ message: 'Server error' })
+  }
+})
+
+// ══════════════════════════════════════
+// VERIFY LOGIN OTP
+// ══════════════════════════════════════
+router.post('/verify-login-otp', async (req, res) => {
+  const { phone, otp } = req.body
+
+  try {
+    // Get OTP
+    const { data: otpRecord } = await supabase
+      .from('otp_store')
+      .select('*')
+      .eq('phone', phone)
+      .eq('type', 'login')
+      .maybeSingle()
+
+    if (!otpRecord) {
+      return res.status(400).json({
+        message: 'OTP not found. Please request again.'
+      })
+    }
+
+    if (new Date() > new Date(otpRecord.expires_at)) {
+      return res.status(400).json({
+        message: 'OTP expired. Please request again.'
+      })
+    }
+
+    if (otpRecord.otp !== otp.toString()) {
+      return res.status(400).json({
+        message: 'Invalid OTP. Please try again.'
+      })
+    }
+
+    // Get farmer
+    const { data: farmer } = await supabase
+      .from('farmers')
+      .select('*')
+      .eq('phone', phone)
+      .maybeSingle()
+
+    if (!farmer) {
+      return res.status(404).json({ message: 'Farmer not found' })
+    }
+
+    // Delete OTP
+    await supabase
+      .from('otp_store')
+      .delete()
+      .eq('phone', phone)
+      .eq('type', 'login')
+
+    // Generate token
+    const token = jwt.sign(
+      { phone },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    )
+
+    res.status(200).json({ token, farmer })
+
+  } catch(err) {
     res.status(500).json({ message: 'Server error' })
   }
 })
