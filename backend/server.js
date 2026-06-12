@@ -8,7 +8,7 @@ const rateLimit = require('express-rate-limit')
 
 //Import express (the framework that handles request)
 const express = require('express')
-app.use(express.static('public'))
+
 const compression = require('compression')
 
 //Import cors (allows frontend to talk with backend)
@@ -25,6 +25,7 @@ app.set('trust proxy',1)
 
 //Tells express to accept JSON data in request
 app.use(express.json())
+app.use(express.static('public'))
 
 
 // Enable cors so frontend can connect
