@@ -1784,45 +1784,84 @@ async function loadFeedPrices() {
   var pricesDiv = document.getElementById('feed-prices')
   if (!pricesDiv) return
 
-  pricesDiv.innerHTML = '<div style="text-align:center;padding:20px;">' +
+  // Crop tabs
+  var tabs = [
+    { key: 'chilli', label: '🌶️ మిర్చి', icon: '🌶️' },
+    { key: 'paddy', label: '🌾 వరి', icon: '🌾' },
+    { key: 'cotton', label: '🌿 పత్తి', icon: '🌿' },
+    { key: 'bengalgram', label: '🫘 సెనగలు', icon: '🫘' },
+    { key: 'maize', label: '🌽 మొక్కజొన్న', icon: '🌽' },
+    { key: 'groundnut', label: '🥜 వేరుశెనగ', icon: '🥜' }
+  ]
+
+  // Build tab UI
+  var tabHtml = '<div style="display:flex;gap:8px;overflow-x:auto;' +
+    'padding-bottom:8px;margin-bottom:12px;scrollbar-width:none;">'
+
+  tabs.forEach(function(tab, i) {
+    tabHtml += '<button id="price-tab-' + tab.key + '" ' +
+      'onclick="loadCropPrices(\'' + tab.key + '\')" ' +
+      'style="white-space:nowrap;padding:6px 14px;' +
+      'border-radius:20px;border:none;cursor:pointer;font-size:12px;' +
+      'font-weight:800;font-family:Nunito,sans-serif;' +
+      'background:' + (i === 0 ? '#1a6e35' : '#f0f0f0') + ';' +
+      'color:' + (i === 0 ? 'white' : '#555') + ';">' +
+      tab.label + '</button>'
+  })
+
+  tabHtml += '</div>'
+  tabHtml += '<div id="crop-prices-list"></div>'
+
+  pricesDiv.innerHTML = tabHtml
+
+  // Load chilli by default
+  loadCropPrices('chilli')
+}
+
+async function loadCropPrices(cropKey) {
+  // Update tab styles
+  var tabs = ['chilli', 'paddy', 'cotton', 'bengalgram', 'maize', 'groundnut']
+  tabs.forEach(function(key) {
+    var tab = document.getElementById('price-tab-' + key)
+    if (tab) {
+      tab.style.background = key === cropKey ? '#1a6e35' : '#f0f0f0'
+      tab.style.color = key === cropKey ? 'white' : '#555'
+    }
+  })
+
+  var listEl = document.getElementById('crop-prices-list')
+  if (!listEl) return
+
+  listEl.innerHTML = '<div style="text-align:center;padding:20px;">' +
     '<div class="loader-sm"></div></div>'
 
   try {
-    var res = await fetch(API + '/feed/prices')
+    var res = await fetch(API + '/feed/prices/' + cropKey)
     var data = await res.json()
 
     if (res.ok && data.prices && data.prices.length > 0) {
-      // Show real prices
-      pricesDiv.innerHTML = data.prices
-        .filter(function(p) {
-          // Show only relevant crops
-          var crops = ['chilli', 'paddy', 'cotton',
-                       'groundnut', 'maize', 'tomato', 'onion']
-          return crops.some(function(c) {
-            return p.crop.toLowerCase().includes(c)
-          })
-        })
-        .slice(0, 8)  // show max 8 crops
-        .map(function(p) {
-          return '<div class="price-card">' +
-            '<div class="price-crop">🌾 ' + p.crop + '</div>' +
-            '<div class="price-value">₹' + p.modalPrice.toLocaleString('en-IN') + '</div>' +
-            '<div class="price-unit">per quintal — Modal Price</div>' +
-            '<div style="font-size:11px;color:#888;margin-top:4px;">' +
-            'Min: ₹' + p.minPrice + ' · Max: ₹' + p.maxPrice +
-            '</div>' +
-            '<div class="price-market">📍 ' + p.market + '</div>' +
-            '<div style="font-size:10px;color:#aaa;">' + p.date + '</div>' +
-            '</div>'
-        }).join('')
-      return
+      listEl.innerHTML = data.prices.map(function(p) {
+        return '<div class="price-card" style="border-left:3px solid #1a6e35;">' +
+          '<div style="font-size:14px;font-weight:800;color:#1a2e1e;">' +
+          p.variety + '</div>' +
+          '<div style="font-size:22px;font-weight:900;color:#1a6e35;margin:4px 0;">₹' +
+          p.modalPrice.toLocaleString('en-IN') + '</div>' +
+          '<div style="font-size:11px;color:#888;">per quintal — Modal Price</div>' +
+          '<div style="font-size:11px;color:#555;margin-top:4px;">' +
+          'Min: ₹' + p.minPrice.toLocaleString('en-IN') +
+          ' · Max: ₹' + p.maxPrice.toLocaleString('en-IN') + '</div>' +
+          '<div style="display:flex;justify-content:space-between;margin-top:6px;">' +
+          '<div style="font-size:11px;color:#888;">📍 ' + p.market + '</div>' +
+          '<div style="font-size:10px;color:#aaa;">' + p.date + '</div>' +
+          '</div></div>'
+      }).join('')
+    } else {
+      listEl.innerHTML = '<div style="text-align:center;padding:24px;color:#888;">' +
+        'No prices available today</div>'
     }
-
-    // Fallback to static prices if API fails
-    loadStaticPrices(pricesDiv)
-
   } catch(e) {
-    loadStaticPrices(pricesDiv)
+    listEl.innerHTML = '<div style="text-align:center;padding:24px;color:#888;">' +
+      'Cannot load prices</div>'
   }
 }
 
@@ -1879,23 +1918,47 @@ async function loadFeedNews() {
 
     if (res.ok && data.articles && data.articles.length > 0) {
       newsDiv.innerHTML = data.articles.map(function(n) {
-        return '<div class="news-card" onclick="window.open(\'' +
-          n.url + '\', \'_blank\')">' +
+        return '<div class="news-card" ' +
+          'onclick="window.open(\'' + n.url + '\', \'_blank\')" ' +
+          'style="cursor:pointer;">' +
           '<div class="news-source">' +
-          (n.source ? n.source.name : 'News') + '</div>' +
+          (n.source ? n.source.name : 'News') + ' · ' +
+          formatNewsDate(n.publishedAt) +
+          '</div>' +
           '<div class="news-title">' + n.title + '</div>' +
           '<div class="news-desc">' + (n.description || '') + '</div>' +
+          '<div style="font-size:11px;color:#1a6e35;margin-top:6px;' +
+          'font-weight:700;">Read more →</div>' +
           '</div>'
       }).join('')
-      return
+    } else {
+      // Show message — no static news with wrong links
+      newsDiv.innerHTML = '<div style="text-align:center;padding:32px;color:#888;">' +
+        '<div style="font-size:32px;margin-bottom:8px;">📰</div>' +
+        '<div style="font-size:13px;font-weight:700;">News loading...</div>' +
+        '<div style="font-size:11px;margin-top:4px;">Pull down to refresh</div>' +
+        '</div>'
     }
-
-    // Fallback to static Telugu news
-    loadStaticNews(newsDiv)
-
   } catch(e) {
-    loadStaticNews(newsDiv)
+    newsDiv.innerHTML = '<div style="text-align:center;padding:32px;color:#888;">' +
+      '<div style="font-size:32px;">📰</div>' +
+      '<div style="font-size:13px;font-weight:700;margin-top:8px;">Cannot load news</div>' +
+      '</div>'
   }
+}
+
+function formatNewsDate(dateStr) {
+  if (!dateStr) return ''
+  try {
+    var date = new Date(dateStr)
+    var now = new Date()
+    var diff = Math.floor((now - date) / (1000 * 60 * 60))
+    if (diff < 1) return 'Just now'
+    if (diff < 24) return diff + ' hours ago'
+    var days = Math.floor(diff / 24)
+    if (days === 1) return 'Yesterday'
+    return days + ' days ago'
+  } catch(e) { return '' }
 }
 
 function loadStaticNews(newsDiv) {
