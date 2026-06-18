@@ -319,11 +319,10 @@ router.get('/news', async (req, res) => {
     }
 
     const url = 'https://gnews.io/api/v4/search?' +
-      'q=andhra+pradesh+agriculture+farmer+chilli&' +
-      'lang=en&' +
-      'country=in&' +
-      'max=8&' +
-      'apikey=' + GNEWS_API_KEY
+     'q=india+agriculture+farmer&' +
+     'lang=en&' +
+     'max=8&' +
+     'apikey=' + GNEWS_API_KEY
 
     const response = await fetch(url)
     const data = await response.json()
