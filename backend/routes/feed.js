@@ -319,10 +319,10 @@ router.get('/news', async (req, res) => {
     }
 
     const url = 'https://gnews.io/api/v4/search?' +
-     'q=india+agriculture+farmer&' +
-     'lang=en&' +
-     'max=8&' +
-     'apikey=' + GNEWS_API_KEY
+  'q=farmer+agriculture+crop+india&' +
+  'lang=en&' +
+  'max=10&' +
+  'apikey=' + GNEWS_API_KEY
 
     const response = await fetch(url)
     const data = await response.json()
@@ -330,20 +330,39 @@ router.get('/news', async (req, res) => {
     console.log('GNews articles:', data.articles?.length || 0)
 
     if (data.articles && data.articles.length > 0) {
-      const cleaned = data.articles.map(function(a) {
-        return {
-          title: a.title || '',
-          description: a.description || '',
-          url: a.url || '#',
-          source: { name: a.source?.name || 'News' },
-          publishedAt: a.publishedAt || ''
-        }
-      }).filter(function(a) {
-        return a.title && a.title !== '[Removed]'
-      })
+  // Filter only agriculture related articles
+  var agriKeywords = [
+    'farm', 'farmer', 'agriculture', 'crop', 'harvest',
+    'kisan', 'rythu', 'chilli', 'paddy', 'cotton',
+    'mandi', 'market price', 'groundnut', 'vegetable',
+    'irrigation', 'drought', 'rain', 'MSP', 'fertilizer'
+  ]
 
-      return res.status(200).json({ articles: cleaned })
+  var filtered = data.articles.filter(function(a) {
+    var text = ((a.title || '') + ' ' + (a.description || '')).toLowerCase()
+    return agriKeywords.some(function(keyword) {
+      return text.includes(keyword.toLowerCase())
+    })
+  })
+
+  // If no agriculture news found — show all articles
+  var finalArticles = filtered.length > 0 ? filtered : data.articles
+
+  const cleaned = finalArticles.map(function(a) {
+    return {
+      title: a.title || '',
+      description: a.description || '',
+      url: a.url || '#',
+      image: a.image || '',
+      source: { name: a.source?.name || 'News' },
+      publishedAt: a.publishedAt || ''
     }
+  }).filter(function(a) {
+    return a.title && a.title !== '[Removed]'
+  })
+
+  return res.status(200).json({ articles: cleaned })
+  }
 
     res.status(200).json({ articles: [] })
 
