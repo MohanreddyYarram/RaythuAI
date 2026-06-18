@@ -472,7 +472,6 @@ function loadFarmerData() {
   if (!farmerStr) return
   var farmer = JSON.parse(farmerStr)
 
-  // Get current field data
   var currentField = allFields.find(function(f) {
     return f.id === currentFieldId
   }) || allFields[0] || farmer
@@ -481,59 +480,102 @@ function loadFarmerData() {
   var greeting = hour < 12 ? t('good_morning') :
                  hour < 17 ? t('good_afternoon') : t('good_evening')
 
+  // Greeting
   var greetEl = document.getElementById('farmer-greeting')
   if (greetEl) greetEl.textContent = greeting + ', ' + farmer.name + t('greeting_suffix')
+  var greetDesktop = document.getElementById('farmer-greeting-desktop')
+  if (greetDesktop) greetDesktop.textContent = greeting + ', ' + farmer.name + t('greeting_suffix')
 
-  // Use field data for crop info
+  // Topbar
+  var topEl = document.getElementById('topbar-farmer-name')
+  if (topEl) topEl.textContent = farmer.name
+
+  // Crop name
   var cropEl = document.querySelector('.crop-name')
   if (cropEl) cropEl.textContent = '🌾 ' + (currentField.crop_type || farmer.crop_type || 'Chilli')
 
+  // Crop meta
   var cropMetaEl = document.querySelector('.crop-meta')
-  if(cropMetaEl){
+  if (cropMetaEl) {
     var parts = []
-    if (currentField.sowing_date){
-      var sowDate = new Date(currentField.sowing_date + 'T00:00:00')
-      var sowFormatted = sowDate.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'2-digit'})
-      parts.push(t('sowed')+':'+sowFormatted)
-    }
-    parts.push((currentField.land_acres ||'0')+' '+t('acres'))
-    if(currentField.village) parts.push(currentField.village)
-    cropMetaEl.textContent = parts.join(' . ')
+    if (currentField.land_acres) parts.push(currentField.land_acres + ' ' + t('acres'))
+    if (currentField.village) parts.push(currentField.village)
+    cropMetaEl.textContent = parts.join(' · ')
   }
-  
-  // Calculate growth stage from field sowing date
-  var sowingDate = currentField.sowing_date
+
+  // Sowing date
+  var sowingEl = document.getElementById('home-sowing-date')
+  if (sowingEl && currentField.sowing_date) {
+    var sowDate = new Date(currentField.sowing_date + 'T00:00:00')
+    sowingEl.textContent = t('sowed') + ': ' + sowDate.toLocaleDateString('en-IN', {
+      day: 'numeric', month: 'short', year: '2-digit'
+    })
+  }
+
+  // Village
+  var villageEl = document.getElementById('home-village')
+  if (villageEl) villageEl.textContent = currentField.village || farmer.village || '—'
+
+  // Growth stage
+  var sowingDate = currentField.sowing_date || farmer.sowing_date
   if (sowingDate) {
-    var days = Math.floor((new Date() - new Date(sowingDate+'T00:00:00')) / (1000 * 60 * 60 * 24))
+    var days = Math.floor(
+      (new Date() - new Date(sowingDate + 'T00:00:00')) / (1000 * 60 * 60 * 24)
+    )
     var stage, progress
 
-    if (days < 30) { stage = 'Seedling Stage'; progress = 10 }
-    else if (days < 60) { stage = 'Vegetative Stage'; progress = 25 }
-    else if (days < 90) { stage = 'Flowering Stage'; progress = 50 }
-    else if (days < 120) { stage = 'Fruit Development'; progress = 75 }
-    else if (days < 150) { stage = 'Harvest Ready'; progress = 90 }
-    else { stage = 'Season Complete'; progress = 100 }
+    if (days < 0)   { stage = t('seedling'); progress = 0 }
+    else if (days < 30)  { stage = t('seedling'); progress = 10 }
+    else if (days < 60)  { stage = t('vegetative'); progress = 25 }
+    else if (days < 90)  { stage = t('flowering'); progress = 50 }
+    else if (days < 120) { stage = t('fruit'); progress = 75 }
+    else if (days < 150) { stage = t('harvest_stage'); progress = 90 }
+    else { stage = t('complete'); progress = 100 }
 
-    var stageEl = document.querySelector('.crop-stage, .crop-badge')
+    var stageEl = document.querySelector('.crop-badge')
     if (stageEl) stageEl.textContent = stage
 
     var progressEl = document.querySelector('.crop-progress-fill')
     if (progressEl) progressEl.style.width = progress + '%'
-    var progressLabel = document.querySelector('.crop-progress-label')
-    if(progressLabel) progressLabel.textContent = t('season_progress')+ ' - ' + progress + '%'
-    
-   // Greeting
-    var greetEl = document.getElementById('farmer-greeting')
-    if (greetEl) greetEl.textContent = greeting + ', ' + farmer.name + t('greeting_suffix')
-    var greetDesktop = document.getElementById('farmer-greeting-desktop')
-    if (greetDesktop) greetDesktop.textContent = greeting + ', ' + farmer.name + t('greeting_suffix')
 
-   // Topbar name
-   var topEl = document.getElementById('topbar-farmer-name')
-   if (topEl) topEl.textContent = farmer.name
-   var sbEl = document.getElementById('sidebar-farmer-name')
-    if (sbEl) sbEl.textContent = farmer.name
+    var progressLabel = document.querySelector('.crop-progress-label')
+    if (progressLabel) progressLabel.textContent = t('season_progress') + ' — ' + progress + '%'
+
+    // Days active stat
+    var daysEl = document.getElementById('home-stat-days')
+    if (daysEl) daysEl.textContent = Math.max(0, days)
+  }
+
+  // Load activities for home stats
+  loadHomeStats(farmer.phone)
+}
+
+// Load activities count and cost for home screen
+async function loadHomeStats(phone) {
+  try {
+    var fieldParam = currentFieldId ? '?field_id=' + currentFieldId : ''
+    var res = await fetch(API + '/activities/' + phone + fieldParam, {
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
+    })
+    var data = await res.json()
+
+    if (res.ok && data.activities) {
+      var activities = data.activities
+      var totalCost = activities.reduce(function(sum, a) {
+        return sum + (parseFloat(a.cost) || 0)
+      }, 0)
+
+      var tasksEl = document.getElementById('home-stat-tasks')
+      if (tasksEl) tasksEl.textContent = activities.length
+
+      var costEl = document.getElementById('home-stat-cost')
+      if (costEl) costEl.textContent = totalCost >= 1000
+        ? '₹' + (totalCost / 1000).toFixed(1) + 'k'
+        : '₹' + totalCost
     }
+  } catch(e) {
+    console.log('Home stats error:', e.message)
+  }
 }
 
 /* ══════════════════════════════════════

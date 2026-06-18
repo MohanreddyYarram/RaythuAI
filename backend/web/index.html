@@ -341,23 +341,24 @@ AI agriculture Telugu">
     <div class="screens-container">
 
       <!-- ══ HOME SCREEN ══ -->
-      <div class="screen active" id="screen-home">
+            <div class="screen active" id="screen-home">
 
         <!-- MOBILE HERO -->
         <div class="home-hero mobile-only">
-          <div class="home-greeting" id="farmer-greeting">నమస్కారం 🙏</div>
-          <div class="home-subtext" id="home-subtext">Good morning, farmer</div>
-
-           <!-- FIELD SELECTOR -->
-          <div id="field-selector" style="padding:0 16px;margin-bottom:8px;"></div>
-
-          <div class="home-weather">
-            <span class="weather-icon">⛅</span>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
             <div>
+              <div class="home-greeting" id="farmer-greeting">నమస్కారం 🙏</div>
+              <div class="home-subtext" id="home-subtext">Good morning, farmer</div>
+            </div>
+            <div class="home-weather" style="text-align:right;">
+              <span class="weather-icon">⛅</span>
               <div class="weather-temp">--°C</div>
-              <div class="weather-desc">Loading weather...</div>
+              <div class="weather-desc" style="font-size:10px;">Loading...</div>
             </div>
           </div>
+
+          <!-- FIELD SELECTOR — PROMINENT -->
+          <div id="field-selector" style="margin:12px 0 4px;"></div>
         </div>
 
         <!-- DESKTOP HERO -->
@@ -367,7 +368,6 @@ AI agriculture Telugu">
             <div class="dh-sub" id="dh-subtext">Good morning — here's your farm overview</div>
             <div id="field-selector-desktop" style="margin-top:12px;"></div>
           </div>
-          
           <div class="dh-weather">
             <div class="dh-weather-main">
               <span style="font-size:36px;" class="weather-icon">⛅</span>
@@ -381,6 +381,8 @@ AI agriculture Telugu">
         </div>
 
         <div class="home-content">
+
+          <!-- QUICK ACTIONS -->
           <div class="section-label" id="quick-actions-label">⚡ Quick Actions</div>
           <div class="action-grid">
             <div class="action-card primary" onclick="switchScreen('detect')">
@@ -405,45 +407,81 @@ AI agriculture Telugu">
             </div>
           </div>
 
-          <div class="desktop-only" style="padding:0 20px;">
-            <div class="section-label" style="padding:16px 0 8px;">📊 Season Overview</div>
-            <div class="stats-row">
-              <div class="stat-box"><div class="stat-val" id="home-stat-days">0</div><div class="stat-label">Days Active</div></div>
-              <div class="stat-box"><div class="stat-val" id="home-stat-tasks">0</div><div class="stat-label">Tasks Done</div></div>
-              <div class="stat-box"><div class="stat-val" id="home-stat-cost">₹0</div><div class="stat-label">Spent This Season</div></div>
-              <div class="stat-box"><div class="stat-val">—</div><div class="stat-label">AI Scans Done</div></div>
+          <!-- SEASON OVERVIEW — DYNAMIC -->
+          <div class="section-label" id="crop-status-label">🌾 Season Overview</div>
+          <div id="season-overview-card" style="background:white;border-radius:16px;
+            padding:16px;margin:0 0 16px;border:1.5px solid #e8e0d0;">
+
+            <!-- Top row — crop name + stage badge -->
+            <div style="display:flex;justify-content:space-between;
+              align-items:center;margin-bottom:12px;">
+              <div>
+                <div class="crop-name" style="font-size:16px;font-weight:900;
+                  color:#1a2e1e;">—</div>
+                <div class="crop-meta" style="font-size:12px;color:#888;
+                  margin-top:2px;">Loading...</div>
+              </div>
+              <div class="crop-badge" style="background:#e8f5ee;color:#1a6e35;
+                font-size:11px;font-weight:800;padding:6px 12px;
+                border-radius:20px;">—</div>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="crop-progress-label" style="font-size:11px;
+              color:#888;margin-bottom:6px;">Season Progress — 0%</div>
+            <div class="crop-progress-bar" style="background:#f0f0f0;
+              border-radius:10px;height:8px;overflow:hidden;">
+              <div class="crop-progress-fill" style="width:0%;height:100%;
+                background:linear-gradient(90deg,#1a6e35,#27ae60);
+                border-radius:10px;transition:width 0.8s ease;"></div>
+            </div>
+
+            <!-- Stats row — dynamic from activities -->
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);
+              gap:8px;margin-top:14px;">
+              <div style="text-align:center;background:#f8f5f0;
+                border-radius:10px;padding:10px 8px;">
+                <div id="home-stat-days" style="font-size:20px;font-weight:900;
+                  color:#1a6e35;">0</div>
+                <div style="font-size:10px;color:#888;font-weight:700;
+                  margin-top:2px;" id="stat-days-label">Days Active</div>
+              </div>
+              <div style="text-align:center;background:#f8f5f0;
+                border-radius:10px;padding:10px 8px;">
+                <div id="home-stat-tasks" style="font-size:20px;font-weight:900;
+                  color:#1a6e35;">0</div>
+                <div style="font-size:10px;color:#888;font-weight:700;
+                  margin-top:2px;" id="stat-tasks-label">Activities</div>
+              </div>
+              <div style="text-align:center;background:#f8f5f0;
+                border-radius:10px;padding:10px 8px;">
+                <div id="home-stat-cost" style="font-size:20px;font-weight:900;
+                  color:#1a6e35;">₹0</div>
+                <div style="font-size:10px;color:#888;font-weight:700;
+                  margin-top:2px;" id="stat-cost-label">Total Spent</div>
+              </div>
+            </div>
+
+            <!-- Sowing info row -->
+            <div style="display:flex;justify-content:space-between;
+              align-items:center;margin-top:12px;padding-top:12px;
+              border-top:1px solid #f0ede8;">
+              <div style="font-size:11px;color:#888;">
+                🌱 <span id="home-sowing-date">—</span>
+              </div>
+              <div style="font-size:11px;color:#888;">
+                📍 <span id="home-village">—</span>
+              </div>
+              <div style="font-size:11px;color:#1a6e35;font-weight:700;"
+                onclick="switchScreen('tracker')" style="cursor:pointer;">
+                View Tracker →
+              </div>
             </div>
           </div>
 
-          <div class="home-bottom-grid">
-            <div>
-              <div class="section-label" id="alert-label">⚠️ Latest Alert</div>
-              <div class="alert-card">
-                <div class="alert-icon">🐛</div>
-                <div class="alert-body">
-                  <div class="alert-title" id="alert-title">Thrips Alert in Your Area</div>
-                  <div class="alert-desc" id="alert-desc">3 farmers near you reported thrips. Check your crop today.</div>
-                </div>
-              </div>
-            </div>
-            <div>
-              <div class="section-label" id="crop-status-label">🌶️ My Crop Status</div>
-              <div class="crop-card">
-                <div class="crop-top">
-                  <div class="crop-name">—</div>
-                  <div class="crop-badge">—</div>
-                </div>
-                <div class="crop-meta">Loading...</div>
-                <div class="crop-progress-label">Season Progress — 0%</div>
-                <div class="crop-progress-bar">
-                  <div class="crop-progress-fill" style="width:0%"></div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
-        <!-- BOTTOM NAV HOME -->
+        <!-- BOTTOM NAV -->
         <nav class="bottom-nav mobile-only">
           <div class="nav-item" onclick="switchScreen('home')">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
@@ -468,7 +506,7 @@ AI agriculture Telugu">
             <span id="nav-shop">Shop</span>
           </div>
         </nav>
-      </div>
+     </div>
 
       <!-- ══ DETECT SCREEN ══ -->
       <div class="screen" id="screen-detect">
