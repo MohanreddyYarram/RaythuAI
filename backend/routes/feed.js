@@ -323,7 +323,7 @@ router.get('/news', async (req, res) => {
       'lang=en&' +
       'country=in&' +
       'max=8&' +
-      'apikey=' + GNEWS_API_KEY
+      'apikey=' + process.env.GNEWS_API_KEY
 
     const response = await fetch(url)
     const data = await response.json()

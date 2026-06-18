@@ -1784,45 +1784,60 @@ async function loadFeedPrices() {
   var pricesDiv = document.getElementById('feed-prices')
   if (!pricesDiv) return
 
-  // Crop tabs
-  var tabs = [
-    { key: 'chilli', label: '🌶️ మిర్చి', icon: '🌶️' },
-    { key: 'paddy', label: '🌾 వరి', icon: '🌾' },
-    { key: 'cotton', label: '🌿 పత్తి', icon: '🌿' },
-    { key: 'bengalgram', label: '🫘 సెనగలు', icon: '🫘' },
-    { key: 'maize', label: '🌽 మొక్కజొన్న', icon: '🌽' },
-    { key: 'groundnut', label: '🥜 వేరుశెనగ', icon: '🥜' }
-  ]
+  pricesDiv.innerHTML =
+    // Horizontal scrollable tabs on top
+    '<div style="overflow-x:auto;white-space:nowrap;' +
+    'padding-bottom:10px;margin-bottom:12px;' +
+    'scrollbar-width:none;-webkit-overflow-scrolling:touch;">' +
+    '<button id="ptab-chilli" onclick="loadCropPrices(\'chilli\')" ' +
+    'style="display:inline-block;padding:7px 16px;margin-right:8px;' +
+    'border-radius:20px;border:none;cursor:pointer;font-size:12px;' +
+    'font-weight:800;font-family:Nunito,sans-serif;' +
+    'background:#1a6e35;color:white;">🌶️ మిర్చి</button>' +
 
-  // Build tab UI
-  var tabHtml = '<div style="display:flex;gap:8px;overflow-x:auto;' +
-    'padding-bottom:8px;margin-bottom:12px;scrollbar-width:none;">'
+    '<button id="ptab-paddy" onclick="loadCropPrices(\'paddy\')" ' +
+    'style="display:inline-block;padding:7px 16px;margin-right:8px;' +
+    'border-radius:20px;border:none;cursor:pointer;font-size:12px;' +
+    'font-weight:800;font-family:Nunito,sans-serif;' +
+    'background:#f0f0f0;color:#555;">🌾 వరి</button>' +
 
-  tabs.forEach(function(tab, i) {
-    tabHtml += '<button id="price-tab-' + tab.key + '" ' +
-      'onclick="loadCropPrices(\'' + tab.key + '\')" ' +
-      'style="white-space:nowrap;padding:6px 14px;' +
-      'border-radius:20px;border:none;cursor:pointer;font-size:12px;' +
-      'font-weight:800;font-family:Nunito,sans-serif;' +
-      'background:' + (i === 0 ? '#1a6e35' : '#f0f0f0') + ';' +
-      'color:' + (i === 0 ? 'white' : '#555') + ';">' +
-      tab.label + '</button>'
-  })
+    '<button id="ptab-cotton" onclick="loadCropPrices(\'cotton\')" ' +
+    'style="display:inline-block;padding:7px 16px;margin-right:8px;' +
+    'border-radius:20px;border:none;cursor:pointer;font-size:12px;' +
+    'font-weight:800;font-family:Nunito,sans-serif;' +
+    'background:#f0f0f0;color:#555;">🌿 పత్తి</button>' +
 
-  tabHtml += '</div>'
-  tabHtml += '<div id="crop-prices-list"></div>'
+    '<button id="ptab-bengalgram" onclick="loadCropPrices(\'bengalgram\')" ' +
+    'style="display:inline-block;padding:7px 16px;margin-right:8px;' +
+    'border-radius:20px;border:none;cursor:pointer;font-size:12px;' +
+    'font-weight:800;font-family:Nunito,sans-serif;' +
+    'background:#f0f0f0;color:#555;">🫘 సెనగలు</button>' +
 
-  pricesDiv.innerHTML = tabHtml
+    '<button id="ptab-maize" onclick="loadCropPrices(\'maize\')" ' +
+    'style="display:inline-block;padding:7px 16px;margin-right:8px;' +
+    'border-radius:20px;border:none;cursor:pointer;font-size:12px;' +
+    'font-weight:800;font-family:Nunito,sans-serif;' +
+    'background:#f0f0f0;color:#555;">🌽 మొక్కజొన్న</button>' +
+
+    '<button id="ptab-groundnut" onclick="loadCropPrices(\'groundnut\')" ' +
+    'style="display:inline-block;padding:7px 16px;margin-right:8px;' +
+    'border-radius:20px;border:none;cursor:pointer;font-size:12px;' +
+    'font-weight:800;font-family:Nunito,sans-serif;' +
+    'background:#f0f0f0;color:#555;">🥜 వేరుశెనగ</button>' +
+    '</div>' +
+
+    // Prices list below tabs — full width
+    '<div id="crop-prices-list" style="width:100%;"></div>'
 
   // Load chilli by default
   loadCropPrices('chilli')
 }
 
 async function loadCropPrices(cropKey) {
-  // Update tab styles
-  var tabs = ['chilli', 'paddy', 'cotton', 'bengalgram', 'maize', 'groundnut']
-  tabs.forEach(function(key) {
-    var tab = document.getElementById('price-tab-' + key)
+  // Update active tab
+  var allTabs = ['chilli', 'paddy', 'cotton', 'bengalgram', 'maize', 'groundnut']
+  allTabs.forEach(function(key) {
+    var tab = document.getElementById('ptab-' + key)
     if (tab) {
       tab.style.background = key === cropKey ? '#1a6e35' : '#f0f0f0'
       tab.style.color = key === cropKey ? 'white' : '#555'
@@ -1832,8 +1847,10 @@ async function loadCropPrices(cropKey) {
   var listEl = document.getElementById('crop-prices-list')
   if (!listEl) return
 
-  listEl.innerHTML = '<div style="text-align:center;padding:20px;">' +
-    '<div class="loader-sm"></div></div>'
+  listEl.innerHTML =
+    '<div style="text-align:center;padding:20px;">' +
+    '<div class="loader-sm"></div>' +
+    '</div>'
 
   try {
     var res = await fetch(API + '/feed/prices/' + cropKey)
@@ -1841,29 +1858,57 @@ async function loadCropPrices(cropKey) {
 
     if (res.ok && data.prices && data.prices.length > 0) {
       listEl.innerHTML = data.prices.map(function(p) {
-        return '<div class="price-card" style="border-left:3px solid #1a6e35;">' +
-          '<div style="font-size:14px;font-weight:800;color:#1a2e1e;">' +
+        return '<div style="background:white;border-radius:14px;' +
+          'padding:14px 16px;margin-bottom:10px;' +
+          'border:1.5px solid #e8e0d0;' +
+          'border-left:4px solid #1a6e35;' +
+          'width:100%;box-sizing:border-box;">' +
+
+          // Variety name
+          '<div style="font-size:14px;font-weight:800;' +
+          'color:#1a2e1e;margin-bottom:6px;">' +
           p.variety + '</div>' +
-          '<div style="font-size:22px;font-weight:900;color:#1a6e35;margin:4px 0;">₹' +
-          p.modalPrice.toLocaleString('en-IN') + '</div>' +
-          '<div style="font-size:11px;color:#888;">per quintal — Modal Price</div>' +
-          '<div style="font-size:11px;color:#555;margin-top:4px;">' +
-          'Min: ₹' + p.minPrice.toLocaleString('en-IN') +
-          ' · Max: ₹' + p.maxPrice.toLocaleString('en-IN') + '</div>' +
-          '<div style="display:flex;justify-content:space-between;margin-top:6px;">' +
-          '<div style="font-size:11px;color:#888;">📍 ' + p.market + '</div>' +
+
+          // Modal price — big
+          '<div style="font-size:24px;font-weight:900;color:#1a6e35;">' +
+          '₹' + p.modalPrice.toLocaleString('en-IN') +
+          '<span style="font-size:12px;color:#888;font-weight:600;">' +
+          ' /quintal</span></div>' +
+
+          // Min Max
+          '<div style="display:flex;gap:12px;margin-top:6px;">' +
+          '<div style="font-size:11px;color:#888;">' +
+          '📉 Min: ₹' + p.minPrice.toLocaleString('en-IN') + '</div>' +
+          '<div style="font-size:11px;color:#888;">' +
+          '📈 Max: ₹' + p.maxPrice.toLocaleString('en-IN') + '</div>' +
+          '</div>' +
+
+          // Market and date
+          '<div style="display:flex;justify-content:space-between;' +
+          'align-items:center;margin-top:8px;' +
+          'padding-top:8px;border-top:1px solid #f0f0f0;">' +
+          '<div style="font-size:11px;color:#1a6e35;font-weight:700;">' +
+          '📍 ' + p.market + '</div>' +
           '<div style="font-size:10px;color:#aaa;">' + p.date + '</div>' +
-          '</div></div>'
+          '</div>' +
+          '</div>'
       }).join('')
     } else {
-      listEl.innerHTML = '<div style="text-align:center;padding:24px;color:#888;">' +
-        'No prices available today</div>'
+      listEl.innerHTML =
+        '<div style="text-align:center;padding:32px;color:#888;">' +
+        '<div style="font-size:32px;margin-bottom:8px;">📊</div>' +
+        '<div style="font-size:13px;font-weight:700;">No prices today</div>' +
+        '<div style="font-size:11px;margin-top:4px;">Try again later</div>' +
+        '</div>'
     }
   } catch(e) {
-    listEl.innerHTML = '<div style="text-align:center;padding:24px;color:#888;">' +
+    listEl.innerHTML =
+      '<div style="text-align:center;padding:24px;color:#888;font-weight:700;">' +
       'Cannot load prices</div>'
   }
 }
+
+
 
 function loadStaticPrices(pricesDiv) {
   var prices = [
