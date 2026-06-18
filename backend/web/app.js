@@ -1780,61 +1780,70 @@ async function loadFeedWeather() {
 }
 
 
+
 async function loadFeedPrices() {
   var pricesDiv = document.getElementById('feed-prices')
   if (!pricesDiv) return
 
-  pricesDiv.innerHTML =
-    // Horizontal scrollable tabs on top
-    '<div style="overflow-x:auto;white-space:nowrap;' +
-    'padding-bottom:10px;margin-bottom:12px;' +
+  // Tabs row — separate div
+  var tabsHtml =
+    '<div style="display:flex;flex-wrap:nowrap;overflow-x:auto;' +
+    'gap:8px;padding-bottom:10px;margin-bottom:16px;' +
     'scrollbar-width:none;-webkit-overflow-scrolling:touch;">' +
+
     '<button id="ptab-chilli" onclick="loadCropPrices(\'chilli\')" ' +
-    'style="display:inline-block;padding:7px 16px;margin-right:8px;' +
-    'border-radius:20px;border:none;cursor:pointer;font-size:12px;' +
-    'font-weight:800;font-family:Nunito,sans-serif;' +
-    'background:#1a6e35;color:white;">🌶️ మిర్చి</button>' +
+    'style="flex-shrink:0;padding:7px 16px;border-radius:20px;' +
+    'border:none;cursor:pointer;font-size:12px;font-weight:800;' +
+    'font-family:Nunito,sans-serif;background:#1a6e35;color:white;">' +
+    '🌶️ మిర్చి</button>' +
 
     '<button id="ptab-paddy" onclick="loadCropPrices(\'paddy\')" ' +
-    'style="display:inline-block;padding:7px 16px;margin-right:8px;' +
-    'border-radius:20px;border:none;cursor:pointer;font-size:12px;' +
-    'font-weight:800;font-family:Nunito,sans-serif;' +
-    'background:#f0f0f0;color:#555;">🌾 వరి</button>' +
+    'style="flex-shrink:0;padding:7px 16px;border-radius:20px;' +
+    'border:none;cursor:pointer;font-size:12px;font-weight:800;' +
+    'font-family:Nunito,sans-serif;background:#f0f0f0;color:#555;">' +
+    '🌾 వరి</button>' +
 
     '<button id="ptab-cotton" onclick="loadCropPrices(\'cotton\')" ' +
-    'style="display:inline-block;padding:7px 16px;margin-right:8px;' +
-    'border-radius:20px;border:none;cursor:pointer;font-size:12px;' +
-    'font-weight:800;font-family:Nunito,sans-serif;' +
-    'background:#f0f0f0;color:#555;">🌿 పత్తి</button>' +
+    'style="flex-shrink:0;padding:7px 16px;border-radius:20px;' +
+    'border:none;cursor:pointer;font-size:12px;font-weight:800;' +
+    'font-family:Nunito,sans-serif;background:#f0f0f0;color:#555;">' +
+    '🌿 పత్తి</button>' +
 
     '<button id="ptab-bengalgram" onclick="loadCropPrices(\'bengalgram\')" ' +
-    'style="display:inline-block;padding:7px 16px;margin-right:8px;' +
-    'border-radius:20px;border:none;cursor:pointer;font-size:12px;' +
-    'font-weight:800;font-family:Nunito,sans-serif;' +
-    'background:#f0f0f0;color:#555;">🫘 సెనగలు</button>' +
+    'style="flex-shrink:0;padding:7px 16px;border-radius:20px;' +
+    'border:none;cursor:pointer;font-size:12px;font-weight:800;' +
+    'font-family:Nunito,sans-serif;background:#f0f0f0;color:#555;">' +
+    '🫘 సెనగలు</button>' +
 
     '<button id="ptab-maize" onclick="loadCropPrices(\'maize\')" ' +
-    'style="display:inline-block;padding:7px 16px;margin-right:8px;' +
-    'border-radius:20px;border:none;cursor:pointer;font-size:12px;' +
-    'font-weight:800;font-family:Nunito,sans-serif;' +
-    'background:#f0f0f0;color:#555;">🌽 మొక్కజొన్న</button>' +
+    'style="flex-shrink:0;padding:7px 16px;border-radius:20px;' +
+    'border:none;cursor:pointer;font-size:12px;font-weight:800;' +
+    'font-family:Nunito,sans-serif;background:#f0f0f0;color:#555;">' +
+    '🌽 మొక్కజొన్న</button>' +
 
     '<button id="ptab-groundnut" onclick="loadCropPrices(\'groundnut\')" ' +
-    'style="display:inline-block;padding:7px 16px;margin-right:8px;' +
-    'border-radius:20px;border:none;cursor:pointer;font-size:12px;' +
-    'font-weight:800;font-family:Nunito,sans-serif;' +
-    'background:#f0f0f0;color:#555;">🥜 వేరుశెనగ</button>' +
-    '</div>' +
+    'style="flex-shrink:0;padding:7px 16px;border-radius:20px;' +
+    'border:none;cursor:pointer;font-size:12px;font-weight:800;' +
+    'font-family:Nunito,sans-serif;background:#f0f0f0;color:#555;">' +
+    '🥜 వేరుశెనగ</button>' +
 
-    // Prices list below tabs — full width
-    '<div id="crop-prices-list" style="width:100%;"></div>'
+    '</div>'
+
+  // Prices list — separate div below tabs
+  var listHtml = '<div id="crop-prices-list"></div>'
+
+  // Set both in column layout
+  pricesDiv.style.display = 'flex'
+  pricesDiv.style.flexDirection = 'column'
+  pricesDiv.style.width = '100%'
+  pricesDiv.innerHTML = tabsHtml + listHtml
 
   // Load chilli by default
   loadCropPrices('chilli')
 }
 
 async function loadCropPrices(cropKey) {
-  // Update active tab
+  // Update active tab styles
   var allTabs = ['chilli', 'paddy', 'cotton', 'bengalgram', 'maize', 'groundnut']
   allTabs.forEach(function(key) {
     var tab = document.getElementById('ptab-' + key)
@@ -1847,10 +1856,12 @@ async function loadCropPrices(cropKey) {
   var listEl = document.getElementById('crop-prices-list')
   if (!listEl) return
 
+  listEl.style.width = '100%'
+  listEl.style.display = 'block'
+
   listEl.innerHTML =
     '<div style="text-align:center;padding:20px;">' +
-    '<div class="loader-sm"></div>' +
-    '</div>'
+    '<div class="loader-sm"></div></div>'
 
   try {
     var res = await fetch(API + '/feed/prices/' + cropKey)
@@ -1858,35 +1869,32 @@ async function loadCropPrices(cropKey) {
 
     if (res.ok && data.prices && data.prices.length > 0) {
       listEl.innerHTML = data.prices.map(function(p) {
-        return '<div style="background:white;border-radius:14px;' +
+        return '<div style="' +
+          'display:block;width:100%;box-sizing:border-box;' +
+          'background:white;border-radius:14px;' +
           'padding:14px 16px;margin-bottom:10px;' +
           'border:1.5px solid #e8e0d0;' +
-          'border-left:4px solid #1a6e35;' +
-          'width:100%;box-sizing:border-box;">' +
+          'border-left:4px solid #1a6e35;">' +
 
-          // Variety name
           '<div style="font-size:14px;font-weight:800;' +
           'color:#1a2e1e;margin-bottom:6px;">' +
           p.variety + '</div>' +
 
-          // Modal price — big
           '<div style="font-size:24px;font-weight:900;color:#1a6e35;">' +
           '₹' + p.modalPrice.toLocaleString('en-IN') +
           '<span style="font-size:12px;color:#888;font-weight:600;">' +
           ' /quintal</span></div>' +
 
-          // Min Max
-          '<div style="display:flex;gap:12px;margin-top:6px;">' +
+          '<div style="display:flex;gap:16px;margin-top:6px;">' +
           '<div style="font-size:11px;color:#888;">' +
           '📉 Min: ₹' + p.minPrice.toLocaleString('en-IN') + '</div>' +
           '<div style="font-size:11px;color:#888;">' +
           '📈 Max: ₹' + p.maxPrice.toLocaleString('en-IN') + '</div>' +
           '</div>' +
 
-          // Market and date
           '<div style="display:flex;justify-content:space-between;' +
-          'align-items:center;margin-top:8px;' +
-          'padding-top:8px;border-top:1px solid #f0f0f0;">' +
+          'margin-top:8px;padding-top:8px;' +
+          'border-top:1px solid #f0f0f0;">' +
           '<div style="font-size:11px;color:#1a6e35;font-weight:700;">' +
           '📍 ' + p.market + '</div>' +
           '<div style="font-size:10px;color:#aaa;">' + p.date + '</div>' +
@@ -1898,15 +1906,15 @@ async function loadCropPrices(cropKey) {
         '<div style="text-align:center;padding:32px;color:#888;">' +
         '<div style="font-size:32px;margin-bottom:8px;">📊</div>' +
         '<div style="font-size:13px;font-weight:700;">No prices today</div>' +
-        '<div style="font-size:11px;margin-top:4px;">Try again later</div>' +
         '</div>'
     }
   } catch(e) {
     listEl.innerHTML =
-      '<div style="text-align:center;padding:24px;color:#888;font-weight:700;">' +
-      'Cannot load prices</div>'
+      '<div style="text-align:center;padding:24px;' +
+      'color:#888;font-weight:700;">Cannot load prices</div>'
   }
 }
+
 
 
 
