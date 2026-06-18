@@ -1781,65 +1781,90 @@ async function loadFeedWeather() {
 
 
 
-async function loadFeedPrices() {
-  var pricesDiv = document.getElementById('feed-prices')
-  if (!pricesDiv) return
+async function loadFeedNews() {
+  var newsDiv = document.getElementById('feed-news')
+  if (!newsDiv) return
 
-  // Tabs row — separate div
-  var tabsHtml =
-    '<div style="display:flex;flex-wrap:nowrap;overflow-x:auto;' +
-    'gap:8px;padding-bottom:10px;margin-bottom:16px;' +
-    'scrollbar-width:none;-webkit-overflow-scrolling:touch;">' +
+  newsDiv.innerHTML =
+    '<div style="text-align:center;padding:20px;">' +
+    '<div class="loader-sm"></div></div>'
 
-    '<button id="ptab-chilli" onclick="loadCropPrices(\'chilli\')" ' +
-    'style="flex-shrink:0;padding:7px 16px;border-radius:20px;' +
-    'border:none;cursor:pointer;font-size:12px;font-weight:800;' +
-    'font-family:Nunito,sans-serif;background:#1a6e35;color:white;">' +
-    '🌶️ మిర్చి</button>' +
+  try {
+    var res = await fetch(API + '/feed/news')
+    var data = await res.json()
 
-    '<button id="ptab-paddy" onclick="loadCropPrices(\'paddy\')" ' +
-    'style="flex-shrink:0;padding:7px 16px;border-radius:20px;' +
-    'border:none;cursor:pointer;font-size:12px;font-weight:800;' +
-    'font-family:Nunito,sans-serif;background:#f0f0f0;color:#555;">' +
-    '🌾 వరి</button>' +
+    console.log('News articles received:', data.articles?.length || 0)
 
-    '<button id="ptab-cotton" onclick="loadCropPrices(\'cotton\')" ' +
-    'style="flex-shrink:0;padding:7px 16px;border-radius:20px;' +
-    'border:none;cursor:pointer;font-size:12px;font-weight:800;' +
-    'font-family:Nunito,sans-serif;background:#f0f0f0;color:#555;">' +
-    '🌿 పత్తి</button>' +
+    if (res.ok && data.articles && data.articles.length > 0) {
+      newsDiv.innerHTML = data.articles.map(function(n) {
+        var timeAgo = formatNewsDate(n.publishedAt)
+        var isAP = n.category === 'AP/TS'
 
-    '<button id="ptab-bengalgram" onclick="loadCropPrices(\'bengalgram\')" ' +
-    'style="flex-shrink:0;padding:7px 16px;border-radius:20px;' +
-    'border:none;cursor:pointer;font-size:12px;font-weight:800;' +
-    'font-family:Nunito,sans-serif;background:#f0f0f0;color:#555;">' +
-    '🫘 సెనగలు</button>' +
+        return '<div ' +
+          'onclick="window.open(\'' + n.url + '\', \'_blank\')" ' +
+          'style="cursor:pointer;background:white;' +
+          'border-radius:14px;padding:14px 16px;' +
+          'margin-bottom:10px;border:1.5px solid #e8e0d0;' +
+          'border-left:4px solid ' + (isAP ? '#e74c3c' : '#1a6e35') + ';' +
+          'display:block;">' +
 
-    '<button id="ptab-maize" onclick="loadCropPrices(\'maize\')" ' +
-    'style="flex-shrink:0;padding:7px 16px;border-radius:20px;' +
-    'border:none;cursor:pointer;font-size:12px;font-weight:800;' +
-    'font-family:Nunito,sans-serif;background:#f0f0f0;color:#555;">' +
-    '🌽 మొక్కజొన్న</button>' +
+          // Source + badge + time
+          '<div style="display:flex;justify-content:space-between;' +
+          'align-items:center;margin-bottom:6px;">' +
+          '<div style="display:flex;align-items:center;gap:6px;">' +
+          '<div style="font-size:11px;font-weight:800;color:#1a6e35;">' +
+          (n.source ? n.source.name : 'News') + '</div>' +
+          (isAP ?
+            '<div style="background:#ffeaea;color:#e74c3c;' +
+            'font-size:9px;font-weight:800;padding:2px 6px;' +
+            'border-radius:10px;">🌶️ AP/TS</div>' :
+            '<div style="background:#e8f5ee;color:#1a6e35;' +
+            'font-size:9px;font-weight:800;padding:2px 6px;' +
+            'border-radius:10px;">🇮🇳 India</div>'
+          ) +
+          '</div>' +
+          '<div style="font-size:10px;color:#aaa;">' + timeAgo + '</div>' +
+          '</div>' +
 
-    '<button id="ptab-groundnut" onclick="loadCropPrices(\'groundnut\')" ' +
-    'style="flex-shrink:0;padding:7px 16px;border-radius:20px;' +
-    'border:none;cursor:pointer;font-size:12px;font-weight:800;' +
-    'font-family:Nunito,sans-serif;background:#f0f0f0;color:#555;">' +
-    '🥜 వేరుశెనగ</button>' +
+          // Title
+          '<div style="font-size:13px;font-weight:800;' +
+          'color:#1a2e1e;line-height:1.4;margin-bottom:6px;">' +
+          n.title + '</div>' +
 
-    '</div>'
+          // Description
+          (n.description ?
+            '<div style="font-size:12px;color:#666;' +
+            'line-height:1.5;margin-bottom:8px;">' +
+            (n.description.length > 100 ?
+              n.description.substring(0, 100) + '...' :
+              n.description) +
+            '</div>' : '') +
 
-  // Prices list — separate div below tabs
-  var listHtml = '<div id="crop-prices-list"></div>'
+          // Read more
+          '<div style="font-size:11px;color:#1a6e35;font-weight:700;">' +
+          'Read more →</div>' +
+          '</div>'
+      }).join('')
+      return
+    }
 
-  // Set both in column layout
-  pricesDiv.style.display = 'flex'
-  pricesDiv.style.flexDirection = 'column'
-  pricesDiv.style.width = '100%'
-  pricesDiv.innerHTML = tabsHtml + listHtml
+    // No articles
+    newsDiv.innerHTML =
+      '<div style="text-align:center;padding:32px;color:#888;">' +
+      '<div style="font-size:32px;margin-bottom:8px;">📰</div>' +
+      '<div style="font-size:13px;font-weight:700;">No news available</div>' +
+      '<div style="font-size:11px;margin-top:4px;">Pull down to refresh</div>' +
+      '</div>'
 
-  // Load chilli by default
-  loadCropPrices('chilli')
+  } catch(e) {
+    console.log('News render error:', e.message)
+    newsDiv.innerHTML =
+      '<div style="text-align:center;padding:32px;color:#888;">' +
+      '<div style="font-size:32px;">📰</div>' +
+      '<div style="font-size:13px;font-weight:700;margin-top:8px;">' +
+      'Cannot load news</div>' +
+      '</div>'
+  }
 }
 
 async function loadCropPrices(cropKey) {
@@ -1856,9 +1881,6 @@ async function loadCropPrices(cropKey) {
   var listEl = document.getElementById('crop-prices-list')
   if (!listEl) return
 
-  listEl.style.width = '100%'
-  listEl.style.display = 'block'
-
   listEl.innerHTML =
     '<div style="text-align:center;padding:20px;">' +
     '<div class="loader-sm"></div></div>'
@@ -1868,39 +1890,69 @@ async function loadCropPrices(cropKey) {
     var data = await res.json()
 
     if (res.ok && data.prices && data.prices.length > 0) {
-      listEl.innerHTML = data.prices.map(function(p) {
-        return '<div style="' +
-          'display:block;width:100%;box-sizing:border-box;' +
-          'background:white;border-radius:14px;' +
-          'padding:14px 16px;margin-bottom:10px;' +
-          'border:1.5px solid #e8e0d0;' +
-          'border-left:4px solid #1a6e35;">' +
 
-          '<div style="font-size:14px;font-weight:800;' +
-          'color:#1a2e1e;margin-bottom:6px;">' +
-          p.variety + '</div>' +
+      // ── TABLE FORMAT ──
+      var html =
+        '<div style="width:100%;overflow-x:auto;">' +
+        '<table style="width:100%;border-collapse:collapse;' +
+        'font-family:Nunito,sans-serif;font-size:13px;">' +
 
-          '<div style="font-size:24px;font-weight:900;color:#1a6e35;">' +
-          '₹' + p.modalPrice.toLocaleString('en-IN') +
-          '<span style="font-size:12px;color:#888;font-weight:600;">' +
-          ' /quintal</span></div>' +
+        // Table header
+        '<thead>' +
+        '<tr style="background:#1a6e35;color:white;">' +
+        '<th style="padding:10px 12px;text-align:left;' +
+        'border-radius:10px 0 0 0;font-size:12px;">రకం / Variety</th>' +
+        '<th style="padding:10px 12px;text-align:center;font-size:12px;">కనిష్ట / Min</th>' +
+        '<th style="padding:10px 12px;text-align:center;font-size:12px;">గరిష్ట / Max</th>' +
+        '<th style="padding:10px 12px;text-align:center;font-size:12px;">మోడల్ / Modal</th>' +
+        '<th style="padding:10px 12px;text-align:left;' +
+        'border-radius:0 10px 0 0;font-size:12px;">మార్కెట్</th>' +
+        '</tr>' +
+        '</thead>' +
 
-          '<div style="display:flex;gap:16px;margin-top:6px;">' +
-          '<div style="font-size:11px;color:#888;">' +
-          '📉 Min: ₹' + p.minPrice.toLocaleString('en-IN') + '</div>' +
-          '<div style="font-size:11px;color:#888;">' +
-          '📈 Max: ₹' + p.maxPrice.toLocaleString('en-IN') + '</div>' +
-          '</div>' +
+        // Table body
+        '<tbody>' +
+        data.prices.map(function(p, index) {
+          var isEven = index % 2 === 0
+          return '<tr style="background:' + (isEven ? 'white' : '#f8f5f0') + ';' +
+            'border-bottom:1px solid #f0ede8;">' +
 
-          '<div style="display:flex;justify-content:space-between;' +
-          'margin-top:8px;padding-top:8px;' +
-          'border-top:1px solid #f0f0f0;">' +
-          '<div style="font-size:11px;color:#1a6e35;font-weight:700;">' +
-          '📍 ' + p.market + '</div>' +
-          '<div style="font-size:10px;color:#aaa;">' + p.date + '</div>' +
-          '</div>' +
-          '</div>'
-      }).join('')
+            // Variety
+            '<td style="padding:12px;font-weight:800;color:#1a2e1e;">' +
+            p.variety + '</td>' +
+
+            // Min price
+            '<td style="padding:12px;text-align:center;color:#888;">' +
+            '₹' + p.minPrice.toLocaleString('en-IN') + '</td>' +
+
+            // Max price
+            '<td style="padding:12px;text-align:center;color:#888;">' +
+            '₹' + p.maxPrice.toLocaleString('en-IN') + '</td>' +
+
+            // Modal price — highlighted
+            '<td style="padding:12px;text-align:center;' +
+            'font-weight:900;font-size:15px;color:#1a6e35;">' +
+            '₹' + p.modalPrice.toLocaleString('en-IN') + '</td>' +
+
+            // Market
+            '<td style="padding:12px;font-size:11px;color:#888;">' +
+            '📍 ' + p.market + '</td>' +
+
+            '</tr>'
+        }).join('') +
+        '</tbody>' +
+        '</table>' +
+
+        // Footer — last updated
+        '<div style="text-align:right;font-size:10px;color:#aaa;' +
+        'margin-top:8px;padding:0 4px;">' +
+        '🕐 Updated: ' + (data.prices[0].date || 'Today') +
+        ' · Per Quintal (₹)' +
+        '</div>' +
+        '</div>'
+
+      listEl.innerHTML = html
+
     } else {
       listEl.innerHTML =
         '<div style="text-align:center;padding:32px;color:#888;">' +

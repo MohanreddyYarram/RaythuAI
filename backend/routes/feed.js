@@ -311,63 +311,91 @@ router.get('/prices/all', async (req, res) => {
 // ══════════════════════════════════════
 router.get('/news', async (req, res) => {
   try {
-    const GNEWS_API_KEY = process.env.GNEWS_API_KEY
+    const NEWSDATA_API_KEY = process.env.NEWSDATA_API_KEY
 
-    if (!GNEWS_API_KEY) {
-      console.log('GNEWS_API_KEY missing')
+    if (!NEWSDATA_API_KEY) {
+      console.log('NEWSDATA_API_KEY missing')
       return res.status(200).json({ articles: [] })
     }
 
-    const url = 'https://gnews.io/api/v4/search?' +
-  'q=farmer+agriculture+crop+india&' +
-  'lang=en&' +
-  'max=10&' +
-  'apikey=' + GNEWS_API_KEY
+    // Fetch both India agriculture + AP/TS news simultaneously
+    const [indiaRes, apRes] = await Promise.all([
 
-    const response = await fetch(url)
-    const data = await response.json()
+      // India wide agriculture news
+      fetch('https://newsdata.io/api/1/news?' +
+        'apikey=' + NEWSDATA_API_KEY + '&' +
+        'q=farmer+agriculture+crop+kisan&' +
+        'country=in&' +
+        'language=en&' +
+        'category=business,science&' +
+        'size=5'),
 
-    console.log('GNews articles:', data.articles?.length || 0)
+      // AP/TS specific news
+      fetch('https://newsdata.io/api/1/news?' +
+        'apikey=' + NEWSDATA_API_KEY + '&' +
+        'q=andhra+pradesh+telangana+farmer+chilli+rythu&' +
+        'country=in&' +
+        'language=en&' +
+        'size=5')
+    ])
 
-    if (data.articles && data.articles.length > 0) {
-  // Filter only agriculture related articles
-  var agriKeywords = [
-    'farm', 'farmer', 'agriculture', 'crop', 'harvest',
-    'kisan', 'rythu', 'chilli', 'paddy', 'cotton',
-    'mandi', 'market price', 'groundnut', 'vegetable',
-    'irrigation', 'drought', 'rain', 'MSP', 'fertilizer'
-  ]
+    const [indiaData, apData] = await Promise.all([
+      indiaRes.json(),
+      apRes.json()
+    ])
 
-  var filtered = data.articles.filter(function(a) {
-    var text = ((a.title || '') + ' ' + (a.description || '')).toLowerCase()
-    return agriKeywords.some(function(keyword) {
-      return text.includes(keyword.toLowerCase())
-    })
-  })
+    console.log('India news:', indiaData.results?.length || 0)
+    console.log('AP/TS news:', apData.results?.length || 0)
 
-  // If no agriculture news found — show all articles
-  var finalArticles = filtered.length > 0 ? filtered : data.articles
+    // Combine both results
+    var allArticles = []
 
-  const cleaned = finalArticles.map(function(a) {
-    return {
-      title: a.title || '',
-      description: a.description || '',
-      url: a.url || '#',
-      image: a.image || '',
-      source: { name: a.source?.name || 'News' },
-      publishedAt: a.publishedAt || ''
+    // Add AP/TS news first — more relevant
+    if (apData.results && apData.results.length > 0) {
+      apData.results.forEach(function(a) {
+        allArticles.push({
+          title: a.title || '',
+          description: a.description || '',
+          url: a.link || '#',
+          source: { name: a.source_id || 'News' },
+          publishedAt: a.pubDate || '',
+          category: 'AP/TS'  // tag for display
+        })
+      })
     }
-  }).filter(function(a) {
-    return a.title && a.title !== '[Removed]'
-  })
 
-  return res.status(200).json({ articles: cleaned })
-  }
+    // Add India news
+    if (indiaData.results && indiaData.results.length > 0) {
+      indiaData.results.forEach(function(a) {
+        // Avoid duplicates
+        var isDuplicate = allArticles.some(function(existing) {
+          return existing.url === a.link
+        })
+        if (!isDuplicate) {
+          allArticles.push({
+            title: a.title || '',
+            description: a.description || '',
+            url: a.link || '#',
+            source: { name: a.source_id || 'News' },
+            publishedAt: a.pubDate || '',
+            category: 'India'
+          })
+        }
+      })
+    }
 
-    res.status(200).json({ articles: [] })
+    // Clean and filter
+    var cleaned = allArticles.filter(function(a) {
+      return a.title &&
+        a.title !== '[Removed]' &&
+        a.url !== '#'
+    })
+
+    console.log('Total combined articles:', cleaned.length)
+    return res.status(200).json({ articles: cleaned })
 
   } catch(err) {
-    console.log('News API error:', err.message)
+    console.log('News error:', err.message)
     res.status(200).json({ articles: [] })
   }
 })
