@@ -323,7 +323,7 @@ router.get('/news', async (req, res) => {
       'lang=en&' +
       'country=in&' +
       'max=8&' +
-      'apikey=' + process.env.GNEWS_API_KEY
+      'apikey=' + GNEWS_API_KEY
 
     const response = await fetch(url)
     const data = await response.json()
@@ -352,6 +352,14 @@ router.get('/news', async (req, res) => {
     console.log('News API error:', err.message)
     res.status(200).json({ articles: [] })
   }
+})
+router.get('/news/test', async (req, res) => {
+  const key = process.env.GNEWS_API_KEY
+  res.json({
+    keyExists: !!key,
+    keyLength: key ? key.length : 0,
+    keyStart: key ? key.substring(0, 8) + '...' : 'MISSING'
+  })
 })
 
 module.exports = router
