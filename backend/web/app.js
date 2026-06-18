@@ -1733,7 +1733,7 @@ var GOVT_SCHEMES = [
 ]
 
 async function loadFeed() {
-  await Promise.all([loadFeedWeather(), loadFeedPrices(), loadFeedTips(), loadFeedNews(), loadFeedSchemes()])
+  await Promise.all([loadFeedWeather(), loadFeedPrices(), loadFeedNews()])
 }
 
 async function loadFeedWeather() {
@@ -2002,7 +2002,64 @@ function loadStaticPrices(pricesDiv) {
   }).join('')
 }
 
+async function loadFeedPrices() {
+  var pricesDiv = document.getElementById('feed-prices')
+  if (!pricesDiv) return
 
+  // Tabs row
+  var tabsHtml =
+    '<div style="display:flex;flex-wrap:nowrap;overflow-x:auto;' +
+    'gap:8px;padding-bottom:10px;margin-bottom:16px;' +
+    'scrollbar-width:none;-webkit-overflow-scrolling:touch;">' +
+
+    '<button id="ptab-chilli" onclick="loadCropPrices(\'chilli\')" ' +
+    'style="flex-shrink:0;padding:7px 16px;border-radius:20px;border:none;' +
+    'cursor:pointer;font-size:12px;font-weight:800;' +
+    'font-family:Nunito,sans-serif;background:#1a6e35;color:white;">' +
+    '🌶️ మిర్చి</button>' +
+
+    '<button id="ptab-paddy" onclick="loadCropPrices(\'paddy\')" ' +
+    'style="flex-shrink:0;padding:7px 16px;border-radius:20px;border:none;' +
+    'cursor:pointer;font-size:12px;font-weight:800;' +
+    'font-family:Nunito,sans-serif;background:#f0f0f0;color:#555;">' +
+    '🌾 వరి</button>' +
+
+    '<button id="ptab-cotton" onclick="loadCropPrices(\'cotton\')" ' +
+    'style="flex-shrink:0;padding:7px 16px;border-radius:20px;border:none;' +
+    'cursor:pointer;font-size:12px;font-weight:800;' +
+    'font-family:Nunito,sans-serif;background:#f0f0f0;color:#555;">' +
+    '🌿 పత్తి</button>' +
+
+    '<button id="ptab-bengalgram" onclick="loadCropPrices(\'bengalgram\')" ' +
+    'style="flex-shrink:0;padding:7px 16px;border-radius:20px;border:none;' +
+    'cursor:pointer;font-size:12px;font-weight:800;' +
+    'font-family:Nunito,sans-serif;background:#f0f0f0;color:#555;">' +
+    '🫘 సెనగలు</button>' +
+
+    '<button id="ptab-maize" onclick="loadCropPrices(\'maize\')" ' +
+    'style="flex-shrink:0;padding:7px 16px;border-radius:20px;border:none;' +
+    'cursor:pointer;font-size:12px;font-weight:800;' +
+    'font-family:Nunito,sans-serif;background:#f0f0f0;color:#555;">' +
+    '🌽 మొక్కజొన్న</button>' +
+
+    '<button id="ptab-groundnut" onclick="loadCropPrices(\'groundnut\')" ' +
+    'style="flex-shrink:0;padding:7px 16px;border-radius:20px;border:none;' +
+    'cursor:pointer;font-size:12px;font-weight:800;' +
+    'font-family:Nunito,sans-serif;background:#f0f0f0;color:#555;">' +
+    '🥜 వేరుశెనగ</button>' +
+    '</div>'
+
+  // Prices list below tabs
+  var listHtml = '<div id="crop-prices-list"></div>'
+
+  pricesDiv.style.display = 'flex'
+  pricesDiv.style.flexDirection = 'column'
+  pricesDiv.style.width = '100%'
+  pricesDiv.innerHTML = tabsHtml + listHtml
+
+  // Load chilli by default
+  loadCropPrices('chilli')
+}
 
 function loadFeedTips() {
   var tipsDiv = document.getElementById('feed-tips'); if (!tipsDiv) return
@@ -2010,47 +2067,7 @@ function loadFeedTips() {
   tipsDiv.innerHTML = shuffled.map(function(tip) { return '<div class="tip-card"><div class="tip-icon">' + tip.icon + '</div><div><div class="tip-title">' + tip.title + '</div><div class="tip-desc">' + tip.desc + '</div></div></div>' }).join('')
 }
 
-async function loadFeedNews() {
-  var newsDiv = document.getElementById('feed-news')
-  if (!newsDiv) return
 
-  newsDiv.innerHTML = '<div style="text-align:center;padding:20px;">' +
-    '<div class="loader-sm"></div></div>'
-
-  try {
-    var res = await fetch(API + '/feed/news')
-    var data = await res.json()
-
-    if (res.ok && data.articles && data.articles.length > 0) {
-      newsDiv.innerHTML = data.articles.map(function(n) {
-        return '<div class="news-card" ' +
-          'onclick="window.open(\'' + n.url + '\', \'_blank\')" ' +
-          'style="cursor:pointer;">' +
-          '<div class="news-source">' +
-          (n.source ? n.source.name : 'News') + ' · ' +
-          formatNewsDate(n.publishedAt) +
-          '</div>' +
-          '<div class="news-title">' + n.title + '</div>' +
-          '<div class="news-desc">' + (n.description || '') + '</div>' +
-          '<div style="font-size:11px;color:#1a6e35;margin-top:6px;' +
-          'font-weight:700;">Read more →</div>' +
-          '</div>'
-      }).join('')
-    } else {
-      // Show message — no static news with wrong links
-      newsDiv.innerHTML = '<div style="text-align:center;padding:32px;color:#888;">' +
-        '<div style="font-size:32px;margin-bottom:8px;">📰</div>' +
-        '<div style="font-size:13px;font-weight:700;">News loading...</div>' +
-        '<div style="font-size:11px;margin-top:4px;">Pull down to refresh</div>' +
-        '</div>'
-    }
-  } catch(e) {
-    newsDiv.innerHTML = '<div style="text-align:center;padding:32px;color:#888;">' +
-      '<div style="font-size:32px;">📰</div>' +
-      '<div style="font-size:13px;font-weight:700;margin-top:8px;">Cannot load news</div>' +
-      '</div>'
-  }
-}
 
 function formatNewsDate(dateStr) {
   if (!dateStr) return ''
