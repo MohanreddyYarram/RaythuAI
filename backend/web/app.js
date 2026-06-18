@@ -1779,24 +1779,86 @@ async function loadFeedWeather() {
   } catch(e) { weatherDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">Weather unavailable</div>' }
 }
 
+
 async function loadFeedPrices() {
-  var pricesDiv = document.getElementById('feed-prices'); if (!pricesDiv) return
+  var pricesDiv = document.getElementById('feed-prices')
+  if (!pricesDiv) return
+
+  pricesDiv.innerHTML = '<div style="text-align:center;padding:20px;">' +
+    '<div class="loader-sm"></div></div>'
+
+  try {
+    var res = await fetch(API + '/feed/prices')
+    var data = await res.json()
+
+    if (res.ok && data.prices && data.prices.length > 0) {
+      // Show real prices
+      pricesDiv.innerHTML = data.prices
+        .filter(function(p) {
+          // Show only relevant crops
+          var crops = ['chilli', 'paddy', 'cotton',
+                       'groundnut', 'maize', 'tomato', 'onion']
+          return crops.some(function(c) {
+            return p.crop.toLowerCase().includes(c)
+          })
+        })
+        .slice(0, 8)  // show max 8 crops
+        .map(function(p) {
+          return '<div class="price-card">' +
+            '<div class="price-crop">🌾 ' + p.crop + '</div>' +
+            '<div class="price-value">₹' + p.modalPrice.toLocaleString('en-IN') + '</div>' +
+            '<div class="price-unit">per quintal — Modal Price</div>' +
+            '<div style="font-size:11px;color:#888;margin-top:4px;">' +
+            'Min: ₹' + p.minPrice + ' · Max: ₹' + p.maxPrice +
+            '</div>' +
+            '<div class="price-market">📍 ' + p.market + '</div>' +
+            '<div style="font-size:10px;color:#aaa;">' + p.date + '</div>' +
+            '</div>'
+        }).join('')
+      return
+    }
+
+    // Fallback to static prices if API fails
+    loadStaticPrices(pricesDiv)
+
+  } catch(e) {
+    loadStaticPrices(pricesDiv)
+  }
+}
+
+function loadStaticPrices(pricesDiv) {
   var prices = [
-    { crop: 'Chilli (Teja)', icon: '🌶️', price: 18500, change: +500, unit: 'per quintal', market: 'Guntur APMC' },
-    { crop: 'Paddy (Sona)', icon: '🌾', price: 2200, change: -50, unit: 'per quintal', market: 'Nellore APMC' },
-    { crop: 'Cotton', icon: '🌿', price: 6800, change: +200, unit: 'per quintal', market: 'Kurnool APMC' },
-    { crop: 'Groundnut', icon: '🥜', price: 5200, change: 0, unit: 'per quintal', market: 'Anantapur APMC' },
-    { crop: 'Maize', icon: '🌽', price: 1850, change: -30, unit: 'per quintal', market: 'Nizamabad APMC' },
-    { crop: 'Tomato', icon: '🍅', price: 1200, change: +300, unit: 'per quintal', market: 'Madanapalle APMC' }
+    { crop: 'Chilli (Teja)', icon: '🌶️', price: 18500,
+      change: +500, unit: 'per quintal', market: 'Guntur APMC' },
+    { crop: 'Paddy (Sona)', icon: '🌾', price: 2200,
+      change: -50, unit: 'per quintal', market: 'Nellore APMC' },
+    { crop: 'Cotton', icon: '🌿', price: 6800,
+      change: +200, unit: 'per quintal', market: 'Kurnool APMC' },
+    { crop: 'Groundnut', icon: '🥜', price: 5200,
+      change: 0, unit: 'per quintal', market: 'Anantapur APMC' },
+    { crop: 'Maize', icon: '🌽', price: 1850,
+      change: -30, unit: 'per quintal', market: 'Nizamabad APMC' },
+    { crop: 'Tomato', icon: '🍅', price: 1200,
+      change: +300, unit: 'per quintal', market: 'Madanapalle APMC' }
   ]
-  // BUG FIX: price UP = green (price-up), price DOWN = red (price-down)
+
   pricesDiv.innerHTML = prices.map(function(p) {
-    var changeClass = p.change > 0 ? 'price-up' : p.change < 0 ? 'price-down' : 'price-same'
-    var changeText = p.change > 0 ? '▲ ₹' + p.change : p.change < 0 ? '▼ ₹' + Math.abs(p.change) : '— No change'
-    var changeLabel = p.change > 0 ? 'Up from yesterday' : p.change < 0 ? 'Down from yesterday' : 'Same as yesterday'
-    return '<div class="price-card"><div class="price-crop">' + p.icon + ' ' + p.crop + '</div><div class="price-value">₹' + p.price.toLocaleString('en-IN') + '</div><div class="price-unit">' + p.unit + '</div><div class="price-change ' + changeClass + '">' + changeText + ' · ' + changeLabel + '</div><div class="price-market">📍 ' + p.market + '</div></div>'
+    var changeClass = p.change > 0 ? 'price-up' :
+                      p.change < 0 ? 'price-down' : 'price-same'
+    var changeText = p.change > 0 ? '▲ ₹' + p.change :
+                     p.change < 0 ? '▼ ₹' + Math.abs(p.change) :
+                     '— No change'
+    return '<div class="price-card">' +
+      '<div class="price-crop">' + p.icon + ' ' + p.crop + '</div>' +
+      '<div class="price-value">₹' + p.price.toLocaleString('en-IN') + '</div>' +
+      '<div class="price-unit">' + p.unit + '</div>' +
+      '<div class="price-change ' + changeClass + '">' + changeText + '</div>' +
+      '<div class="price-market">📍 ' + p.market + '</div>' +
+      '</div>'
   }).join('')
 }
+
+
 
 function loadFeedTips() {
   var tipsDiv = document.getElementById('feed-tips'); if (!tipsDiv) return
@@ -1805,25 +1867,61 @@ function loadFeedTips() {
 }
 
 async function loadFeedNews() {
-  var newsDiv = document.getElementById('feed-news'); if (!newsDiv) return
-  // Try dynamic news from server first
+  var newsDiv = document.getElementById('feed-news')
+  if (!newsDiv) return
+
+  newsDiv.innerHTML = '<div style="text-align:center;padding:20px;">' +
+    '<div class="loader-sm"></div></div>'
+
   try {
-    var res = await fetch(API + '/feed/news'); var data = await res.json()
+    var res = await fetch(API + '/feed/news')
+    var data = await res.json()
+
     if (res.ok && data.articles && data.articles.length > 0) {
       newsDiv.innerHTML = data.articles.map(function(n) {
-        return '<div class="news-card" onclick="window.open(\'' + n.url + '\', \'_blank\')"><div class="news-source">' + (n.source ? n.source.name : 'News') + '</div><div class="news-title">' + n.title + '</div><div class="news-desc">' + (n.description || '') + '</div></div>'
+        return '<div class="news-card" onclick="window.open(\'' +
+          n.url + '\', \'_blank\')">' +
+          '<div class="news-source">' +
+          (n.source ? n.source.name : 'News') + '</div>' +
+          '<div class="news-title">' + n.title + '</div>' +
+          '<div class="news-desc">' + (n.description || '') + '</div>' +
+          '</div>'
       }).join('')
       return
     }
-  } catch(e) {}
-  // Static Telugu agriculture news fallback
+
+    // Fallback to static Telugu news
+    loadStaticNews(newsDiv)
+
+  } catch(e) {
+    loadStaticNews(newsDiv)
+  }
+}
+
+function loadStaticNews(newsDiv) {
   var news = [
-    { source: 'ఈనాడు', title: 'గుంటూరు మిర్చి ధరలు పెరుగుతున్నాయి — రైతులకు లాభం', desc: 'గుంటూరు APMC మార్కెట్‌లో మిర్చి ధరలు క్వింటాల్‌కు ₹18,500 దాటాయి.', url: 'https://eenadu.net' },
-    { source: 'సాక్షి', title: 'ఆంధ్రప్రదేశ్ రైతులకు PM కిసాన్ డబ్బులు జమ', desc: 'పీఎం కిసాన్ పథకం కింద ఆంధ్రప్రదేశ్ రైతులకు ₹2000 నేరుగా బ్యాంక్ ఖాతాలో జమ అయ్యింది.', url: 'https://sakshi.com' },
-    { source: 'ఆంధ్రజ్యోతి', title: 'మిర్చి పంటకు త్రిప్స్ తెగులు — నివారణ చర్యలు', desc: 'గుంటూరు జిల్లాలో మిర్చి పంటకు త్రిప్స్ తెగులు ఎక్కువగా కనిపిస్తోంది.', url: 'https://andhrajyothy.com' },
-    { source: 'NTV తెలుగు', title: 'రబీ సీజన్ కోసం వ్యవసాయ శాఖ సిద్ధం', desc: 'రబీ సీజన్‌లో మంచి దిగుబడి కోసం వ్యవసాయ శాఖ రైతులకు శిక్షణ ఇస్తోంది.', url: 'https://ntv.in' }
+    { source: 'ఈనాడు',
+      title: 'గుంటూరు మిర్చి ధరలు పెరుగుతున్నాయి',
+      desc: 'గుంటూరు APMC మార్కెట్‌లో మిర్చి ధరలు పెరిగాయి.',
+      url: 'https://eenadu.net' },
+    { source: 'సాక్షి',
+      title: 'రైతులకు PM కిసాన్ డబ్బులు జమ',
+      desc: 'పీఎం కిసాన్ పథకం కింద రైతులకు ₹2000 జమ అయ్యింది.',
+      url: 'https://sakshi.com' },
+    { source: 'ఆంధ్రజ్యోతి',
+      title: 'మిర్చి పంటకు త్రిప్స్ తెగులు నివారణ',
+      desc: 'గుంటూరు జిల్లాలో మిర్చి పంటకు త్రిప్స్ తెగులు కనిపిస్తోంది.',
+      url: 'https://andhrajyothy.com' }
   ]
-  newsDiv.innerHTML = news.map(function(n) { return '<div class="news-card" onclick="window.open(\'' + n.url + '\', \'_blank\')"><div class="news-source">' + n.source + '</div><div class="news-title">' + n.title + '</div><div class="news-desc">' + n.desc + '</div></div>' }).join('')
+
+  newsDiv.innerHTML = news.map(function(n) {
+    return '<div class="news-card" onclick="window.open(\'' +
+      n.url + '\', \'_blank\')">' +
+      '<div class="news-source">' + n.source + '</div>' +
+      '<div class="news-title">' + n.title + '</div>' +
+      '<div class="news-desc">' + n.desc + '</div>' +
+      '</div>'
+  }).join('')
 }
 
 function loadFeedSchemes() {

@@ -1984,9 +1984,9 @@ html, body {
   margin-top: 4px;
 }
 
-.price-up { color: #e74c3c; }
-.price-down { color: var(--green); }
-.price-same { color: var(--text-muted); }
+.price-up { color: #1a6e35; }
+.price-down { color: #e74c3c; }
+.price-same { color: #888888; }
 
 .price-market {
   font-size: 10px;
