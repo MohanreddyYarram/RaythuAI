@@ -6,7 +6,8 @@ const jwt = require('jsonwebtoken')
 const express = require('express')
 const router = express.Router()
 const multer = require('multer')
-const claude = require('../services/claude')
+//const claude = require('../services/claude')
+const gemini = require('../services/gemini')
 const supabase = require('../services/supabase')
 
 const upload = multer({ storage: multer.memoryStorage() })
@@ -108,7 +109,8 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
     }))
 
     console.log('Calling Claude with', imageBlocks.length, 'images...')
-    const result = await claude.detectDisease(imageBlocks)
+    //const result = await claude.detectDisease(imageBlocks)
+    const result = await gemini.detectDisease(imageBlocks)
     console.log('Claude result:', result.disease)
 
     // ── Save Scan to Database ──
