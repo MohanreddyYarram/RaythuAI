@@ -2465,28 +2465,54 @@ function updateFieldSelector() {
     ? Math.floor((new Date() - new Date(currentField.sowing_date)) / (1000 * 60 * 60 * 24))
     : null
 
+  // Full width card style
   var html =
-    '<div style="display:inline-flex;align-items:center;gap:8px;' +
-    'background:#e8f5ee;border-radius:20px;padding:8px 16px;' +
-    'cursor:pointer;border:1.5px solid #1a6e35;" onclick="openFieldPicker()">' +
-    '<span style="font-size:18px;">🌾</span>' +
-    '<div>' +
-    '<div style="font-size:13px;font-weight:800;color:#1a6e35;line-height:1.2;">' +
-    currentField.field_name + '</div>' +
-    '<div style="font-size:11px;color:#555;">' +
-    currentField.crop_type + ' · ' + currentField.land_acres + ' ' + t('acres') +
-    (currentField.village ? ' · ' + currentField.village : '') +
-    (daysOld !== null ? ' · ' + daysOld + ' days' : '') +
-    '</div>' +
-    '</div>' +
-    '<span style="font-size:12px;color:#1a6e35;font-weight:800;">▾</span>' +
-    '</div>'
+    '<div onclick="openFieldPicker()" ' +
+    'style="display:flex;align-items:center;justify-content:space-between;' +
+    'background:#f0f9f3;border:1.5px solid #1a6e35;' +
+    'border-radius:14px;padding:12px 16px;cursor:pointer;' +
+    'width:100%;box-sizing:border-box;">' +
 
-  // Update mobile selector
+    // Left — field info
+    '<div style="display:flex;align-items:center;gap:12px;">' +
+    '<div style="background:#1a6e35;border-radius:10px;' +
+    'width:40px;height:40px;display:flex;align-items:center;' +
+    'justify-content:center;font-size:20px;flex-shrink:0;">🌾</div>' +
+    '<div>' +
+    '<div style="font-size:15px;font-weight:900;color:#1a2e1e;">' +
+    currentField.field_name + '</div>' +
+    '<div style="font-size:12px;color:#555;margin-top:2px;">' +
+    currentField.crop_type +
+    ' · ' + currentField.land_acres + ' ' + t('acres') +
+    (currentField.village ? ' · ' + currentField.village : '') +
+    '</div>' +
+    (daysOld !== null ?
+      '<div style="font-size:11px;color:#1a6e35;font-weight:700;margin-top:2px;">' +
+      '📅 Day ' + daysOld + ' of season</div>' : '') +
+    '</div>' +
+    '</div>' +
+
+    // Right — switch arrow
+    '<div style="display:flex;flex-direction:column;align-items:center;' +
+    'background:#1a6e35;border-radius:8px;padding:6px 10px;">' +
+    '<span style="font-size:11px;color:white;font-weight:800;">Switch</span>' +
+    '<span style="font-size:16px;color:white;">▾</span>' +
+    '</div>' +
+
+    '</div>' +
+
+    // Show all fields count below
+    (allFields.length > 1 ?
+      '<div style="font-size:11px;color:#888;margin-top:6px;' +
+      'text-align:center;font-weight:600;">' +
+      '📋 ' + allFields.length + ' fields — tap to switch' +
+      '</div>' : '')
+
+  // Update mobile
   var mobile = document.getElementById('field-selector')
   if (mobile) mobile.innerHTML = html
 
-  // Update desktop selector
+  // Update desktop
   var desktop = document.getElementById('field-selector-desktop')
   if (desktop) desktop.innerHTML = html
 }
