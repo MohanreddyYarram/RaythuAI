@@ -389,15 +389,31 @@ function showToast(msg, type) {
    INIT
 ══════════════════════════════════════ */
 window.onload = function() {
+  // Hide everything first
+  var loginScreen = document.getElementById('login-screen')
+  var app = document.getElementById('app')
+  var langScreen = document.getElementById('lang-screen')
+ 
+  if (loginScreen) loginScreen.style.display = 'none'
+  if (app) app.style.display = 'none'
+  if (langScreen) langScreen.style.display = 'none'
+ 
   currentLang = localStorage.getItem('rytuai_lang')
+ 
   if (!currentLang) {
-    var ls = document.getElementById('lang-screen')
-    if (ls) { ls.style.display = 'flex'; return }
-    currentLang = 'en'
+    // First time user — show language screen
+    if (langScreen) langScreen.style.display = 'flex'
+    return
   }
+ 
+  // Language already selected
   updateLangToggleBtn()
   var token = localStorage.getItem('rytuai_token')
-  if (token) showApp()
+  if (token) {
+    showApp()
+  } else {
+    if (loginScreen) loginScreen.style.display = 'flex'
+  }
 }
 
 function showApp() {
