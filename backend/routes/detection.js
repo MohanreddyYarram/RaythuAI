@@ -82,11 +82,11 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
         .update({ scans_used: payPerScan.scans_used + 1 })
         .eq('id', payPerScan.id)
       console.log('Pay per scan credit used for:', farmerPhone)
-    } else if (freeScansUsed >= 5) {
+    } else if (freeScansUsed >= 2) {
       // Limit reached — show upgrade UI
       return res.status(429).json({
         message: 'Monthly free scans used',
-        limit: 5,
+        limit: 2,
         used: freeScansUsed,
         upgrade: true,
         resets: 'Next month'
