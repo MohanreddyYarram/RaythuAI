@@ -390,7 +390,7 @@ function parseGoogleNewsRSS(xml) {
           url: link || '#',
           publishedAt: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
           source: { name: cleanText(source) },
-          description: cleanText(description || '').includes('http').substring(0, 150)
+          description: cleanText(desc).includes('http') ? '' : cleanText(desc).substring(0, 150)
         })
       }
     }
