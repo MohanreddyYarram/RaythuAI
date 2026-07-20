@@ -310,7 +310,7 @@ router.get('/prices/all', async (req, res) => {
 // Agriculture news from GNews API
 // ══════════════════════════════════════
 
-const fetch = require('node-fetch')  // already installed in your project
+
  
 // ── Telugu Agriculture News via Google News RSS ──
 // No API key needed — Google News RSS is free and always works
