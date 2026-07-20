@@ -2411,28 +2411,13 @@ async function loadScanHistory() {
       cachedScans = data.scans
       lastScanLoadTime = Date.now()
       renderScanHistory(data.scans)
-    } else {
-      // If no scans for this field — try without field filter
-      if (currentFieldId && fieldParam) {
-        console.log('No scans for field', currentFieldId, '— loading all scans')
-        var res2 = await fetch(API + '/detect/history/' + farmer.phone, {
-          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rytuai_token') }
-        })
-        var data2 = await res2.json()
-        if (res2.ok && data2.scans && data2.scans.length > 0) {
-          cachedScans = data2.scans
-          lastScanLoadTime = Date.now()
-          renderScanHistory(data2.scans)
-          return
-        }
-      }
+    }else {
       cachedScans = []
-      container.innerHTML =
-        '<div style="text-align:center;padding:32px;color:#888;">' +
-        '<div style="font-size:32px;margin-bottom:8px;">🔬</div>' +
-        '<div style="font-size:13px;font-weight:700;">' +
-        (currentLang === 'te' ? 'ఇంకా స్కాన్‌లు లేవు' : 'No scans yet') +
-        '</div></div>'
+      container.innerHTML = '<div style="text-align:center;padding:32px;color:#888;">' +
+       '<div style="font-size:32px;margin-bottom:8px;">🔬</div>' +
+      '<div style="font-size:13px;font-weight:700;">' +
+       (currentLang === 'te' ? 'ఈ పొలానికి స్కాన్లు లేవు' : 'No scans for this field') +
+      '</div></div>'
     }
   } catch(e) {
     if (cachedScans && cachedScans.length > 0) renderScanHistory(cachedScans)
@@ -2714,6 +2699,7 @@ function closeFieldPicker() {
 function selectField(fieldId) {
   currentFieldId = fieldId
   localStorage.setItem('rytuai_current_field', String(fieldId))
+  loadFieldIntelligence()
   closeFieldPicker()
   updateFieldSelector()
   loadFarmerData()
