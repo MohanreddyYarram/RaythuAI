@@ -2865,8 +2865,8 @@ async function saveNewField() {
 // FIELD INTELLIGENCE — Load alerts
 // ─────────────────────────────────────
 async function loadFieldIntelligence() {
-  const phone = localStorage.getItem('farmer_phone')
-  const token = localStorage.getItem('token')
+  const phone = localStorage.getItem('rytuai_phone')
+  const token = localStorage.getItem('rytuai_token')
   if (!phone || !token) return
  
   try {
@@ -2977,7 +2977,7 @@ function renderGrowthStage(fields) {
   const section = document.getElementById('growth-stage-section')
  
   // Find the active field's growth stage
-  const activeFieldId = localStorage.getItem('active_field_id')
+  const activeFieldId = localStorage.getItem('rytuai_current_field')
   let targetField = fields.find(f => String(f.field_id) === String(activeFieldId))
   if (!targetField) targetField = fields[0]
  
