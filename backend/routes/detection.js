@@ -7,22 +7,17 @@ const express = require('express')
 const router = express.Router()
 const multer = require('multer')
 const claude = require('../services/claude')
-//const gemini = require('../services/gemini')
 const supabase = require('../services/supabase')
 
 const upload = multer({ storage: multer.memoryStorage() })
 
-function sanitizePhone(phone) {
-  return phone ? phone.replace(/[^0-9]/g, '').substring(0, 10) : ''
-}
-
 // ══════════════════════════════════════
 // POST /detect — AI Disease Detection
+// FIX 2: Fetches field data (land_acres) and passes to Claude
 // ══════════════════════════════════════
 router.post('/', upload.array('photos', 4), async (req, res) => {
   console.log('=== DETECT ROUTE HIT ===')
 
-  // Check login
   const authHeader = req.headers.authorization
   if (!authHeader || !authHeader.startsWith('Bearer')) {
     return res.status(401).json({ message: 'Please login to use disease detection' })
@@ -52,16 +47,14 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
 
     const freeScansUsed = scanCount ? scanCount.length : 0
 
-    // BUG FIX 1: 'Plan' → 'plan' (lowercase)
     const { data: subscription } = await supabase
       .from('subscriptions')
       .select('*')
       .eq('farmer_id', farmerPhone)
       .eq('plan', 'unlimited')
       .gte('valid_until', new Date().toISOString())
-      .maybeSingle() // BUG FIX 2: maybeSingle() instead of single() — no error if not found
+      .maybeSingle()
 
-    // BUG FIX 3: maybeSingle() for pay per scan too
     const { data: payPerScan } = await supabase
       .from('subscriptions')
       .select('*')
@@ -72,18 +65,15 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
       .limit(1)
       .maybeSingle()
 
-    // Decision logic
     if (subscription) {
       console.log('Unlimited plan active for:', farmerPhone)
     } else if (payPerScan && payPerScan.scans_purchased > payPerScan.scans_used) {
-      // Deduct one paid scan credit
       await supabase
         .from('subscriptions')
         .update({ scans_used: payPerScan.scans_used + 1 })
         .eq('id', payPerScan.id)
       console.log('Pay per scan credit used for:', farmerPhone)
     } else if (freeScansUsed >= 2) {
-      // Limit reached — show upgrade UI
       return res.status(429).json({
         message: 'Monthly free scans used',
         limit: 2,
@@ -93,9 +83,26 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
       })
     }
 
-    // ── Check Images ──
     if (!req.files || req.files.length < 1) {
       return res.status(400).json({ message: 'Please upload at least one image' })
+    }
+
+    // ── FIX 2: Fetch Field Context for Dosage Calculation ──
+    let fieldContext = null
+    const fieldId = req.body.field_id ? parseInt(req.body.field_id) : null
+
+    if (fieldId) {
+      const { data: fieldData, error: fieldError } = await supabase
+        .from('fields')
+        .select('id, field_name, crop_type, land_acres, village, district, sowing_date, soil_type, irrigation_type')
+        .eq('id', fieldId)
+        .eq('farmer_id', farmerPhone)
+        .maybeSingle()
+
+      if (!fieldError && fieldData) {
+        fieldContext = fieldData
+        console.log(`🌾 Field loaded: ${fieldData.field_name}, ${fieldData.land_acres} acres`)
+      }
     }
 
     // ── Build Image Blocks for Claude ──
@@ -109,18 +116,18 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
     }))
 
     console.log('Calling Claude with', imageBlocks.length, 'images...')
-    const result = await claude.detectDisease(imageBlocks)
-    //const result = await gemini.detectDisease(imageBlocks)
-    console.log('Claude result:', result.disease)
+    const result = await claude.detectDisease(imageBlocks, fieldContext) // FIX 2: pass fieldContext
+    console.log('Claude result:', result.disease, '| Confidence:', result.confidence)
 
     // ── Save Scan to Database ──
     try {
       const { error: scanError } = await supabase.from('scans').insert({
         farmer_id: farmerPhone,
-        field_id: req.body.field_id ? parseInt(req.body.field_id) : null,
+        field_id: fieldId,
         disease: result.disease || 'Unknown',
         telugu_name: result.teluguName || '',
-        confidence: result.confidence || '',
+        confidence: result.confidence || 0, // FIX 1: now integer
+        image_quality: result.imageQuality || null, // FIX 1: new field
         severity: result.severity || '',
         spread: result.spread || '',
         treat_within: result.treatWithin || '',
@@ -177,7 +184,6 @@ router.post('/search-pesticides', async (req, res) => {
     if (error) return res.status(400).json({ message: error.message })
 
     var matched = {}
-
     pesticide_names.forEach(function(pestName) {
       var matches = data.filter(function(product) {
         var pName = product.name.toLowerCase()
@@ -203,19 +209,17 @@ router.post('/search-pesticides', async (req, res) => {
 // ══════════════════════════════════════
 router.get('/history/:phone', async (req, res) => {
   const { phone } = req.params
-  const {field_id} = req.query
+  const { field_id } = req.query
   try {
-
     let query = supabase
       .from('scans')
       .select('*')
-      .eq('farmer_id',phone)
-      .order('created_at',{ascending:false})
-    if(field_id){
-      query = query.eq('field_id',parseInt(field_id))
+      .eq('farmer_id', phone)
+      .order('created_at', { ascending: false })
+    if (field_id) {
+      query = query.eq('field_id', parseInt(field_id))
     }
     const { data, error } = await query
-
     if (error) return res.status(400).json({ message: error.message })
     res.status(200).json({ scans: data })
   } catch(err) {
@@ -246,5 +250,5 @@ router.get('/scan-count/:phone', async (req, res) => {
   }
 })
 
-// BUG FIX 4: 'route' → 'router'
 module.exports = router
+

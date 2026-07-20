@@ -107,6 +107,7 @@ const shopRoute = require('./routes/shop')
 const paymentRoute = require('./routes/payment')
 const fieldsRoute = require('./routes/fields')
 const feedRoute = require('./routes/feed')
+const fieldIntelligenceRoute = require('./routes/field-intelligence')
 //const newsRoute = require('./routes/news')
 
 //Detect limit for detect route
@@ -150,6 +151,7 @@ app.use('/shop',shopRoute)
 app.use('/payment',paymentRoute)
 app.use('/fields',fieldsRoute)
 app.use('/feed',feedRoute)
+app.use('/field-intelligence',fieldIntelligenceRoute)
 //app.use('/news',newsRoute)
 // Home Route
 app.get('/',(req,res)=>{
