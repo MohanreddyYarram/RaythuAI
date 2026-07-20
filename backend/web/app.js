@@ -2865,21 +2865,20 @@ async function saveNewField() {
 // FIELD INTELLIGENCE — Load alerts
 // ─────────────────────────────────────
 async function loadFieldIntelligence() {
-  const phone = localStorage.getItem('rytuai_phone')
-  const token = localStorage.getItem('rytuai_token')
+  var phone = localStorage.getItem('rytuai_phone')
+  var token = localStorage.getItem('rytuai_token')
+  var fieldId = localStorage.getItem('rytuai_current_field')  // ← add this
   if (!phone || !token) return
- 
   try {
-    const res = await fetch(`/field-intelligence/${phone}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+    var url = '/field-intelligence/' + phone
+    if (fieldId) url += '?field_id=' + fieldId  // ← filter by active field
+    var res = await fetch(url, {
+      headers: { 'Authorization': 'Bearer ' + token }
     })
- 
     if (!res.ok) return
-    const data = await res.json()
- 
+    var data = await res.json()
     renderFieldAlerts(data.alerts || [], data.alert_counts || {})
     renderGrowthStage(data.fields || [])
- 
   } catch(err) {
     console.log('Field intelligence error:', err.message)
   }
