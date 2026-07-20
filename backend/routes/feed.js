@@ -420,8 +420,9 @@ function extractGoogleLink(item) {
 }
  
 function cleanText(str) {
-  return str
-    .replace(/<[^>]+>/g, '')       // strip HTML tags
+  return (str || '')
+    .replace(/<a\b[^>]*>[\s\S]*?<\/a>/gi, '')
+    .replace(/<[^>]+>/g, '')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
