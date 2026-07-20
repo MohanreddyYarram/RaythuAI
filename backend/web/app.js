@@ -617,6 +617,7 @@ function switchScreen(name) {
   if (name === 'detect') { if (typeof loadScanCount === 'function') loadScanCount() }
   if (name === 'feed') { if (typeof loadFeed === 'function') loadFeed() }
   if (name === 'shop') { setTimeout(function() { if (typeof loadStores === 'function') loadStores() }, 100) }
+  if (name === 'home') {if (typeof loadFieldIntelligence === 'function') loadFieldIntelligence()}
 }
 
 function goBack() {
@@ -1840,90 +1841,137 @@ async function loadFeedWeather() {
 
 
 async function loadFeedNews() {
-  var newsDiv = document.getElementById('feed-news')
-  if (!newsDiv) return
-
-  newsDiv.innerHTML =
-    '<div style="text-align:center;padding:20px;">' +
-    '<div class="loader-sm"></div></div>'
-
+  const container = document.getElementById('feed-news')
+  if (!container) return
+ 
+  container.innerHTML = `
+    <div style="text-align:center;padding:24px;">
+      <div class="loader-sm"></div>
+      <div style="font-size:12px;color:#888;margin-top:8px;font-weight:700;">
+        వ్యవసాయ వార్తలు లోడ్ అవుతున్నాయి...
+      </div>
+    </div>`
+ 
   try {
-    var res = await fetch(API + '/feed/news')
-    var data = await res.json()
-
-    console.log('News articles received:', data.articles?.length || 0)
-
-    if (res.ok && data.articles && data.articles.length > 0) {
-      newsDiv.innerHTML = data.articles.map(function(n) {
-        var timeAgo = formatNewsDate(n.publishedAt)
-        var isAP = n.category === 'AP/TS'
-
-        return '<div ' +
-          'onclick="window.open(\'' + n.url + '\', \'_blank\')" ' +
-          'style="cursor:pointer;background:white;' +
-          'border-radius:14px;padding:14px 16px;' +
-          'margin-bottom:10px;border:1.5px solid #e8e0d0;' +
-          'border-left:4px solid ' + (isAP ? '#e74c3c' : '#1a6e35') + ';' +
-          'display:block;">' +
-
-          // Source + badge + time
-          '<div style="display:flex;justify-content:space-between;' +
-          'align-items:center;margin-bottom:6px;">' +
-          '<div style="display:flex;align-items:center;gap:6px;">' +
-          '<div style="font-size:11px;font-weight:800;color:#1a6e35;">' +
-          (n.source ? n.source.name : 'News') + '</div>' +
-          (isAP ?
-            '<div style="background:#ffeaea;color:#e74c3c;' +
-            'font-size:9px;font-weight:800;padding:2px 6px;' +
-            'border-radius:10px;">🌶️ AP/TS</div>' :
-            '<div style="background:#e8f5ee;color:#1a6e35;' +
-            'font-size:9px;font-weight:800;padding:2px 6px;' +
-            'border-radius:10px;">🇮🇳 India</div>'
-          ) +
-          '</div>' +
-          '<div style="font-size:10px;color:#aaa;">' + timeAgo + '</div>' +
-          '</div>' +
-
-          // Title
-          '<div style="font-size:13px;font-weight:800;' +
-          'color:#1a2e1e;line-height:1.4;margin-bottom:6px;">' +
-          n.title + '</div>' +
-
-          // Description
-          (n.description ?
-            '<div style="font-size:12px;color:#666;' +
-            'line-height:1.5;margin-bottom:8px;">' +
-            (n.description.length > 100 ?
-              n.description.substring(0, 100) + '...' :
-              n.description) +
-            '</div>' : '') +
-
-          // Read more
-          '<div style="font-size:11px;color:#1a6e35;font-weight:700;">' +
-          'Read more →</div>' +
-          '</div>'
-      }).join('')
+    const res = await fetch('/feed/news')
+    const data = await res.json()
+    const articles = data.articles || []
+ 
+    if (articles.length === 0) {
+      container.innerHTML = renderNewsEmpty()
       return
     }
-
-    // No articles
-    newsDiv.innerHTML =
-      '<div style="text-align:center;padding:32px;color:#888;">' +
-      '<div style="font-size:32px;margin-bottom:8px;">📰</div>' +
-      '<div style="font-size:13px;font-weight:700;">No news available</div>' +
-      '<div style="font-size:11px;margin-top:4px;">Pull down to refresh</div>' +
-      '</div>'
-
-  } catch(e) {
-    console.log('News render error:', e.message)
-    newsDiv.innerHTML =
-      '<div style="text-align:center;padding:32px;color:#888;">' +
-      '<div style="font-size:32px;">📰</div>' +
-      '<div style="font-size:13px;font-weight:700;margin-top:8px;">' +
-      'Cannot load news</div>' +
-      '</div>'
+ 
+    container.innerHTML = articles.map((article, i) => renderNewsCard(article, i)).join('')
+ 
+  } catch(err) {
+    container.innerHTML = renderNewsEmpty()
   }
 }
+ 
+// ─────────────────────────────────────
+// RENDER A SINGLE NEWS CARD
+// ─────────────────────────────────────
+function renderNewsCard(article, index) {
+  const timeAgo = getTimeAgo(article.publishedAt)
+  const sourceName = article.source?.name || 'వ్యవసాయ వార్తలు'
+  const url = article.url || '#'
+ 
+  // Detect if title is Telugu
+  const isTelugu = /[\u0C00-\u0C7F]/.test(article.title)
+  const titleStyle = isTelugu
+    ? `font-family:'Tiro Telugu',serif;font-size:15px;line-height:1.6;`
+    : `font-size:14px;line-height:1.4;`
+ 
+  const descStyle = isTelugu
+    ? `font-family:'Tiro Telugu',serif;font-size:12px;`
+    : `font-size:12px;`
+ 
+  // Tag based on content
+  const tag = getNewsTag(article.title)
+ 
+  return `
+    <div class="news-card" onclick="window.open('${escapeHtml(url)}', '_blank')"
+      style="margin-bottom:10px;cursor:pointer;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="font-size:10px;font-weight:800;color:#1a6e35;text-transform:uppercase;
+            letter-spacing:0.3px;">${escapeHtml(sourceName.substring(0, 30))}</div>
+          ${tag ? `<div style="font-size:9px;font-weight:800;background:${tag.bg};
+            color:${tag.color};padding:2px 7px;border-radius:20px;">${tag.label}</div>` : ''}
+        </div>
+        <div style="font-size:10px;color:#aaa;flex-shrink:0;">${timeAgo}</div>
+      </div>
+      <div style="font-weight:800;color:#1a2e1e;margin-bottom:5px;${titleStyle}">
+        ${escapeHtml(article.title)}
+      </div>
+      ${article.description ? `
+        <div style="color:#666;margin-bottom:4px;${descStyle}">
+          ${escapeHtml(article.description.substring(0, 120))}${article.description.length > 120 ? '...' : ''}
+        </div>` : ''}
+      <div style="display:flex;align-items:center;justify-content:flex-end;margin-top:6px;">
+        <div style="font-size:11px;color:#1a6e35;font-weight:800;">చదవండి →</div>
+      </div>
+    </div>`
+}
+ 
+// ─────────────────────────────────────
+// EMPTY STATE
+// ─────────────────────────────────────
+function renderNewsEmpty() {
+  return `
+    <div style="background:white;border-radius:14px;border:1.5px solid #e8e0d0;
+      padding:24px;text-align:center;">
+      <div style="font-size:36px;margin-bottom:10px;">📰</div>
+      <div style="font-size:14px;font-weight:800;color:#1a2e1e;margin-bottom:6px;">
+        వార్తలు అందుబాటులో లేవు
+      </div>
+      <div style="font-size:12px;color:#888;">
+        Network issue or no recent articles. Try again shortly.
+      </div>
+    </div>`
+}
+ 
+// ─────────────────────────────────────
+// TAG DETECTION
+// ─────────────────────────────────────
+function getNewsTag(title) {
+  const t = title.toLowerCase()
+  if (/మిరప|chilli|pepper/.test(t)) return { label: '🌶️ మిరప', bg: '#fff3cd', color: '#856404' }
+  if (/ధర|price|market|మండి|mandi/.test(t)) return { label: '💰 ధర', bg: '#e8f5ee', color: '#1a6e35' }
+  if (/వర్షం|rain|రుతు|monsoon/.test(t)) return { label: '🌧️ వర్షం', bg: '#e3f2fd', color: '#1565c0' }
+    if (/పంట|crop|రైతు|farmer/.test(t)) return { label: '🌾 రైతు', bg: '#f0f7f2', color: '#1a6e35' }
+  if (/ప్రభుత్వ|government|scheme|పథకం/.test(t)) return { label: '🏛️ ప్రభుత్వం', bg: '#fce4ec', color: '#880e4f' }
+  if (/తెగులు|disease|pest|పురుగు/.test(t)) return { label: '🦠 తెగులు', bg: '#fff5f5', color: '#c62828' }
+  return null
+}
+ 
+// ─────────────────────────────────────
+// TIME AGO HELPER
+// ─────────────────────────────────────
+function getTimeAgo(dateStr) {
+  try {
+    const diff = Date.now() - new Date(dateStr).getTime()
+    const mins = Math.floor(diff / 60000)
+    const hours = Math.floor(mins / 60)
+    const days = Math.floor(hours / 24)
+    if (mins < 60) return `${mins}m ago`
+    if (hours < 24) return `${hours}h ago`
+    if (days === 1) return 'Yesterday'
+    return `${days}d ago`
+  } catch { return '' }
+}
+ 
+function escapeHtml(str) {
+  if (!str) return ''
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 
 async function loadCropPrices(cropKey) {
   // Update active tab styles
@@ -2813,7 +2861,156 @@ async function saveNewField() {
     showToast('Cannot connect to server', 'error')
   }
 }
+// ─────────────────────────────────────
+// FIELD INTELLIGENCE — Load alerts
+// ─────────────────────────────────────
+async function loadFieldIntelligence() {
+  const phone = localStorage.getItem('farmer_phone')
+  const token = localStorage.getItem('token')
+  if (!phone || !token) return
+ 
+  try {
+    const res = await fetch(`/field-intelligence/${phone}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+ 
+    if (!res.ok) return
+    const data = await res.json()
+ 
+    renderFieldAlerts(data.alerts || [], data.alert_counts || {})
+    renderGrowthStage(data.fields || [])
+ 
+  } catch(err) {
+    console.log('Field intelligence error:', err.message)
+  }
+}
+ 
+// ─────────────────────────────────────
+// RENDER ALERTS
+// ─────────────────────────────────────
+function renderFieldAlerts(alerts, counts) {
+  const section = document.getElementById('field-alerts-section')
+  const container = document.getElementById('field-alerts-container')
+ 
+  if (!alerts || alerts.length === 0) {
+    section.style.display = 'none'
+    return
+  }
+ 
+  section.style.display = 'block'
+ 
+  // Show max 4 alerts on home screen
+  const displayAlerts = alerts.slice(0, 4)
+ 
+  container.innerHTML = displayAlerts.map(alert => {
+    const bgColor = alert.level === 'critical' ? '#fff5f5'
+      : alert.level === 'warning' ? '#fff8e1'
+      : '#f0f7f2'
+ 
+    const borderColor = alert.level === 'critical' ? '#ffcdd2'
+      : alert.level === 'warning' ? '#ffd54f'
+      : '#c8ddc8'
+ 
+    const textColor = alert.level === 'critical' ? '#c62828'
+      : alert.level === 'warning' ? '#e65100'
+      : '#1a6e35'
+ 
+    const badgeBg = alert.level === 'critical' ? '#e53935'
+      : alert.level === 'warning' ? '#ff8f00'
+      : '#1a6e35'
+ 
+    return `
+      <div style="background:${bgColor};border:1.5px solid ${borderColor};
+        border-radius:14px;padding:13px 14px;margin-bottom:8px;
+        display:flex;align-items:flex-start;gap:12px;">
+        <div style="font-size:26px;flex-shrink:0;line-height:1;">${alert.icon}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;">
+            <div style="font-size:13px;font-weight:800;color:#1a2e1e;">${alert.field_name}</div>
+            <div style="font-size:9px;font-weight:800;background:${badgeBg};
+              color:white;padding:2px 8px;border-radius:20px;text-transform:uppercase;">
+              ${alert.level === 'critical' ? 'Urgent' : alert.level === 'warning' ? 'Due' : 'Reminder'}
+            </div>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:${textColor};margin-bottom:3px;">
+            ${alert.message}
+          </div>
+          <div style="font-size:11px;color:#666;font-family:'Tiro Telugu',serif;line-height:1.5;">
+            ${alert.message_telugu}
+          </div>
+          ${alert.last_done ? `
+            <div style="font-size:10px;color:#888;margin-top:5px;font-weight:700;">
+              Last: ${formatAlertDate(alert.last_done)} &nbsp;·&nbsp; 
+              Every ${alert.recommended_interval} days
+            </div>` : ''}
+        </div>
+      </div>`
+  }).join('')
+ 
+  // Show "view all" if more than 4
+  if (alerts.length > 4) {
+    container.innerHTML += `
+      <div style="text-align:center;padding:4px 0 8px;">
+        <button onclick="switchScreen('tracker')" style="
+          background:none;border:1.5px solid #1a6e35;border-radius:20px;
+          padding:6px 16px;font-size:12px;font-weight:800;color:#1a6e35;
+          font-family:'Nunito',sans-serif;cursor:pointer;">
+          View all ${alerts.length} alerts →
+        </button>
+      </div>`
+  }
+ 
+  // Update section label with count badge
+  const criticalCount = counts.critical || 0
+  const label = document.getElementById('alerts-section-label')
+  if (label && criticalCount > 0) {
+    label.innerHTML = `🔔 Field Alerts <span style="background:#e53935;color:white;
+      font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;
+      margin-left:6px;vertical-align:middle;">${criticalCount}</span>`
+  }
+}
+ 
+// ─────────────────────────────────────
+// RENDER GROWTH STAGE
+// ─────────────────────────────────────
+function renderGrowthStage(fields) {
+  const section = document.getElementById('growth-stage-section')
+ 
+  // Find the active field's growth stage
+  const activeFieldId = localStorage.getItem('active_field_id')
+  let targetField = fields.find(f => String(f.field_id) === String(activeFieldId))
+  if (!targetField) targetField = fields[0]
+ 
+  if (!targetField || !targetField.growth_stage) {
+    section.style.display = 'none'
+    return
+  }
+ 
+  section.style.display = 'block'
+  const stage = targetField.growth_stage
+ 
+  document.getElementById('growth-stage-icon').textContent = stage.icon
+  document.getElementById('growth-stage-name').textContent = stage.stage
+  document.getElementById('growth-stage-telugu').textContent = stage.stage_telugu
+  document.getElementById('growth-stage-days').textContent = stage.days
+}
+ 
+// ─────────────────────────────────────
+// DATE FORMATTER
+// ─────────────────────────────────────
+function formatAlertDate(dateStr) {
+  try {
+    const d = new Date(dateStr)
+    const today = new Date()
+    const diff = Math.floor((today - d) / (1000 * 60 * 60 * 24))
+    if (diff === 0) return 'Today'
+    if (diff === 1) return 'Yesterday'
+    if (diff < 7) return `${diff} days ago`
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+  } catch { return dateStr }
+}
 
+ 
 
 // Keep server alive
 setInterval(function() { fetch('/auth/ping').catch(function() {}) }, 10 * 60 * 1000)

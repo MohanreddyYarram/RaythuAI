@@ -309,103 +309,127 @@ router.get('/prices/all', async (req, res) => {
 // GET /feed/news
 // Agriculture news from GNews API
 // ══════════════════════════════════════
+
+const fetch = require('node-fetch')  // already installed in your project
+ 
+// ── Telugu Agriculture News via Google News RSS ──
+// No API key needed — Google News RSS is free and always works
 router.get('/news', async (req, res) => {
   try {
-    const NEWSDATA_API_KEY = process.env.NEWSDATA_API_KEY
-
-    if (!NEWSDATA_API_KEY) {
-      console.log('NEWSDATA_API_KEY missing')
-      return res.status(200).json({ articles: [] })
-    }
-
-    // Fetch both India agriculture + AP/TS news simultaneously
-    const [indiaRes, apRes] = await Promise.all([
-
-      // India wide agriculture news
-      fetch('https://newsdata.io/api/1/news?' +
-        'apikey=' + NEWSDATA_API_KEY + '&' +
-        'q=farmer+agriculture+crop+kisan&' +
-        'country=in&' +
-        'language=en&' +
-        'category=business,science&' +
-        'size=5'),
-
-      // AP/TS specific news
-      fetch('https://newsdata.io/api/1/news?' +
-        'apikey=' + NEWSDATA_API_KEY + '&' +
-        'q=andhra+pradesh+telangana+farmer+chilli+rythu&' +
-        'country=in&' +
-        'language=en&' +
-        'size=5')
-    ])
-
-    const [indiaData, apData] = await Promise.all([
-      indiaRes.json(),
-      apRes.json()
-    ])
-
-    console.log('India news:', indiaData.results?.length || 0)
-    console.log('AP/TS news:', apData.results?.length || 0)
-
-    // Combine both results
-    var allArticles = []
-
-    // Add AP/TS news first — more relevant
-    if (apData.results && apData.results.length > 0) {
-      apData.results.forEach(function(a) {
-        allArticles.push({
-          title: a.title || '',
-          description: a.description || '',
-          url: a.link || '#',
-          source: { name: a.source_id || 'News' },
-          publishedAt: a.pubDate || '',
-          category: 'AP/TS'  // tag for display
-        })
-      })
-    }
-
-    // Add India news
-    if (indiaData.results && indiaData.results.length > 0) {
-      indiaData.results.forEach(function(a) {
-        // Avoid duplicates
-        var isDuplicate = allArticles.some(function(existing) {
-          return existing.url === a.link
-        })
-        if (!isDuplicate) {
-          allArticles.push({
-            title: a.title || '',
-            description: a.description || '',
-            url: a.link || '#',
-            source: { name: a.source_id || 'News' },
-            publishedAt: a.pubDate || '',
-            category: 'India'
-          })
-        }
-      })
-    }
-
-    // Clean and filter
-    var cleaned = allArticles.filter(function(a) {
-      return a.title &&
-        a.title !== '[Removed]' &&
-        a.url !== '#'
+    // Multiple queries — pick the best results
+    const queries = [
+      'వ్యవసాయం ఆంధ్రప్రదేశ్',           // Agriculture Andhra Pradesh in Telugu
+      'రైతులు తెలంగాణ వ్యవసాయం',          // Farmers Telangana Agriculture  
+      'మిరప ధరలు గుంటూరు',                // Chilli prices Guntur
+      'agriculture andhra pradesh farmer'   // English fallback
+    ]
+ 
+    // Use the first Telugu query as primary
+    const query = encodeURIComponent('వ్యవసాయం రైతులు ఆంధ్రప్రదేశ్ తెలంగాణ')
+    const rssUrl = `https://news.google.com/rss/search?q=${query}&hl=te&gl=IN&ceid=IN:te`
+ 
+    const response = await fetch(rssUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; RytuAI/1.0)',
+        'Accept': 'application/rss+xml, application/xml, text/xml'
+      },
+      
     })
-
-    console.log('Total combined articles:', cleaned.length)
-    return res.status(200).json({ articles: cleaned })
-
+ 
+    if (!response.ok) {
+      throw new Error(`RSS fetch failed: ${response.status}`)
+    }
+ 
+    const xml = await response.text()
+ 
+    // Parse RSS XML manually (no extra library needed)
+    const articles = parseGoogleNewsRSS(xml)
+ 
+    // If Telugu query returns too few, also fetch English AP agriculture news
+    if (articles.length < 3) {
+      const enQuery = encodeURIComponent('andhra pradesh telangana agriculture farmer chilli 2025')
+      const enUrl = `https://news.google.com/rss/search?q=${enQuery}&hl=en-IN&gl=IN&ceid=IN:en`
+      const enRes = await fetch(enUrl, { timeout: 6000 })
+      if (enRes.ok) {
+        const enXml = await enRes.text()
+        const enArticles = parseGoogleNewsRSS(enXml)
+        articles.push(...enArticles.slice(0, 5))
+      }
+    }
+ 
+    res.status(200).json({ articles: articles.slice(0, 10) })
+ 
   } catch(err) {
-    console.log('News error:', err.message)
+    console.log('News fetch error:', err.message)
+    // Return empty gracefully — never crash
     res.status(200).json({ articles: [] })
   }
 })
-router.get('/news/test', async (req, res) => {
-  const key = process.env.GNEWS_API_KEY
-  res.json({
-    keyExists: !!key,
-    keyLength: key ? key.length : 0,
-    keyStart: key ? key.substring(0, 8) + '...' : 'MISSING'
-  })
-})
+ 
+// ── Simple RSS XML Parser (no library needed) ──
+function parseGoogleNewsRSS(xml) {
+  const articles = []
+  
+  try {
+    // Extract <item> blocks
+    const itemRegex = /<item>([\s\S]*?)<\/item>/g
+    let match
+ 
+    while ((match = itemRegex.exec(xml)) !== null) {
+      const item = match[1]
+ 
+      const title = extractTag(item, 'title')
+      const link = extractTag(item, 'link') || extractGoogleLink(item)
+      const pubDate = extractTag(item, 'pubDate')
+      const source = extractTag(item, 'source') || extractAttr(item, 'source', 'url') || 'Google News'
+      const description = extractTag(item, 'description')
+ 
+      if (title && title.length > 5) {
+        articles.push({
+          title: cleanText(title),
+          url: link || '#',
+          publishedAt: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
+          source: { name: cleanText(source) },
+          description: cleanText(description || '').substring(0, 150)
+        })
+      }
+    }
+  } catch(e) {
+    console.log('RSS parse error:', e.message)
+  }
+ 
+  return articles
+}
+ 
+function extractTag(xml, tag) {
+  const regex = new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i')
+  const match = xml.match(regex)
+  if (!match) return ''
+  return (match[1] || match[2] || '').trim()
+}
+ 
+function extractAttr(xml, tag, attr) {
+  const regex = new RegExp(`<${tag}[^>]*${attr}="([^"]*)"`, 'i')
+  const match = xml.match(regex)
+  return match ? match[1] : ''
+}
+ 
+function extractGoogleLink(item) {
+  const match = item.match(/https?:\/\/[^\s<"]+/)
+  return match ? match[0] : ''
+}
+ 
+function cleanText(str) {
+  return str
+    .replace(/<[^>]+>/g, '')       // strip HTML tags
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
 
 module.exports = router
