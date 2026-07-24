@@ -429,7 +429,8 @@ router.post('/forgot-password', async (req, res) => {
     await supabase.from('otp_store').insert({
       phone,
       otp,
-      expiry: new Date(Date.now() + 5 * 60 * 1000).toISOString()
+      expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+      type:'reset'
     })
 
     res.status(200).json({
