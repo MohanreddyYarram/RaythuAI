@@ -52,7 +52,6 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
       .select('*')
       .eq('farmer_id', farmerPhone)
       .eq('plan', 'unlimited')
-      .gte('valid_until', new Date().toISOString())
       .maybeSingle()
 
     const { data: payPerScan } = await supabase
