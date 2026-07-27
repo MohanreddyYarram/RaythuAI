@@ -232,6 +232,23 @@ router.get('/history/:phone', async (req, res) => {
 router.get('/scan-count/:phone', async (req, res) => {
   const { phone } = req.params
   try {
+
+    //Check unlimited count
+    const {data: subscription} = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('farmer_id',phone)
+    .eq('plan','unlimited')
+    .maybeSingle()
+
+    if(subscription){
+      return res.status(200).json({
+        count:0,
+        limit:999,
+        unlimited:true
+      })
+    }
+    //General User
     var startOfMonth = new Date()
     startOfMonth.setDate(1)
     startOfMonth.setHours(0, 0, 0, 0)

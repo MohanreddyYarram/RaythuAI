@@ -1203,7 +1203,14 @@ async function loadScanCount() {
     if (res.ok) {
       var countEl = document.getElementById('scan-count-display')
       if (countEl) {
-        var used = data.count || 0; var remaining = 2 - used
+
+        var used = data.count || 0; 
+        if(data.unlimited){
+          countEl.innerHTML = '<div style="text-align:center;padding:8px;font-size:12px;color:#1a6e35;font-weight:700;">Unlimited Scans Active </div>'
+          return
+        }
+        
+        var remaining = 2 - used
         countEl.innerHTML = '<div style="background:' + (remaining <= 1 ? '#fff3cd' : '#e8f5ee') + ';border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;font-weight:700;text-align:center;color:' + (remaining <= 1 ? '#856404' : '#1a6e35') + ';">🔬 ' + used + '/2 scans used this month · ' + remaining + ' remaining</div>'
       }
     }
