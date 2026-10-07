@@ -1,6 +1,7 @@
 // ══════════════════════════════════════
 
 const Anthropic = require('@anthropic-ai/sdk')
+const sharp = require('sharp')
 
 // ─────────────────────────────────────
 // SYSTEM PROMPT
@@ -116,11 +117,11 @@ Return ONLY this JSON — no text before, no text after, no code fences:
   "imageQuality": "Good or Fair or Poor",
   "whatIsThis": "2-3 sentence scientific explanation in English",
   "whatIsThisTelugu": "2-3 వాక్యాలు సరళమైన AP తెలుగులో",
-  "symptomsFound": "EXACTLY 5 numbered symptoms visible in THIS photo only",
-  "symptomsFoundTelugu": "సరిగ్గా 5 లక్షణాలు నంబర్లతో తెలుగులో",
-  "prevention": "EXACTLY 8 numbered prevention tips in English",
-  "preventionTelugu": "సరిగ్గా 8 నివారణ చర్యలు (వయారిభామ + అడ్డు పంటలు తప్పనిసరి)",
-  "teluguSummary": "అన్నదాతా నమస్కారం! తో మొదలు. 3-4 వాక్యాలు రైతు భాషలో. ధైర్యంగా ఉండండి, మీ పంట కోలుకుంటుంది! 🌱 తో ముగింపు.",
+  "symptomsFound": "EXACTLY 3 numbered symptoms visible in THIS photo only",
+  "symptomsFoundTelugu": "సరిగ్గా 3 లక్షణాలు నంబర్లతో తెలుగులో",
+  "prevention": "EXACTLY 5 numbered prevention tips in English",
+  "preventionTelugu": "సరిగ్గా 5 నివారణ చర్యలు (వయారిభామ + అడ్డు పంటలు తప్పనిసరి)",
+  "teluguSummary": "అన్నదాతా నమస్కారం! తో మొదలు. 2 వాక్యాలు రైతు భాషలో. ధైర్యంగా ఉండండి, మీ పంట కోలుకుంటుంది! 🌱 తో ముగింపు.",
   "pesticides": [
     {
       "name": "Active ingredient % formulation",
@@ -142,8 +143,8 @@ Self-check before responding:
 - Telugu is natural AP farmer language ✓
 - Symptoms from THIS photo specifically ✓
 - priceMRP > priceRytu (both integers) ✓
-- Exactly 4 pesticides ✓
-- Exactly 5 symptoms, 8 prevention tips ✓
+- Exactly 3 pesticides ✓
+- Exactly 3 symptoms, 5 prevention tips ✓
 - teluguSummary starts and ends correctly ✓
 - Field-size total dosage included in usage if acres provided ✓`
 }
@@ -168,8 +169,8 @@ function validateScanResponse(data) {
     }
   })
 
-  if (!Array.isArray(data.pesticides) || data.pesticides.length !== 4) {
-    errors.push(`Pesticides: expected 4, got ${data.pesticides?.length}`)
+  if (!Array.isArray(data.pesticides) || data.pesticides.length !== 3) {
+    errors.push(`Pesticides: expected 3, got ${data.pesticides?.length}`)
   }
 
   if (Array.isArray(data.pesticides)) {
@@ -267,6 +268,24 @@ async function detectDisease(imageBlocks, fieldContext = null) {
       apiKey: process.env.ANTHROPIC_API_KEY
     })
 
+    const compressedFiles = await Promise.all(
+      req.files.map(file=>
+        sharp(file.buffer)
+          .resize(800,800,{fit:'inside'})
+          .jpeg({quality: 70})
+          .toBuffer()
+      )
+    )
+
+    const imageBlocks = compressedFiels.map(buffer => ({
+      type: 'image',
+      source:{
+        type:'base64',
+        media_type: 'image/jpeg',
+        data: buffer.toString('base64')
+      }
+    }))
+
     console.log(`🔍 RytuAI: Analyzing ${imageBlocks.length} image(s) with Claude...`)
     if (fieldContext) {
       console.log(`🌾 Field context: ${fieldContext.land_acres} acres, ${fieldContext.crop_type}`)
@@ -282,7 +301,7 @@ async function detectDisease(imageBlocks, fieldContext = null) {
 
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 4096,
+      max_tokens: 2048,
       system: SYSTEM_PROMPT,
       messages: [
         {
