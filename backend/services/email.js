@@ -1,26 +1,12 @@
+const { Resend } = require('resend')
 
-const nodemailer = require('nodemailer')
+const resend = new Resend(process.env.RESEND_API_KEY)
 
-// Create transporter using Gmail
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.GMAIL_USER,         // your gmail address
-    pass: process.env.GMAIL_APP_PASSWORD  // 16 digit app password
-  },
-  tls: {
-    rejectUnauthorized : false
-
-  }
-})
-
-// Send OTP Email
 async function sendOTPEmail(email, otp, name) {
   try {
-    const mailOptions = {
-      from: `RytuAI <${process.env.GMAIL_USER}>`,
+    const { data, error } = await resend.emails.send({
+      from: 'RytuAI <otp@rytuai.in>',  // after domain verified
+      // from: 'RytuAI <onboarding@resend.dev>', // use this for testing
       to: email,
       subject: 'RytuAI - Your OTP Verification Code',
       html: `
@@ -61,14 +47,18 @@ async function sendOTPEmail(email, otp, name) {
           
         </div>
       `
+    })
+
+    if (error) {
+      console.log('Resend error:', error)
+      return false
     }
 
-    const result = await transporter.sendMail(mailOptions)
-    console.log('Email sent successfully:', result.messageId)
+    console.log('Email sent successfully:', data.id)
     return true
 
-  } catch (error) {
-    console.log('Email error:', error.message)
+  } catch (err) {
+    console.log('Email error:', err.message)
     return false
   }
 }
