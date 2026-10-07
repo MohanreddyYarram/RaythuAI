@@ -1,60 +1,68 @@
-const sgMail = require('@sendgrid/mail')
-sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
+const nodemailer = require('nodemailer')
+
+// Create transporter using Gmail
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_USER,         // your gmail address
+    pass: process.env.GMAIL_APP_PASSWORD  // 16 digit app password
+  }
+})
+
+// Send OTP Email
 async function sendOTPEmail(email, otp, name) {
   try {
-    await sgMail.send({
+    const mailOptions = {
+      from: `RytuAI <${process.env.GMAIL_USER}>`,
       to: email,
-      from: {
-        email: process.env.EMAIL_FROM,
-        name: 'RytuAI'
-      },
-      subject: 'RytuAI — Your OTP Code',
+      subject: 'RytuAI - Your OTP Verification Code',
       html: `
-        <div style="font-family:Arial,sans-serif;max-width:400px;
-          margin:0 auto;padding:24px;background:#f5f5f5;
-          border-radius:12px;text-align:center;">
-          <div style="font-size:48px;">🌶️</div>
-          <div style="font-size:22px;font-weight:900;color:#1a2e1e;">
-            RytuAI
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          
+          <h2 style="color: #2d7a2d;">RytuAI - రైతు AI</h2>
+          
+          <p>Hello ${name},</p>
+          
+          <p>Your OTP verification code is:</p>
+          
+          <div style="
+            background: #f0f7f0;
+            border: 2px solid #2d7a2d;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+          ">
+            <h1 style="
+              color: #2d7a2d;
+              font-size: 40px;
+              letter-spacing: 10px;
+              margin: 0;
+            ">${otp}</h1>
           </div>
-          <div style="font-size:13px;color:#888;margin-bottom:24px;">
-            రైతు AI అప్లికేషన్
-          </div>
-          <div style="background:white;border-radius:12px;padding:24px;
-            border:1.5px solid #e8e0d0;">
-            <div style="font-size:14px;color:#555;margin-bottom:16px;">
-              నమస్కారం ${name} గారు 🙏<br>
-              Your verification OTP:
-            </div>
-            <div style="font-size:52px;font-weight:900;color:#1a6e35;
-              letter-spacing:12px;font-family:monospace;
-              background:#e8f5ee;padding:16px;border-radius:10px;">
-              ${otp}
-            </div>
-            <div style="font-size:12px;color:#e74c3c;
-              font-weight:700;margin-top:16px;">
-              ⏱️ Valid for 10 minutes only
-            </div>
-            <div style="font-size:11px;color:#888;margin-top:4px;">
-              10 నిమిషాల వరకు మాత్రమే చెల్లుతుంది
-            </div>
-          </div>
-          <div style="font-size:11px;color:#aaa;margin-top:16px;">
-            Do not share OTP with anyone.<br>
-            మీ OTP ని ఎవరికీ చెప్పకండి.<br>
-            <strong style="color:#1a6e35;">rytuai.in</strong>
-          </div>
+          
+          <p>This OTP is valid for <strong>10 minutes.</strong></p>
+          <p>Do not share this OTP with anyone.</p>
+          
+          <hr/>
+          
+          <p style="color: #666; font-size: 13px;">
+            మీ OTP కోడ్: <strong>${otp}</strong><br/>
+            ఈ కోడ్ 10 నిమిషాలు మాత్రమే చెల్లుతుంది.<br/>
+            దీన్ని ఎవరితోనూ పంచుకోవద్దు.
+          </p>
+          
         </div>
       `
-    })
-    console.log('OTP sent to:', email)
-    return true
-  } catch(err) {
-    console.log('SendGrid error:', err.message)
-    if (err.response) {
-      console.log('SendGrid body:', JSON.stringify(err.response.body))
     }
+
+    const result = await transporter.sendMail(mailOptions)
+    console.log('Email sent successfully:', result.messageId)
+    return true
+
+  } catch (error) {
+    console.log('Email error:', error.message)
     return false
   }
 }
